@@ -1,0 +1,95 @@
+AFRAME.registerComponent('componente', {
+        //raycaster (dipendenza dal componente a-frame)
+        dependencies: ['raycaster'],
+        schema: {},
+
+        init: function () {
+            var origin = this.el.getAttribute('raycaster').origin;
+            this.el.setAttribute('raycaster', {
+                //evitare collisioni con la camera o con il raggio stesso
+                near: 0.05,
+                //lunghezza del raggio
+                far: 10
+            });
+
+            /*definizione di diversi event listener: le entità inserite nell'html dinamicamente hanno bisogno
+              di essere caricate per poter assegnare degli attributi*/
+            //definizione del percorso. il percorso viene creato con un componente esterno per a-frame
+            //#1 curva
+            var curve = document.createElement('a-curve');
+            curve.setAttribute('id','curve');
+            document.querySelector('a-scene').appendChild(curve);
+            curve.addEventListener('loaded',function() {
+                //#2 punti (figli)
+                var child0 = document.createElement('a-curve-point');
+                child0.setAttribute('id','punto0');
+                child0.setAttribute('position', '0 0 0');
+                curve.appendChild(child0);
+
+                /*
+                var child1 = document.createElement('a-curve-point');
+                child1.setAttribute('id','punto1');
+                //child1: posizione dell'elemento
+                child1.setAttribute('position', '0 0 0');
+                curve.appendChild(child1);*/
+
+                var child2 = document.createElement('a-curve-point');
+                child2.setAttribute('id','punto2');
+                //child2: "origine"
+                child2.setAttribute('position', '0 0 0');
+                curve.appendChild(child2);
+            });
+            //creazione meshline
+            var meshLine = document.createElement('a-entity');
+            meshLine.setAttribute('id', 'ml');
+            //aggiunta meshline alla scena
+            this.el.parentNode.appendChild(meshLine);
+            //event listener: il raggio ha intersecato qualcosa
+            /*nel momento in cui un oggetto viene intersecato dal raggio, viene creato un percorso che parte dalla posizione
+            * dell'oggetto e arriva alla posizione della camera (posizione dell'utente) e l'oggetto intersecato segue questo
+            * percorso*/
+            this.el.addEventListener('raycaster-intersection', function (event) {
+                //oggetto intersecato
+                var intersectedObject = event.detail.els[0];
+                //se l'elemento intersecato non è una mano (e nemmeno il piano)
+                if (intersectedObject.getAttribute('leap-hand') == null && intersectedObject !== document.querySelector('a-plane')) {
+                    //posizioni elemento intersecato e camera per successiva definizione del percorso
+                    var endPath = intersectedObject.getAttribute('position');
+                    //var middle = ((endPath.x+origin.x)/2)+' '+((endPath.y+origin.y)/2)+' '+((endPath.z+origin.z)/2);
+                    document.querySelector('#punto0').setAttribute('position', endPath);
+                    //document.querySelector('#punto0').setAttribute('position', middle);
+                    document.querySelector('#punto2').setAttribute('position', origin);
+                    intersectedObject.setAttribute('alongpath', {curve: '#curve'});
+                }
+            });
+        },
+        update: function (oldData) {
+
+        },
+        tick: function () {
+            //hand raycaster
+            //var origin = document.querySelector('#lh').components["leap-hand"].intersector.raycaster.ray.origin;
+            var origin = document.querySelector('#rh').components["leap-hand"].intersector.raycaster.ray.origin;
+            //posizione camera per successivo calcolo posizione relativa (figli della camera)
+            var cameraPosition = this.el.parentNode.getAttribute('position');
+            //posizione relativa per raycaster (figlio della camera)
+            var relativeOriginPosition = (origin.x-cameraPosition.x)+' '+(origin.y-cameraPosition.y)+' '+(origin.z-cameraPosition.z);
+            //percorso meshline relativo
+            var path = (origin.x-cameraPosition.x)+' '+(origin.y-cameraPosition.y)+' '+(origin.z-cameraPosition.z)+', '+(origin.x-cameraPosition.x)+' '+(origin.y-cameraPosition.y)+' '+((origin.z-cameraPosition.z)-this.el.getAttribute('raycaster').far);
+            //modifica del raycaster del componente con posizione della mano (coincide con la mesh)
+            this.el.setAttribute('raycaster', {
+                showLine: true,
+                origin: relativeOriginPosition
+            });
+            this.el.setAttribute('line', {
+                end: path.split(', ')[1]
+            });
+            document.querySelector('#ml').setAttribute('meshline', {
+                lineWidth: 20,
+                path: path,
+                color: '#74BEC1',
+                lineWidthStyler: '1 - p'
+            });
+        }
+    }
+);
