@@ -59,20 +59,20 @@ AFRAME.registerComponent('componente', {
                 if (isVisible && intersectedObject.getAttribute('leap-hand') == null && intersectedObject !== document.querySelector('a-plane')) {
                     //posizioni elemento intersecato e camera per successiva definizione del percorso
                     var endPath = intersectedObject.getAttribute('position');
+                    d = endPath.z;
                     //var middle = ((endPath.x+origin.x)/2)+' '+((endPath.y+origin.y)/2)+' '+((endPath.z+origin.z)/2);
                     document.querySelector('#punto0').setAttribute('position', endPath);
                     //document.querySelector('#punto0').setAttribute('position', middle);
                     document.querySelector('#punto2').setAttribute('position', origin);
                     intersectedObject.setAttribute('alongpath', {
                         curve: '#curve',
-                        delay: 3000,
-                        rotate: true
+                        delay: 1500
                     });
-                    //AGGIUNGERE RITARDO
                 }
             });
             this.el.addEventListener('raycaster-intersection-cleared', function (event) {
                 flag = false;
+                d = 10;
             });
         },
         update: function (oldData) {
@@ -93,7 +93,6 @@ AFRAME.registerComponent('componente', {
                 //posizione relativa per raycaster (figlio della camera)
                 var relativeOriginPosition = (origin.x - cameraPosition.x) + ' ' + (origin.y - cameraPosition.y) + ' ' + (origin.z - cameraPosition.z);
                 //percorso meshline relativo
-                //USARE DISTANCE AL POSTO DI FAR (VEDI DOCUMENTAZIONE)
                 var path = (origin.x - cameraPosition.x) + ' ' + (origin.y - cameraPosition.y) + ' ' + (origin.z - cameraPosition.z) + ', ' + (origin.x - cameraPosition.x) + ' ' + (origin.y - cameraPosition.y) + ' ' + ((origin.z - cameraPosition.z) - this.el.getAttribute('raycaster').far);
 
                 var p = this.el.getAttribute('position');
@@ -107,7 +106,8 @@ AFRAME.registerComponent('componente', {
                         origin: relativeOriginPosition
                     });
                     this.el.setAttribute('line', {
-                        end: path.split(', ')[1]
+                        end: path.split(', ')[1],
+                        color: '#74BEC1'
                     });
                     document.querySelector('#ml').setAttribute('meshline', {
                         lineWidth: 20,
@@ -120,15 +120,18 @@ AFRAME.registerComponent('componente', {
                 {
                     //modifica del raycaster del componente con posizione della mano (coincide con la mesh)
                     this.el.setAttribute('raycaster', {
-                        showLine: false,
+                        showLine: true,
                         origin: relativeOriginPosition
                     });
                     this.el.setAttribute('line', {
-                        end: path.split(', ')[1]
+                        end: path.split(', ')[1],
+                        color: '#FFFFFF'
                     });
                     document.querySelector('#ml').setAttribute('meshline', {
-                        lineWidth: 0,
-                        path: '0 0 0, 0 0 0'
+                        lineWidth: 20,
+                        path: pathChild,
+                        color: '#FFFFFF',
+                        lineWidthStyler: '1 - p'
                     });
                 }
             }
