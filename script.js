@@ -10,9 +10,8 @@ AFRAME.registerComponent('componente', {
                 //evitare collisioni con la camera o con il raggio stesso
                 near: 0.05,
                 //lunghezza del raggio
-                far: 10
+                far: 0.05
             });
-
             /*definizione di diversi event listener: le entità inserite nell'html dinamicamente hanno bisogno
               di essere caricate per poter assegnare degli attributi*/
             //definizione del percorso. il percorso viene creato con un componente esterno per a-frame
@@ -63,7 +62,12 @@ AFRAME.registerComponent('componente', {
                     //var middle = ((endPath.x+origin.x)/2)+' '+((endPath.y+origin.y)/2)+' '+((endPath.z+origin.z)/2);
                     document.querySelector('#punto0').setAttribute('position', endPath);
                     //document.querySelector('#punto0').setAttribute('position', middle);
-                    document.querySelector('#punto2').setAttribute('position', origin);
+                    var p2 = {
+                        x: origin.x,
+                        y: origin.y + 1,
+                        z: origin.z - 3
+                    };
+                    document.querySelector('#punto2').setAttribute('position', p2);
                     intersectedObject.setAttribute('alongpath', {
                         curve: '#curve',
                         delay: 1500
@@ -79,59 +83,109 @@ AFRAME.registerComponent('componente', {
 
         },
         tick: function () {
-            //nasconde il braccio
-            document.querySelector('#rh').components["leap-hand"].handMesh.options.showArm = false;
-            //mano visibile
-            var isVisible = document.querySelector('#rh').components["leap-hand"].isVisible;
-            if (isVisible)
+
+            var hand = document.querySelector('#rh').components["leap-hand"].getHand();
+            //informazioni LeapMotion SDK
+            if(hand !== null && hand !== undefined)
             {
-                //hand raycaster
-                //var origin = document.querySelector('#lh').components["leap-hand"].intersector.raycaster.ray.origin;
-                var origin = document.querySelector('#rh').components["leap-hand"].intersector.raycaster.ray.origin;
-                //posizione camera per successivo calcolo posizione relativa (figli della camera)
-                var cameraPosition = this.el.parentNode.getAttribute('position');
-                //posizione relativa per raycaster (figlio della camera)
-                var relativeOriginPosition = (origin.x - cameraPosition.x) + ' ' + (origin.y - cameraPosition.y) + ' ' + (origin.z - cameraPosition.z);
-                //percorso meshline relativo
-                var path = (origin.x - cameraPosition.x) + ' ' + (origin.y - cameraPosition.y) + ' ' + (origin.z - cameraPosition.z) + ', ' + (origin.x - cameraPosition.x) + ' ' + (origin.y - cameraPosition.y) + ' ' + ((origin.z - cameraPosition.z) - this.el.getAttribute('raycaster').far);
-
-                var p = this.el.getAttribute('position');
-                var pathChild = (origin.x - cameraPosition.x - p.x) + ' ' + (origin.y - cameraPosition.y - p.y) + ' ' + (origin.z - cameraPosition.z - p.z) + ', ' + (origin.x - cameraPosition.x - p.x) + ' ' + (origin.y - cameraPosition.y - p.y) + ' ' + ((origin.z - cameraPosition.z - p.z) - this.el.getAttribute('raycaster').far);
-
-                if(flag)
+                if(hand.pointables.length !== 0)
                 {
-                    //modifica del raycaster del componente con posizione della mano (coincide con la mesh)
-                    this.el.setAttribute('raycaster', {
-                        showLine: true,
-                        origin: relativeOriginPosition
-                    });
-                    this.el.setAttribute('line', {
-                        end: path.split(', ')[1],
-                        color: '#74BEC1'
-                    });
-                    document.querySelector('#ml').setAttribute('meshline', {
-                        lineWidth: 20,
-                        path: pathChild,
-                        color: '#74BEC1',
-                        lineWidthStyler: '1 - p'
-                    });
+                    console.log(hand.pointables[0].extended && hand.pointables[1].extended && (!hand.pointables[2].extended) && (!hand.pointables[3].extended) && hand.pointables[4].extended);
+                    if(hand.pointables[0].extended && hand.pointables[1].extended && (!hand.pointables[2].extended) && (!hand.pointables[3].extended) && hand.pointables[4].extended)
+                    {
+                        //nasconde il braccio
+                        document.querySelector('#rh').components["leap-hand"].handMesh.options.showArm = false;
+                        //mano visibile
+                        var isVisible = document.querySelector('#rh').components["leap-hand"].isVisible;
+                        if (isVisible)
+                        {
+                            this.el.setAttribute('raycaster', {
+                                //lunghezza del raggio
+                                far: 10
+                            });
+                            //hand raycaster
+                            //var origin = document.querySelector('#lh').components["leap-hand"].intersector.raycaster.ray.origin;
+                            var origin = document.querySelector('#rh').components["leap-hand"].intersector.raycaster.ray.origin;
+                            //posizione camera per successivo calcolo posizione relativa (figli della camera)
+                            var cameraPosition = this.el.parentNode.getAttribute('position');
+                            //posizione relativa per raycaster (figlio della camera)
+                            var relativeOriginPosition = (origin.x - cameraPosition.x) + ' ' + (origin.y - cameraPosition.y) + ' ' + (origin.z - cameraPosition.z);
+                            //percorso meshline relativo
+                            var path = (origin.x - cameraPosition.x) + ' ' + (origin.y - cameraPosition.y) + ' ' + (origin.z - cameraPosition.z) + ', ' + (origin.x - cameraPosition.x) + ' ' + (origin.y - cameraPosition.y) + ' ' + ((origin.z - cameraPosition.z) - this.el.getAttribute('raycaster').far);
+
+                            var p = this.el.getAttribute('position');
+                            var pathChild = (origin.x - cameraPosition.x - p.x) + ' ' + (origin.y - cameraPosition.y - p.y) + ' ' + (origin.z - cameraPosition.z - p.z) + ', ' + (origin.x - cameraPosition.x - p.x) + ' ' + (origin.y - cameraPosition.y - p.y) + ' ' + ((origin.z - cameraPosition.z - p.z) - this.el.getAttribute('raycaster').far);
+
+                            if(flag)
+                            {
+                                //modifica del raycaster del componente con posizione della mano (coincide con la mesh)
+                                this.el.setAttribute('raycaster', {
+                                    showLine: true,
+                                    origin: relativeOriginPosition
+                                });
+                                this.el.setAttribute('line', {
+                                    end: path.split(', ')[1],
+                                    color: '#74BEC1'
+                                });
+                                document.querySelector('#ml').setAttribute('meshline', {
+                                    lineWidth: 20,
+                                    path: pathChild,
+                                    color: '#74BEC1',
+                                    lineWidthStyler: '1 - p'
+                                });
+                            }
+                            else
+                            {
+                                //modifica del raycaster del componente con posizione della mano (coincide con la mesh)
+                                this.el.setAttribute('raycaster', {
+                                    showLine: true,
+                                    origin: relativeOriginPosition
+                                });
+                                this.el.setAttribute('line', {
+                                    end: path.split(', ')[1],
+                                    color: '#FFFFFF'
+                                });
+                                document.querySelector('#ml').setAttribute('meshline', {
+                                    lineWidth: 20,
+                                    path: pathChild,
+                                    color: '#FFFFFF',
+                                    lineWidthStyler: '1 - p'
+                                });
+                            }
+                        }
+                        else
+                        {
+                            this.el.setAttribute('raycaster', {
+                                showLine: false
+                            });
+
+                            document.querySelector('#ml').setAttribute('meshline', {
+                                lineWidth: 0,
+                                path: '0 0 0, 0 0 0'
+                            });
+                        }
+                    }
+                    else
+                    {
+                        this.el.setAttribute('raycaster', {
+                            showLine: false
+                        });
+
+                        document.querySelector('#ml').setAttribute('meshline', {
+                            lineWidth: 0,
+                            path: '0 0 0, 0 0 0'
+                        });
+                    }
                 }
                 else
                 {
-                    //modifica del raycaster del componente con posizione della mano (coincide con la mesh)
                     this.el.setAttribute('raycaster', {
-                        showLine: true,
-                        origin: relativeOriginPosition
+                        showLine: false
                     });
-                    this.el.setAttribute('line', {
-                        end: path.split(', ')[1],
-                        color: '#FFFFFF'
-                    });
+
                     document.querySelector('#ml').setAttribute('meshline', {
-                        lineWidth: 20,
-                        path: pathChild,
-                        color: '#FFFFFF',
-                        lineWidthStyler: '1 - p'
+                        lineWidth: 0,
+                        path: '0 0 0, 0 0 0'
                     });
                 }
             }
