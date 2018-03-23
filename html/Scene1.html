@@ -3,17 +3,20 @@
 <head>
     <title>Hello, WebVR! - A-Frame</title>
     <meta name="description" content="Hello, WebVR! - A-Frame">
-    <script src="https://aframe.io/releases/0.7.1/aframe.min.js"></script>
+    <script src="https://aframe.io/releases/0.8.0/aframe.min.js"></script>
     <script src="//unpkg.com/aframe-leap-hands/dist/aframe-leap-hands.min.js"></script>
     <script src="https://rawgit.com/andreasplesch/aframe-meshline-component/master/dist/aframe-meshline-component.min.js"></script>
     <script src="https://rawgit.com/protyze/aframe-curve-component/master/dist/aframe-curve-component.min.js"></script>
     <script src="https://rawgit.com/protyze/aframe-alongpath-component/master/dist/aframe-alongpath-component.min.js"></script>
-    <script src="../script.js"></script>
+    <script src="../js/script.js"></script>
+    <script src="../js/TransformControls.js"></script>
+
+
 </head>
 <body>
-<a-scene inspector="url: https://aframe.io/releases/0.3.0/aframe-inspector.min.js">
+<a-scene inspector>
     <a-sky color="#000000"></a-sky>
-    <a-entity camera="near: 0.01" look-controls position="0 1.5 0">
+    <a-entity id="camera" camera="near: 0.01" look-controls position="0 1.5 0">
         <!--<a-entity id="lh" leap-hand="hand: left"></a-entity>!-->
         <a-entity id="rh" leap-hand="hand: right"></a-entity>
         <a-entity componente></a-entity>
