@@ -1,9 +1,45 @@
+function selectedHand (hand, document)
+{
+    var hands = document.querySelectorAll('[leap-hand]');
+    for(var i = 0; i < hands.length; i++)
+        if(hands[i].components['leap-hand'].hand == hand)
+            return hands[i];
+}
+
+function gestureRecognizer (hand)
+{
+    //palmo verso l'alto, tre dita estese e due no (pollice, indice, mignolo estese)
+    return (hand.palmNormal[1] <= 0 && hand.pointables[0].extended && hand.pointables[1].extended && (!hand.pointables[2].extended) && (!hand.pointables[3].extended) && hand.pointables[4].extended);
+}
+
+function validHand (hand)
+{
+    return (hand !== null && hand !== undefined && hand.pointables.length !== 0);
+}
+
+function getCamera (scene, document)
+{
+    if(scene.camera)
+        return scene.camera;
+    else if(document.querySelector('a-camera'))
+        return document.querySelector('a-camera').components["camera"].camera;
+    else if(document.querySelector('[camera]'))
+        return document.querySelector('[camera]').components["camera"].camera;
+    else
+        return new THREE.PerspectiveCamera();
+}
 //true se si è verificato l'evento "intersezione"
 var flag = false;
 AFRAME.registerComponent('componente', {
         //raycaster (dipendenza dal componente a-frame)
         dependencies: ['raycaster'],
-        schema: {},
+        schema: {
+            //mano da utilizzare per il raggio
+            hand: {type: 'string', default: 'right', oneOf: ['left', 'right']},
+            //controllo da gestire per l'oggetto selezionato
+            control: {type: 'string', default: 'scale', oneOf: ['translate', 'scale', 'rotate']}
+            //TODO: attributo per definire quali oggetti siano selezionabili
+        },
 
         init: function () {
             var origin = this.el.getAttribute('raycaster').origin;
@@ -20,20 +56,19 @@ AFRAME.registerComponent('componente', {
             var curve = document.createElement('a-curve');
             curve.setAttribute('id','curve');
             document.querySelector('a-scene').appendChild(curve);
-            curve.addEventListener('loaded',function() {
+            curve.addEventListener('loaded',function(event) {
                 //#2 punti (figli)
                 var child0 = document.createElement('a-curve-point');
                 child0.setAttribute('id','punto0');
                 child0.setAttribute('position', '0 0 0');
                 curve.appendChild(child0);
-
                 /*
                 var child1 = document.createElement('a-curve-point');
                 child1.setAttribute('id','punto1');
                 //child1: posizione dell'elemento
                 child1.setAttribute('position', '0 0 0');
-                curve.appendChild(child1);*/
-
+                curve.appendChild(child1);
+                */
                 var child2 = document.createElement('a-curve-point');
                 child2.setAttribute('id','punto2');
                 //child2: "origine"
@@ -54,8 +89,9 @@ AFRAME.registerComponent('componente', {
                 //oggetto intersecato
                 var intersectedObject = event.detail.els[0];
                 //mano visibile
-                var isVisible = document.querySelector('#rh').components["leap-hand"].isVisible;
-                //se l'elemento intersecato non è una mano (e nemmeno il piano)
+                var isVisible = selectedHand(event.srcElement.components['componente'].data.hand, document).components['leap-hand'].isVisible;
+                //se l'elemento intersecato non è una mano (e nemmeno il piano) - TODO: integrazione con attributo per raggio nello schema
+                ////if (isVisible && intersectedObject.getAttribute('[selezionabile]')) {
                 if (isVisible && intersectedObject.getAttribute('leap-hand') == null && intersectedObject !== document.querySelector('a-plane')) {
                     //posizioni elemento intersecato e camera per successiva definizione del percorso
                     var endPath = intersectedObject.getAttribute('position');
@@ -72,57 +108,53 @@ AFRAME.registerComponent('componente', {
                         curve: '#curve',
                         delay: 1500
                     });
-
-                    intersectedObject.addEventListener('movingended', function() {
+                    intersectedObject.addEventListener('movingended', function(event) {
                         var scene = document.querySelector('a-scene');
-                        var sphere = document.querySelector('a-sphere').components;
                         //three js cameras
-                        var camera = document.querySelector('#camera').components["camera"].camera;
+                        var camera = getCamera(scene, document);
                         var control = new THREE.TransformControls( camera, document.querySelector('.a-canvas'));
                         //scale, rotate, translate
                         control.setSize( control.size + 1 );
-                        control.setMode('translate');
-                        //three js sphere
-                        control.attach(sphere.geometry.el.object3D);
+                        control.setMode(event.srcElement.components['componente'].data.control);
+                        //three js object
+                        control.attach(event.srcElement.components.geometry.el.object3D);
                         scene.object3D.add(control);
+                        event.srcElement.removeAttribute('alongpath');
                     });
-
-
                 }
             });
             this.el.addEventListener('raycaster-intersection-cleared', function (event) {
                 flag = false;
             });
         },
-        update: function (oldData) {
 
-        },
         tick: function () {
+            //document.querySelector('a-sphere').addEventListener('leap-holdstart', function (event) { console.log(event); });
+            this.el.emit('raycaster-intersection');
 
-            var hand = document.querySelector('#rh').components["leap-hand"].getHand();
+            var hand = selectedHand(this.data.hand, document);
+            if(hand)
+                hand = hand.components['leap-hand'].getHand();
             //informazioni LeapMotion SDK
-            if(hand !== null && hand !== undefined && hand.pointables.length !== 0)
+            if(validHand(hand))
             {
                 //posizione del palmo e riconoscimento gesto
-                if(hand.palmNormal[1] <= 0 && hand.pointables[0].extended && hand.pointables[1].extended && (!hand.pointables[2].extended) && (!hand.pointables[3].extended) && hand.pointables[4].extended)
+                if(gestureRecognizer(hand))
                 {
                     this.el.setAttribute('raycaster', {
                         //lunghezza del raggio
                         far: 10
                     });
                     //hand raycaster
-                    //var origin = document.querySelector('#lh').components["leap-hand"].intersector.raycaster.ray.origin;
-                    var origin = document.querySelector('#rh').components["leap-hand"].intersector.raycaster.ray.origin;
+                    var origin = hand.components["leap-hand"].intersector.raycaster.ray.origin;
                     //posizione camera per successivo calcolo posizione relativa (figli della camera)
                     var cameraPosition = this.el.parentNode.getAttribute('position');
                     //posizione relativa per raycaster (figlio della camera)
                     var relativeOriginPosition = (origin.x - cameraPosition.x) + ' ' + (origin.y - cameraPosition.y) + ' ' + (origin.z - cameraPosition.z);
                     //percorso meshline relativo
                     var path = (origin.x - cameraPosition.x) + ' ' + (origin.y - cameraPosition.y) + ' ' + (origin.z - cameraPosition.z) + ', ' + (origin.x - cameraPosition.x) + ' ' + (origin.y - cameraPosition.y) + ' ' + ((origin.z - cameraPosition.z) - this.el.getAttribute('raycaster').far);
-
                     var p = this.el.getAttribute('position');
                     var pathChild = (origin.x - cameraPosition.x - p.x) + ' ' + (origin.y - cameraPosition.y - p.y) + ' ' + (origin.z - cameraPosition.z - p.z) + ', ' + (origin.x - cameraPosition.x - p.x) + ' ' + (origin.y - cameraPosition.y - p.y) + ' ' + ((origin.z - cameraPosition.z - p.z) - this.el.getAttribute('raycaster').far);
-
                     //modifica del raycaster del componente con posizione della mano (coincide con la mesh)
                     this.el.setAttribute('raycaster', {
                         showLine: true,
@@ -131,7 +163,6 @@ AFRAME.registerComponent('componente', {
                     this.el.setAttribute('line', {
                         end: path.split(', ')[1]
                     });
-
                     if(flag)
                     {
                         this.el.setAttribute('line', {

@@ -16,14 +16,14 @@
 <body>
 <a-scene inspector>
     <a-sky color="#000000"></a-sky>
-    <a-entity id="camera" camera="near: 0.01" look-controls position="0 1.5 0">
-        <!--<a-entity id="lh" leap-hand="hand: left"></a-entity>!-->
-        <a-entity id="rh" leap-hand="hand: right"></a-entity>
+    <a-entity camera="near: 0.01" look-controls position="0 1.5 0">
+        <a-entity leap-hand="hand: left"></a-entity>
+        <a-entity leap-hand="hand: right"></a-entity>
         <a-entity componente></a-entity>
     </a-entity>
 
     <a-box position="-1 0.5 -6" rotation="0 45 0" color="#4CC3D9"></a-box>
-    <a-sphere position="0 1.25 -8" radius="1.25" color="#EF2D5E"></a-sphere>
+    <a-sphere holdable position="0 1.25 -8" radius="1.25" color="#EF2D5E"></a-sphere>
     <a-cylinder position="1 0.75 -6" radius="0.5" height="1.5" color="#FFC65D"></a-cylinder>
     <a-plane position="0 0 -7" rotation="-90 0 0" width="4" height="4" color="#7BC8A4"></a-plane>
 </a-scene>
