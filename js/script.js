@@ -1,20 +1,24 @@
 function selectedHand (hand, document)
 {
     var hands = document.querySelectorAll('[leap-hand]');
-    for(var i = 0; i < hands.length; i++)
-        if(hands[i].components['leap-hand'].hand == hand)
-            return hands[i];
+    if(hands)
+    {
+        for(var i = 0; i < hands.length; i++)
+            if(hands[i].components['leap-hand'] && hands[i].components['leap-hand'].attrValue.hand == hand)
+                return hands[i];
+    }
+    //return document.querySelector('[leap-hand]');
 }
 
 function gestureRecognizer (hand)
 {
     //palmo verso l'alto, tre dita estese e due no (pollice, indice, mignolo estese)
-    return (hand.palmNormal[1] <= 0 && hand.pointables[0].extended && hand.pointables[1].extended && (!hand.pointables[2].extended) && (!hand.pointables[3].extended) && hand.pointables[4].extended);
+    return (hand && hand.palmNormal[1] >= 0 && hand.pointables[0].extended && hand.pointables[1].extended && (!hand.pointables[2].extended) && (!hand.pointables[3].extended) && hand.pointables[4].extended);
 }
 
 function validHand (hand)
 {
-    return (hand !== null && hand !== undefined && hand.pointables.length !== 0);
+    return (hand && hand.pointables.length !== 0);
 }
 
 function getCamera (scene, document)
@@ -30,6 +34,7 @@ function getCamera (scene, document)
 }
 //true se si è verificato l'evento "intersezione"
 var flag = false;
+var pp = 0;
 AFRAME.registerComponent('componente', {
         //raycaster (dipendenza dal componente a-frame)
         dependencies: ['raycaster'],
@@ -47,7 +52,7 @@ AFRAME.registerComponent('componente', {
                 //evitare collisioni con la camera o con il raggio stesso
                 near: 0.05,
                 //lunghezza del raggio
-                far: 0.05
+                far: 0.05,
             });
             /*definizione di diversi event listener: le entità inserite nell'html dinamicamente hanno bisogno
               di essere caricate per poter assegnare degli attributi*/
@@ -75,11 +80,6 @@ AFRAME.registerComponent('componente', {
                 child2.setAttribute('position', '0 0 0');
                 curve.appendChild(child2);
             });
-            //creazione meshline
-            var meshLine = document.createElement('a-entity');
-            meshLine.setAttribute('id', 'ml');
-            //aggiunta meshline alla scena
-            this.el.appendChild(meshLine);
             //event listener: il raggio ha intersecato qualcosa
             /*nel momento in cui un oggetto viene intersecato dal raggio, viene creato un percorso che parte dalla posizione
             * dell'oggetto e arriva alla posizione della camera (posizione dell'utente) e l'oggetto intersecato segue questo
@@ -95,6 +95,7 @@ AFRAME.registerComponent('componente', {
                 if (isVisible && intersectedObject.getAttribute('leap-hand') == null && intersectedObject !== document.querySelector('a-plane')) {
                     //posizioni elemento intersecato e camera per successiva definizione del percorso
                     var endPath = intersectedObject.getAttribute('position');
+                    pp = endPath.z;
                     //var middle = ((endPath.x+origin.x)/2)+' '+((endPath.y+origin.y)/2)+' '+((endPath.z+origin.z)/2);
                     document.querySelector('#punto0').setAttribute('position', endPath);
                     //document.querySelector('#punto0').setAttribute('position', middle);
@@ -113,9 +114,12 @@ AFRAME.registerComponent('componente', {
                         //three js cameras
                         var camera = getCamera(scene, document);
                         var control = new THREE.TransformControls( camera, document.querySelector('.a-canvas'));
+
+                        document.querySelector('.a-canvas').setAttribute('holdable', '');
+
                         //scale, rotate, translate
                         control.setSize( control.size + 1 );
-                        control.setMode(event.srcElement.components['componente'].data.control);
+                        control.setMode(document.querySelector('[componente]').components['componente'].data.control);
                         //three js object
                         control.attach(event.srcElement.components.geometry.el.object3D);
                         scene.object3D.add(control);
@@ -130,11 +134,10 @@ AFRAME.registerComponent('componente', {
 
         tick: function () {
             //document.querySelector('a-sphere').addEventListener('leap-holdstart', function (event) { console.log(event); });
-            this.el.emit('raycaster-intersection');
-
-            var hand = selectedHand(this.data.hand, document);
-            if(hand)
-                hand = hand.components['leap-hand'].getHand();
+            var aframeHand = selectedHand(this.data.hand, document);
+            var hand;
+            if(aframeHand)
+                hand = aframeHand.components['leap-hand'].getHand();
             //informazioni LeapMotion SDK
             if(validHand(hand))
             {
@@ -143,24 +146,23 @@ AFRAME.registerComponent('componente', {
                 {
                     this.el.setAttribute('raycaster', {
                         //lunghezza del raggio
-                        far: 10
+                        far: 5
                     });
                     //hand raycaster
-                    var origin = hand.components["leap-hand"].intersector.raycaster.ray.origin;
+                    var origin = aframeHand.components["leap-hand"].intersector.raycaster.ray.origin;
                     //posizione camera per successivo calcolo posizione relativa (figli della camera)
                     var cameraPosition = this.el.parentNode.getAttribute('position');
                     //posizione relativa per raycaster (figlio della camera)
                     var relativeOriginPosition = (origin.x - cameraPosition.x) + ' ' + (origin.y - cameraPosition.y) + ' ' + (origin.z - cameraPosition.z);
                     //percorso meshline relativo
-                    var path = (origin.x - cameraPosition.x) + ' ' + (origin.y - cameraPosition.y) + ' ' + (origin.z - cameraPosition.z) + ', ' + (origin.x - cameraPosition.x) + ' ' + (origin.y - cameraPosition.y) + ' ' + ((origin.z - cameraPosition.z) - this.el.getAttribute('raycaster').far);
-                    var p = this.el.getAttribute('position');
-                    var pathChild = (origin.x - cameraPosition.x - p.x) + ' ' + (origin.y - cameraPosition.y - p.y) + ' ' + (origin.z - cameraPosition.z - p.z) + ', ' + (origin.x - cameraPosition.x - p.x) + ' ' + (origin.y - cameraPosition.y - p.y) + ' ' + ((origin.z - cameraPosition.z - p.z) - this.el.getAttribute('raycaster').far);
+                    var path = relativeOriginPosition + ', ' + (origin.x - cameraPosition.x) + ' ' + (origin.y - cameraPosition.y) + ' ' + ((origin.z - cameraPosition.z) + pp);
                     //modifica del raycaster del componente con posizione della mano (coincide con la mesh)
                     this.el.setAttribute('raycaster', {
                         showLine: true,
                         origin: relativeOriginPosition
                     });
                     this.el.setAttribute('line', {
+                        start: relativeOriginPosition,
                         end: path.split(', ')[1]
                     });
                     if(flag)
@@ -168,9 +170,9 @@ AFRAME.registerComponent('componente', {
                         this.el.setAttribute('line', {
                             color: '#74BEC1'
                         });
-                        document.querySelector('#ml').setAttribute('meshline', {
+                        this.el.setAttribute('meshline', {
                             lineWidth: 20,
-                            path: pathChild,
+                            path: path,
                             color: '#74BEC1',
                             lineWidthStyler: '1 - p'
                         });
@@ -180,9 +182,9 @@ AFRAME.registerComponent('componente', {
                         this.el.setAttribute('line', {
                             color: '#FFFFFF'
                         });
-                        document.querySelector('#ml').setAttribute('meshline', {
+                        this.el.setAttribute('meshline', {
                             lineWidth: 20,
-                            path: pathChild,
+                            path: path,
                             color: '#FFFFFF',
                             lineWidthStyler: '1 - p'
                         });
@@ -193,12 +195,14 @@ AFRAME.registerComponent('componente', {
                     this.el.setAttribute('raycaster', {
                         showLine: false
                     });
-                    document.querySelector('#ml').setAttribute('meshline', {
+                    this.el.setAttribute('meshline', {
                         lineWidth: 0,
                         path: '0 0 0, 0 0 0'
                     });
                 }
             }
+            pp = 0;
+            flag = false;
         },
 
         remove: function () {
