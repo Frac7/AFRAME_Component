@@ -7,7 +7,6 @@ function selectedHand (hand, document)
             if(hands[i].components['leap-hand'] && hands[i].components['leap-hand'].attrValue.hand == hand)
                 return hands[i];
     }
-    //return document.querySelector('[leap-hand]');
 }
 
 function gestureRecognizer (hand)
@@ -110,20 +109,29 @@ AFRAME.registerComponent('componente', {
                         delay: 1500
                     });
                     intersectedObject.addEventListener('movingended', function(event) {
-                        var scene = document.querySelector('a-scene');
-                        //three js cameras
-                        var camera = getCamera(scene, document);
-                        var control = new THREE.TransformControls( camera, document.querySelector('.a-canvas'));
-
-                        document.querySelector('.a-canvas').setAttribute('holdable', '');
-
-                        //scale, rotate, translate
-                        control.setSize( control.size + 1 );
-                        control.setMode(document.querySelector('[componente]').components['componente'].data.control);
-                        //three js object
-                        control.attach(event.srcElement.components.geometry.el.object3D);
-                        scene.object3D.add(control);
                         event.srcElement.removeAttribute('alongpath');
+                        //propagazione evento
+                        if(!document.querySelector('#transform') || document.querySelector('#transform') === null || document.querySelector('#transform') === undefined)
+                        {
+                            var scene = document.querySelector('a-scene');
+                            //three js cameras
+                            var camera = getCamera(scene, document);
+                            var control = new THREE.TransformControls( camera, document.querySelector('.a-canvas'));
+
+                            var feedback = document.createElement('a-entity');
+                            feedback.setAttribute('id','transform');
+                            feedback.setAttribute('holdable','');
+
+                            //scale, rotate, translate
+                            control.setSize( control.size + 1 );
+                            control.setMode(document.querySelector('[componente]').components['componente'].data.control);
+                            //three js object
+                            control.attach(event.srcElement.components.geometry.el.object3D);
+                            //scene.object3D.add(control);
+                            feedback.object3D.add(control);
+                            scene.appendChild(feedback);
+                            console.log(control);
+                        }
                     });
                 }
             });

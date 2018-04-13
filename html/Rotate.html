@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Hello, WebVR! - A-Frame</title>
+    <meta name="description" content="Hello, WebVR! - A-Frame">
+    <script src="https://aframe.io/releases/0.6.0/aframe.min.js"></script>
+    <script src="//unpkg.com/aframe-leap-hands/dist/aframe-leap-hands.min.js"></script>
+    <script src="../js/TransformControls.js"></script>
+    <script>
+        //tipPosition[0] : asse x
+        var i = 0; //inizio
+        var f = 0; //fine
+        var d = 0; //distanza
+
+        var flag = false; //evento start emesso
+        var target = null; //oggetto da trasformare
+        var hand = null; //mano che innesca l'evento
+
+        var prec = 0; //valore iniziale per somma posizione
+        var setted = false; //ho settato la variabile per la posizione iniziale?
+
+        var asse = null; //asse scelto per la modifica
+        var oldColor = null;
+
+        var el; //variabile d'appoggio
+
+        var i = -1; //indice asse
+
+        /* si calcola la posizione iniziale in leap-holdstart in base all'asse scelto (quindi il cubo) e in leap-holdstop
+        * si calcola la posizione finale. infine si esegue il valore assoluto della differenza per decidere il valore di
+        * scalatura (magari moltiplicato per un certo fattore), per la traslazione si sposta l'oggetto nell'asse di riferimento
+        * (senza moltiplicare nulla), la rotazione è ancora da gestire*/
+
+        //per calcolare un valore positivo o negativo si può utilizzare anche il vettore direzione
+
+        /* all dovrebbe essere renderizzato sopra l'oggetto a cui si riferisce il transform */
+
+        /* vedere: getBoundingClientRect method */
+        AFRAME.registerComponent('holdable', {
+
+            init: function () {
+                this.el.addEventListener('leap-holdstart', this.onHoldStart.bind(this));
+                this.el.addEventListener('leap-holdstop', this.onHoldStop.bind(this));
+                el = this.el;
+            },
+
+            tick: function() {
+                var handTick = null;
+                //settare un flag per hold start e uno per holdstop
+                //in base a questo flag trasformare l'oggetto targettato (da salvare in una variabile)
+                if(flag)
+                {
+                    if(asse === 'x')
+                        i = 0;
+                    else if(asse === 'y')
+                        i = 1;
+                    else if(asse === 'z')
+                        i = 2;
+                    else if(asse === 'all')
+                        i = 3;
+
+                    i = 2; //per ora funziona solo col box blu
+
+                    if(!setted && i === 0)
+                    {
+                        prec = target.getAttribute('rotation').x;
+                        setted = true;
+                    }
+                    else if(!setted && i === 1)
+                    {
+                        prec = target.getAttribute('rotation').y;
+                        setted = true;
+                    }
+                    else if(!setted && i === 2)
+                    {
+                        prec = target.getAttribute('rotation').z;
+                        setted = true;
+                    }
+                    else if(!setted && i === 3)
+                    {
+                        prec = target.getAttribute('rotation');
+                        setted = true;
+                    }
+
+                    if(hand.type === 'right' && document.querySelector('#r').components['leap-hand'].getHand() !== null && document.querySelector('#r').components['leap-hand'].getHand() !== undefined && document.querySelector('#r').components['leap-hand'].getHand())
+                        handTick = document.querySelector('#r').components['leap-hand'].getHand().pointables[0].tipPosition;
+                    else if(hand.type === 'left' && document.querySelector('#l').components['leap-hand'].getHand() !== null && document.querySelector('#l').components['leap-hand'].getHand() !== undefined && document.querySelector('#l').components['leap-hand'].getHand())
+                        handTick = document.querySelector('#l').components['leap-hand'].getHand().pointables[0].tipPosition;
+
+
+                    var oldScale = target.getAttribute('rotation');
+                    if(i === 0)
+                    {
+                        if(handTick !== null)
+                            target.setAttribute('rotation', ((prec + handTick.y) * 225) + ' ' + oldScale.y + ' ' + oldScale.z);
+                        else
+                            el.emit('leap-holdstop');
+                    }
+                    else if(i === 1)
+                    {
+                        if(handTick !== null)
+                            target.setAttribute('rotation', oldScale.x + ' ' + ((prec + handTick.z) * 225) + ' ' + oldScale.z);
+                        else
+                            el.emit('leap-holdstop');
+                    }
+                    else if(i === 2)
+                    {
+                        if(handTick !== null)
+                            target.setAttribute('rotation', oldScale.x + ' ' +  oldScale.y + ' ' + ((prec + ((handTick[0] + handTick[1] + handTick [2])/3)) * 225));
+                        else
+                            el.emit('leap-holdstop');
+                    }
+                    else if(i === 3)
+                    {
+                        if(handTick !== null)
+                            target.setAttribute('rotation', ((prec.x + handTick[0]) * 225) + ' ' + ((prec.y + handTick[1]) * 225) + ' ' + ((prec.z + handTick[2]) * 225));
+                        else
+                            el.emit('leap-holdstop');
+                    }
+                }
+                else
+                {
+                    prec = 0;
+                    i = -1;
+                    setted = false;
+                    hand = target = null;
+                }
+            },
+
+            onHoldStart: function (e) {
+                asse = e.srcElement.id;
+                if(e.detail.hand !== null && e.detail !== undefined && e.detail.hand)
+                {
+                    console.log('leap-holdstart');
+                    console.log(e);
+                    hand = e.detail.hand;
+                    i = e.detail.hand.pointables[0].tipPosition[0];
+                    target = document.querySelector('a-box'); //per ora funziona solo sulla sfera
+                    flag = true;
+                    oldColor = document.querySelector('#' + asse).getAttribute('color');
+                    document.querySelector('#' + asse).setAttribute('color', '#ffff00');
+                }
+            },
+
+            onHoldStop: function (e) {
+                if(e.detail.hand !== null && e.detail !== undefined && e.detail.hand)
+                {
+                    f = e.detail.hand.pointables[0].tipPosition[0];
+                    d = f - i;
+                    console.log(d);
+                }
+                console.log('leap-holdstop');
+                console.log(e);
+                flag = false;
+                setted = false;
+                document.querySelector('#' + asse).setAttribute('color', oldColor);
+            }
+        });
+    </script>
+</head>
+    <body>
+        <a-scene inspector  leap="vr: false">
+            <a-sky color="#000000"></a-sky>
+            <a-entity id="camera" camera="near: 0.01" look-controls position="0 1.5 0"></a-entity>
+            <a-entity id="l" leap-hand="hand: left" position="0 1.25 -0.5"></a-entity>
+            <a-entity id="r" leap-hand="hand: right" position="0 1.25 -0.5"></a-entity>
+
+            <!-- i cubi devono seguire la posizione del transform control !-->
+           <a-entity id="transform" position="0 1.5 -1.5">
+                <a-torus id="x" position="0 0 0" color="#ff0000" scale="0.2 0.2 0.2" holdable rotation="0 90 0" geometry="radius: 5; radiusTubular: 0.05; segmentsRadial: 100; segmentsTubular: 100"></a-torus>
+                <a-torus id="y" position="0 0 0" color="#00ff00" scale="0.2 0.2 0.2" holdable rotation="90 0 0" geometry="radius: 5; radiusTubular: 0.05; segmentsRadial: 100; segmentsTubular: 100"></a-torus>
+                <a-torus id="z" position="0 0 0" color="#0000ff" scale="0.2 0.2 0.2" holdable rotation="0 0 0" geometry="radius: 5; radiusTubular: 0.05; segmentsRadial: 100; segmentsTubular: 100"></a-torus>
+                <a-torus id="all" position="0 0 0" color="#ffffff" scale="0.2 0.2 0.2" holdable material="opacity: 0.5" rotation="0 0 0" geometry="radius: 6; radiusTubular: 0.05; segmentsRadial: 100; segmentsTubular: 100"></a-torus>
+            </a-entity>
+
+            <a-box position="0 1.5 -1.5" color="#4CC3D9"></a-box>
+            <a-plane position="0 0 -4" rotation="-90 0 0" width="4" height="4" color="#7BC8A4"></a-plane>
+        </a-scene>
+        <script>
+            var scene = document.querySelector('a-scene');
+            if (scene.hasLoaded) {
+                run();
+            } else {
+                scene.addEventListener('loaded', run);
+            }
+            function run () {
+                /*var scene = document.querySelector('a-scene');
+                var camera = document.querySelector('#camera').components["camera"].camera;
+                var control = new THREE.TransformControls( camera, document.querySelector('.a-canvas'));
+                control.setMode('scale');
+                control.setSize(control.size + 1);
+                control.attach(document.querySelector('a-sphere').object3D);
+                scene.object3D.add(control);*/
+            }
+        </script>
+    </body>
+</html>
+
