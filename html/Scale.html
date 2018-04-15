@@ -8,7 +8,7 @@
     <script src="../js/TransformControls.js"></script>
     <script>
         //tipPosition[0] : asse x
-        var i = 0; //inizio
+        var firstHandPosition = 0; //firstHandPosition
         var f = 0; //fine
         var d = 0; //distanza
 
@@ -16,10 +16,10 @@
         var target = null; //oggetto da trasformare
         var hand = null; //mano che innesca l'evento
 
-        var prec = 0; //valore iniziale per somma posizione
+        var targetOriginalPosition = 0; //valore iniziale per somma posizione
         var setted = false; //ho settato la variabile per la posizione iniziale?
 
-        var asse = null; //asse scelto per la modifica
+        var axis = null; //asse scelto per la modifica
 
         var el; //variabile d'appoggio
 
@@ -49,35 +49,35 @@
                 //in base a questo flag trasformare l'oggetto targettato (da salvare in una variabile)
                 if(flag)
                 {
-                    if(asse === 'x')
+                    if(axis === 'x')
                         i = 0;
-                    else if(asse === 'y')
+                    else if(axis === 'y')
                         i = 1;
-                    else if(asse === 'z')
+                    else if(axis === 'z')
                         i = 2;
-                    else if(asse === 'all')
+                    else if(axis === 'all')
                         i = 3;
 
                     i = 0; //per ora funziona solo col box blu
 
                     if(!setted && i === 0)
                     {
-                        prec = target.getAttribute('scale').x;
+                        targetOriginalPosition = target.getAttribute('scale').x;
                         setted = true;
                     }
                     else if(!setted && i === 1)
                     {
-                        prec = target.getAttribute('scale').y;
+                        targetOriginalPosition = target.getAttribute('scale').y;
                         setted = true;
                     }
                     else if(!setted && i === 2)
                     {
-                        prec = target.getAttribute('scale').z;
+                        targetOriginalPosition = target.getAttribute('scale').z;
                         setted = true;
                     }
                     else if(!setted && i === 3)
                     {
-                        prec = target.getAttribute('scale');
+                        targetOriginalPosition = target.getAttribute('scale');
                         setted = true;
                     }
 
@@ -101,35 +101,35 @@
                     if(i === 0)
                     {
                         if(handTick !== null)
-                            target.setAttribute('scale', (prec + handTick) + ' ' + oldScale.y + ' ' + oldScale.z);
+                            target.setAttribute('scale', (targetOriginalPosition + (handTick - firstHandPosition[i])) + ' ' + oldScale.y + ' ' + oldScale.z);
                         else
                             el.emit('leap-holdstop');
                     }
                     else if(i === 1)
                     {
                         if(handTick !== null)
-                            target.setAttribute('scale', oldScale.x + ' ' + (prec + handTick) + ' ' + oldScale.z);
+                            target.setAttribute('scale', oldScale.x + ' ' + (targetOriginalPosition + (handTick - firstHandPosition[i])) + ' ' + oldScale.z);
                         else
                             el.emit('leap-holdstop');
                     }
                     else if(i === 2)
                     {
                         if(handTick !== null)
-                            target.setAttribute('scale', oldScale.x + ' ' +  oldScale.y + ' ' + (prec + handTick));
+                            target.setAttribute('scale', oldScale.x + ' ' +  oldScale.y + ' ' + (targetOriginalPosition + (handTick - firstHandPosition[i])));
                         else
                             el.emit('leap-holdstop');
                     }
                     else if(i === 3)
                     {
                         if(handTick !== null)
-                            target.setAttribute('scale', (prec.x + handTick[0]) + ' ' + (prec.y + handTick[1]) + ' ' + (prec.z + handTick[2]));
+                            target.setAttribute('scale', (targetOriginalPosition.x + (handTick[0] - firstHandPosition[0])) + ' ' + (targetOriginalPosition.y + (handTick[1] - firstHandPosition[1])) + ' ' + (targetOriginalPosition.z + (handTick[2] - firstHandPosition[2])));
                         else
                             el.emit('leap-holdstop');
                     }
                 }
                 else
                 {
-                    prec = 0;
+                    targetOriginalPosition = 0;
                     i = -1;
                     setted = false;
                     hand = target = null;
@@ -137,32 +137,30 @@
             },
 
             onHoldStart: function (e) {
-                asse = e.srcElement.id;
+                axis = e.srcElement.id;
                 if(e.detail.hand !== null && e.detail !== undefined && e.detail.hand)
                 {
                     console.log('leap-holdstart');
                     console.log(e);
                     hand = e.detail.hand;
-                    i = e.detail.hand.pointables[0].tipPosition[0];
+                    firstHandPosition = e.detail.hand.pointables[0].tipPosition;
                     target = document.querySelector('a-sphere'); //per ora funziona solo sulla sfera
                     flag = true;
-                    oldColor = document.querySelector('#' + asse).getAttribute('color');
-                    document.querySelector('#' + asse).setAttribute('color', '#ffff00');
+                    oldColor = document.querySelector('#' + axis).getAttribute('color');
+                    document.querySelector('#' + axis).setAttribute('color', '#ffff00');
                 }
             },
 
             onHoldStop: function (e) {
                 if(e.detail.hand !== null && e.detail !== undefined && e.detail.hand)
                 {
-                    f = e.detail.hand.pointables[0].tipPosition[0];
-                    d = f - i;
-                    console.log(d);
+                    //...
                 }
                 console.log('leap-holdstop');
                 console.log(e);
                 flag = false;
                 setted = false;
-                document.querySelector('#' + asse).setAttribute('color', oldColor);
+                document.querySelector('#' + axis).setAttribute('color', oldColor);
             }
         });
     </script>
