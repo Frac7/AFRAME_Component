@@ -7,159 +7,123 @@
     <script src="//unpkg.com/aframe-leap-hands/dist/aframe-leap-hands.min.js"></script>
     <script src="../js/TransformControls.js"></script>
     <script>
-        //tipPosition[0] : asse x
-        var firstHandPosition = 0; //firstHandPosition
-        var f = 0; //fine
-        var d = 0; //distanza
 
-        var flag = false; //evento start emesso
+        var selectHand = function (i)
+        {
+            switch (i)
+            {
+                case 3:
+                    //selezione della posizione del pollice sui tre assi
+                    if(hand.type === 'right' && document.querySelector('#r').components['leap-hand'].getHand() !== null && document.querySelector('#r').components['leap-hand'].getHand() !== undefined && document.querySelector('#r').components['leap-hand'].getHand())
+                        handTick = document.querySelector('#r').components['leap-hand'].getHand().pointables[0].tipPosition;
+                    else if(hand.type === 'left' && document.querySelector('#l').components['leap-hand'].getHand() !== null && document.querySelector('#l').components['leap-hand'].getHand() !== undefined && document.querySelector('#l').components['leap-hand'].getHand())
+                        handTick = document.querySelector('#l').components['leap-hand'].getHand().pointables[0].tipPosition;
+                    break;
+                default:
+                    //selezione della posizione del pollice sui tre assi
+                    if(hand.type === 'right' && document.querySelector('#r').components['leap-hand'].getHand() !== null && document.querySelector('#r').components['leap-hand'].getHand() !== undefined && document.querySelector('#r').components['leap-hand'].getHand())
+                        handTick = document.querySelector('#r').components['leap-hand'].getHand().pointables[0].tipPosition[i];
+                    else if(hand.type === 'left' && document.querySelector('#l').components['leap-hand'].getHand() !== null && document.querySelector('#l').components['leap-hand'].getHand() !== undefined && document.querySelector('#l').components['leap-hand'].getHand())
+                        handTick = document.querySelector('#l').components['leap-hand'].getHand().pointables[0].tipPosition[i];
+            }
+            return handTick;
+        };
+
+        var firstHandPosition = null; //posizione della mano nel momento in cui viene chiamato l'evento leap-holdstart
+        var flag = false; //indica se l'evento sia stato emesso o meno
         var target = null; //oggetto da trasformare
         var hand = null; //mano che innesca l'evento
-
-        var targetOriginalPosition = 0; //valore iniziale per somma posizione
-        var setted = false; //ho settato la variabile per la posizione iniziale?
-
+        var targetOriginalScale = null; //valore iniziale del target per somma posizione
         var axis = null; //asse scelto per la modifica
-
-        var el; //variabile d'appoggio
-
-        var i = -1; //indice asse
-
-        /* si calcola la posizione iniziale in leap-holdstart in base all'asse scelto (quindi il cubo) e in leap-holdstop
-        * si calcola la posizione finale. infine si esegue il valore assoluto della differenza per decidere il valore di
-        * scalatura (magari moltiplicato per un certo fattore), per la traslazione si sposta l'oggetto nell'asse di riferimento
-        * (senza moltiplicare nulla), la rotazione è ancora da gestire*/
-
-        //per calcolare un valore positivo o negativo si può utilizzare anche il vettore direzione
-
-        /* all dovrebbe essere renderizzato sopra l'oggetto a cui si riferisce il transform */
+        var el = null; //variabile d'appoggio
+        var i = null; //indice asse
 
         /* vedere: getBoundingClientRect method */
         AFRAME.registerComponent('holdable', {
 
-            init: function () {
+            init: function ()
+            {
                 this.el.addEventListener('leap-holdstart', this.onHoldStart.bind(this));
                 this.el.addEventListener('leap-holdstop', this.onHoldStop.bind(this));
                 el = this.el;
             },
 
-            tick: function() {
-                var handTick = null;
-                //settare un flag per hold start e uno per holdstop
-                //in base a questo flag trasformare l'oggetto targettato (da salvare in una variabile)
+            tick: function()
+            {
+                var handTick = null; //posizione del pollice nel tick corrente
                 if(flag)
                 {
-                    if(axis === 'x')
+                    //controllo sull'asse selezionato: tutti, x, y, z
+                    if(axis === 'all')
+                        i = 3;
+                    else if(axis === 'x')
                         i = 0;
                     else if(axis === 'y')
                         i = 1;
                     else if(axis === 'z')
                         i = 2;
-                    else if(axis === 'all')
-                        i = 3;
 
-                    i = 0; //per ora funziona solo col box blu
+                    //i = 0; //funzione manuale
 
-                    if(!setted && i === 0)
-                    {
-                        targetOriginalPosition = target.getAttribute('scale').x;
-                        setted = true;
-                    }
-                    else if(!setted && i === 1)
-                    {
-                        targetOriginalPosition = target.getAttribute('scale').y;
-                        setted = true;
-                    }
-                    else if(!setted && i === 2)
-                    {
-                        targetOriginalPosition = target.getAttribute('scale').z;
-                        setted = true;
-                    }
-                    else if(!setted && i === 3)
-                    {
-                        targetOriginalPosition = target.getAttribute('scale');
-                        setted = true;
-                    }
+                    if(i !== null) {
+                        //selezione posizione mano in base all'asse
+                       handTick = selectHand(i);
 
-                    if(i !== 3)
-                    {
-                        if(hand.type === 'right' && document.querySelector('#r').components['leap-hand'].getHand() !== null && document.querySelector('#r').components['leap-hand'].getHand() !== undefined && document.querySelector('#r').components['leap-hand'].getHand())
-                            handTick = document.querySelector('#r').components['leap-hand'].getHand().pointables[0].tipPosition[i];
-                        else if(hand.type === 'left' && document.querySelector('#l').components['leap-hand'].getHand() !== null && document.querySelector('#l').components['leap-hand'].getHand() !== undefined && document.querySelector('#l').components['leap-hand'].getHand())
-                            handTick = document.querySelector('#l').components['leap-hand'].getHand().pointables[0].tipPosition[i];
-                    }
-                    else if(i === 3)
-                    {
-                        if(hand.type === 'right' && document.querySelector('#r').components['leap-hand'].getHand() !== null && document.querySelector('#r').components['leap-hand'].getHand() !== undefined && document.querySelector('#r').components['leap-hand'].getHand())
-                            handTick = document.querySelector('#r').components['leap-hand'].getHand().pointables[0].tipPosition;
-                        else if(hand.type === 'left' && document.querySelector('#l').components['leap-hand'].getHand() !== null && document.querySelector('#l').components['leap-hand'].getHand() !== undefined && document.querySelector('#l').components['leap-hand'].getHand())
-                            handTick = document.querySelector('#l').components['leap-hand'].getHand().pointables[0].tipPosition;
-                    }
-
-
-                    var oldScale = target.getAttribute('scale');
-                    if(i === 0)
-                    {
                         if(handTick !== null)
-                            target.setAttribute('scale', (targetOriginalPosition + (handTick - firstHandPosition[i])) + ' ' + oldScale.y + ' ' + oldScale.z);
+                        {
+                            //modifica della scalatura in base all'asse scelto (differenza tra posizione pollice in holdstart e ad ogni tick)
+                            switch (i)
+                            {
+                                case 0:
+                                    target.setAttribute('scale', (targetOriginalScale.x + (handTick - firstHandPosition[i])) + ' ' + targetOriginalScale.y + ' ' + targetOriginalScale.z);
+                                    break;
+                                case 1:
+                                    target.setAttribute('scale', targetOriginalScale.x + ' ' + (targetOriginalScale.y + (handTick - firstHandPosition[i])) + ' ' + targetOriginalScale.z);
+                                    break;
+                                case 2:
+                                    target.setAttribute('scale', targetOriginalScale.x + ' ' +  targetOriginalScale.y + ' ' + (targetOriginalScale.z + (handTick - firstHandPosition[i])));
+                                    break;
+                                case 3:
+                                    target.setAttribute('scale', (targetOriginalScale.x + (handTick[0] - firstHandPosition[0])) + ' ' + (targetOriginalScale.y + (handTick[1] - firstHandPosition[1])) + ' ' + (targetOriginalScale.z + (handTick[2] - firstHandPosition[2])));
+                                    break;
+                            }
+                        }
                         else
-                            el.emit('leap-holdstop');
-                    }
-                    else if(i === 1)
-                    {
-                        if(handTick !== null)
-                            target.setAttribute('scale', oldScale.x + ' ' + (targetOriginalPosition + (handTick - firstHandPosition[i])) + ' ' + oldScale.z);
-                        else
-                            el.emit('leap-holdstop');
-                    }
-                    else if(i === 2)
-                    {
-                        if(handTick !== null)
-                            target.setAttribute('scale', oldScale.x + ' ' +  oldScale.y + ' ' + (targetOriginalPosition + (handTick - firstHandPosition[i])));
-                        else
-                            el.emit('leap-holdstop');
-                    }
-                    else if(i === 3)
-                    {
-                        if(handTick !== null)
-                            target.setAttribute('scale', (targetOriginalPosition.x + (handTick[0] - firstHandPosition[0])) + ' ' + (targetOriginalPosition.y + (handTick[1] - firstHandPosition[1])) + ' ' + (targetOriginalPosition.z + (handTick[2] - firstHandPosition[2])));
-                        else
+                            //emette l'evento stop perché la mano non è più visibile
                             el.emit('leap-holdstop');
                     }
                 }
                 else
-                {
-                    targetOriginalPosition = 0;
-                    i = -1;
-                    setted = false;
-                    hand = target = null;
-                }
+                    targetOriginalScale = i = hand = target = null;
             },
 
-            onHoldStart: function (e) {
+            onHoldStart: function (e)
+            {
                 axis = e.srcElement.id;
                 if(e.detail.hand !== null && e.detail !== undefined && e.detail.hand)
                 {
                     console.log('leap-holdstart');
                     console.log(e);
+                    //assegnamento mano che innescato l'evento
                     hand = e.detail.hand;
                     firstHandPosition = e.detail.hand.pointables[0].tipPosition;
                     target = document.querySelector('a-sphere'); //per ora funziona solo sulla sfera
                     flag = true;
+                    //salvataggio colore precedente
                     oldColor = document.querySelector('#' + axis).getAttribute('color');
                     document.querySelector('#' + axis).setAttribute('color', '#ffff00');
+                    //salvataggio posizione precedente
+                    targetOriginalScale = target.getAttribute('scale');
                 }
             },
 
-            onHoldStop: function (e) {
-                if(e.detail.hand !== null && e.detail !== undefined && e.detail.hand)
-                {
-                    //...
-                }
+            onHoldStop: function (e)
+            {
                 console.log('leap-holdstop');
                 console.log(e);
+                //l'evento emesso è stato "stoppato"
                 flag = false;
-                setted = false;
+                //assegnamento colore precedente
                 document.querySelector('#' + axis).setAttribute('color', oldColor);
             }
         });
@@ -172,7 +136,6 @@
             <a-entity id="l" leap-hand="hand: left" position="0 1.25 -0.5"></a-entity>
             <a-entity id="r" leap-hand="hand: right" position="0 1.25 -0.5"></a-entity>
 
-            <!-- i cubi devono seguire la posizione del transform control !-->
            <a-entity id="transform" position="0 1.25 -2">
                 <a-box id="x" position="1.5 0 0" color="#ff0000" scale="0.2 0.2 0.2" holdable></a-box>
                 <a-box id="y" position="0 1.5 0" color="#00ff00" scale="0.2 0.2 0.2" holdable></a-box>
@@ -183,23 +146,5 @@
             <a-sphere position="0 1.25 -2" radius="1.25" color="#EF2D5E"></a-sphere>
             <a-plane position="0 0 -4" rotation="-90 0 0" width="4" height="4" color="#7BC8A4"></a-plane>
         </a-scene>
-        <script>
-            var scene = document.querySelector('a-scene');
-            if (scene.hasLoaded) {
-                run();
-            } else {
-                scene.addEventListener('loaded', run);
-            }
-            function run () {
-                /*var scene = document.querySelector('a-scene');
-                var camera = document.querySelector('#camera').components["camera"].camera;
-                var control = new THREE.TransformControls( camera, document.querySelector('.a-canvas'));
-                control.setMode('scale');
-                control.setSize(control.size + 1);
-                control.attach(document.querySelector('a-sphere').object3D);
-                scene.object3D.add(control);*/
-            }
-        </script>
     </body>
 </html>
-

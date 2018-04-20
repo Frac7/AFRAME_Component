@@ -33,7 +33,7 @@
         var flag = false; //indica se l'evento sia stato emesso o meno
         var target = null; //oggetto da trasformare
         var hand = null; //mano che innesca l'evento
-        var targetOriginalRotation = null; //valore iniziale del target per somma posizione
+        var targetOriginalScale = null; //valore iniziale del target per somma posizione
         var axis = null; //asse scelto per la modifica
         var el = null; //variabile d'appoggio
         var i = null; //indice asse
@@ -63,7 +63,7 @@
                     else if(axis === 'z')
                         i = 2;
 
-                    i = 0; //funzione manuale
+                    //i = 0; //funzione manuale
 
                     if(i !== null) {
                         //selezione posizione mano in base all'asse
@@ -75,16 +75,16 @@
                             switch (i)
                             {
                                 case 0:
-                                    target.setAttribute('rotation', (targetOriginalRotation.x + ((handTick - firstHandPosition[1]) * 1)) + ' ' + targetOriginalRotation.y + ' ' + targetOriginalRotation.z);
+                                    target.setAttribute('scale', (targetOriginalScale.x + (handTick - firstHandPosition[i])) + ' ' + targetOriginalScale.y + ' ' + targetOriginalScale.z);
                                     break;
                                 case 1:
-                                    target.setAttribute('rotation', targetOriginalRotation.x + ' ' + (targetOriginalRotation.y + ((handTick - firstHandPosition[0]) * 1)) + ' ' + targetOriginalRotation.z);
+                                    target.setAttribute('scale', targetOriginalScale.x + ' ' + (targetOriginalScale.y + (handTick - firstHandPosition[i])) + ' ' + targetOriginalScale.z);
                                     break;
                                 case 2:
-                                    target.setAttribute('rotation', targetOriginalRotation.x + ' ' +  targetOriginalRotation.y + ' ' + (targetOriginalRotation + ((handTick[0] - firstHandPosition[0] + handTick[1] - firstHandPosition[1]) * 1)));
+                                    target.setAttribute('scale', targetOriginalScale.x + ' ' +  targetOriginalScale.y + ' ' + (targetOriginalScale.z + (handTick - firstHandPosition[i])));
                                     break;
                                 case 3:
-                                    target.setAttribute('rotation', (targetOriginalRotation.x + ((handTick - firstHandPosition[1]) * 1)) + ' ' + (targetOriginalRotation.y + ((handTick - firstHandPosition[0]) * 1)) + ' ' + (targetOriginalRotation + ((handTick[0] - firstHandPosition[0] + handTick[1] - firstHandPosition[1]) * 1)));
+                                    target.setAttribute('scale', (targetOriginalScale.x + (handTick[0] - firstHandPosition[0])) + ' ' + (targetOriginalScale.y + (handTick[1] - firstHandPosition[1])) + ' ' + (targetOriginalScale.z + (handTick[2] - firstHandPosition[2])));
                                     break;
                             }
                         }
@@ -94,7 +94,7 @@
                     }
                 }
                 else
-                    targetOriginalRotation = i = hand = target = null;
+                    targetOriginalScale = i = hand = target = null;
             },
 
             onHoldStart: function (e)
@@ -107,13 +107,13 @@
                     //assegnamento mano che innescato l'evento
                     hand = e.detail.hand;
                     firstHandPosition = e.detail.hand.pointables[0].tipPosition;
-                    target = document.querySelector('a-box'); //per ora funziona solo sulla sfera
+                    target = document.querySelector('a-sphere'); //per ora funziona solo sulla sfera
                     flag = true;
                     //salvataggio colore precedente
                     oldColor = document.querySelector('#' + axis).getAttribute('color');
                     document.querySelector('#' + axis).setAttribute('color', '#ffff00');
                     //salvataggio posizione precedente
-                    targetOriginalRotation = target.getAttribute('rotation');
+                    targetOriginalScale = target.getAttribute('scale');
                 }
             },
 
@@ -130,20 +130,23 @@
     </script>
 </head>
 <body>
-<a-scene inspector  leap="vr: false">
+<a-scene inspector leap="vr: false">
     <a-sky color="#000000"></a-sky>
     <a-entity id="camera" camera="near: 0.01" look-controls position="0 1.5 0"></a-entity>
-    <a-entity id="l" leap-hand="hand: left" position="0 1.25 -0.5"></a-entity>
-    <a-entity id="r" leap-hand="hand: right" position="0 1.25 -0.5"></a-entity>
+    <a-entity id="l" leap-hand="hand: left; holdDistance: 0.5" position="0 1.25 -0.5"></a-entity>
+    <a-entity id="r" leap-hand="hand: right; holdDistance: 0.5" position="0 1.25 -0.5"></a-entity>
 
-    <a-entity id="transform" position="0 1.5 -1.5">
-        <a-torus id="x" position="0 0 0" color="#ff0000" scale="0.2 0.2 0.2" holdable rotation="0 90 0" geometry="radius: 5; radiusTubular: 0.05; segmentsRadial: 100; segmentsTubular: 100"></a-torus>
-        <a-torus id="y" position="0 0 0" color="#00ff00" scale="0.2 0.2 0.2" holdable rotation="90 0 0" geometry="radius: 5; radiusTubular: 0.05; segmentsRadial: 100; segmentsTubular: 100"></a-torus>
-        <a-torus id="z" position="0 0 0" color="#0000ff" scale="0.2 0.2 0.2" holdable rotation="0 0 0" geometry="radius: 5; radiusTubular: 0.05; segmentsRadial: 100; segmentsTubular: 100"></a-torus>
-        <a-torus id="all" position="0 0 0" color="#ffffff" scale="0.2 0.2 0.2" holdable material="opacity: 0.5" rotation="0 0 0" geometry="radius: 6; radiusTubular: 0.05; segmentsRadial: 100; segmentsTubular: 100"></a-torus>
+    <a-entity id="transform" position="0 1.5 -0.5">
+        <a-box id="x" position="0.1 -0.145 0" color="#ff0000" scale="0.03 0.03 0.03" holdable rotation="0 45 0"></a-box>
+        <a-entity line="start: 0.1, -0.145, 0; end: 0 -0.125 0; color: red"></a-entity>
+        <a-box id="y" position="0 -0.05 0" color="#00ff00" scale="0.03 0.03 0.03" holdable rotation="0 45 0"></a-box>
+        <a-entity line="start: 0, -0.05, 0; end: 0 -0.125 0; color: green"></a-entity>
+        <a-box id="z" position="-0.1 -0.145 0" color="#0000ff"scale="0.03 0.03 0.03" holdable rotation="0 45 0"></a-box>
+        <a-entity line="start: -0.1, -0.145, 0; end: 0 -0.125 0; color: blue"></a-entity>
+        <a-box id="all" position="0 -0.125 0" color="#ffffff" scale="0.03 0.03 0.03" holdable material="opacity: 0.5"></a-box>
     </a-entity>
 
-    <a-box position="0 1.5 -1.5" color="#4CC3D9"></a-box>
+    <a-sphere position="0 1.25 -3" radius="1.25" color="#EF2D5E"></a-sphere>
     <a-plane position="0 0 -4" rotation="-90 0 0" width="4" height="4" color="#7BC8A4"></a-plane>
 </a-scene>
 </body>

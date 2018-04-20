@@ -63,34 +63,59 @@
                     else if(axis === 'z')
                         i = 2;
 
-                    i = 0; //funzione manuale
+                    //i = 0; //funzione manuale
 
                     if(i !== null) {
                         //selezione posizione mano in base all'asse
-                        handTick = selectHand(i);
+                        //handTick = selectHand(i);
 
-                        if(handTick !== null)
+                        //if(handTick !== null)
                         {
                             //modifica della scalatura in base all'asse scelto (differenza tra posizione pollice in holdstart e ad ogni tick)
                             switch (i)
                             {
                                 case 0:
-                                    target.setAttribute('rotation', (targetOriginalRotation.x + ((handTick - firstHandPosition[1]) * 1)) + ' ' + targetOriginalRotation.y + ' ' + targetOriginalRotation.z);
+                                    if(selectHand(1) !== null) {
+                                        handTick = selectHand(1);
+                                        target.setAttribute('rotation', (targetOriginalRotation.x + ((handTick - firstHandPosition[1]) * 360)) + ' ' + targetOriginalRotation.y + ' ' + targetOriginalRotation.z);
+                                        console.log((targetOriginalRotation.x + ((handTick - firstHandPosition[1]) * 360)) + ' ' + targetOriginalRotation.y + ' ' + targetOriginalRotation.z);
+                                    } else
+                                    //emette l'evento stop perché la mano non è più visibile
+                                        el.emit('leap-holdstop');
                                     break;
                                 case 1:
-                                    target.setAttribute('rotation', targetOriginalRotation.x + ' ' + (targetOriginalRotation.y + ((handTick - firstHandPosition[0]) * 1)) + ' ' + targetOriginalRotation.z);
+                                    if(selectHand(0) !== null) {
+                                        handTick = selectHand(0);
+                                        target.setAttribute('rotation', targetOriginalRotation.x + ' ' + (targetOriginalRotation.y + ((handTick - firstHandPosition[0]) * 360)) + ' ' + targetOriginalRotation.z);
+                                        console.log(targetOriginalRotation.x + ' ' + (targetOriginalRotation.y + ((handTick - firstHandPosition[0]) * 360)) + ' ' + targetOriginalRotation.z);
+                                    } else
+                                    //emette l'evento stop perché la mano non è più visibile
+                                        el.emit('leap-holdstop');
                                     break;
                                 case 2:
-                                    target.setAttribute('rotation', targetOriginalRotation.x + ' ' +  targetOriginalRotation.y + ' ' + (targetOriginalRotation + ((handTick[0] - firstHandPosition[0] + handTick[1] - firstHandPosition[1]) * 1)));
+                                    if(selectHand(1) !== null && selectHand(0) !== null) {
+                                        handTick0 = selectHand(0);
+                                        handTick1 = selectHand(1);
+                                        target.setAttribute('rotation', targetOriginalRotation.x + ' ' + targetOriginalRotation.y + ' ' + (targetOriginalRotation.z + ((handTick0 - firstHandPosition[0] + handTick1 - firstHandPosition[1]) * 180)));
+                                        console.log(targetOriginalRotation.x + ' ' + targetOriginalRotation.y + ' ' + (targetOriginalRotation.z + ((handTick0 - firstHandPosition[0] + handTick1 - firstHandPosition[1]) * 180)));
+                                    } else
+                                    //emette l'evento stop perché la mano non è più visibile
+                                        el.emit('leap-holdstop');
                                     break;
                                 case 3:
-                                    target.setAttribute('rotation', (targetOriginalRotation.x + ((handTick - firstHandPosition[1]) * 1)) + ' ' + (targetOriginalRotation.y + ((handTick - firstHandPosition[0]) * 1)) + ' ' + (targetOriginalRotation + ((handTick[0] - firstHandPosition[0] + handTick[1] - firstHandPosition[1]) * 1)));
+                                    if(selectHand(3) !== null) {
+                                        handTick = selectHand(3);
+                                        target.setAttribute('rotation', (targetOriginalRotation.x + ((handTick[1] - firstHandPosition[1]) * 360)) + ' ' + (targetOriginalRotation.y + ((handTick[0] - firstHandPosition[0]) * 360)) + ' ' + (targetOriginalRotation.z + ((handTick[0] - firstHandPosition[0] + handTick[1] - firstHandPosition[1]) * 180)));
+                                        console.log((targetOriginalRotation.x + ((handTick[1] - firstHandPosition[1]) * 360)) + ' ' + (targetOriginalRotation.y + ((handTick[0] - firstHandPosition[0]) * 360)) + ' ' + (targetOriginalRotation.z + ((handTick[0] - firstHandPosition[0] + handTick[1] - firstHandPosition[1]) * 180)));
+                                    } else
+                                    //emette l'evento stop perché la mano non è più visibile
+                                        el.emit('leap-holdstop');
                                     break;
                             }
                         }
-                        else
+                        /*else
                         //emette l'evento stop perché la mano non è più visibile
-                            el.emit('leap-holdstop');
+                            el.emit('leap-holdstop');*/
                     }
                 }
                 else
@@ -130,20 +155,21 @@
     </script>
 </head>
 <body>
-<a-scene inspector  leap="vr: false">
+<a-scene inspector leap="vr: false">
     <a-sky color="#000000"></a-sky>
     <a-entity id="camera" camera="near: 0.01" look-controls position="0 1.5 0"></a-entity>
-    <a-entity id="l" leap-hand="hand: left" position="0 1.25 -0.5"></a-entity>
-    <a-entity id="r" leap-hand="hand: right" position="0 1.25 -0.5"></a-entity>
+    <a-entity id="l" leap-hand="hand: left; holdDistance: 0.5" position="0 1.25 -0.5"></a-entity>
+    <a-entity id="r" leap-hand="hand: right; holdDistance: 0.5" position="0 1.25 -0.5"></a-entity>
 
-    <a-entity id="transform" position="0 1.5 -1.5">
-        <a-torus id="x" position="0 0 0" color="#ff0000" scale="0.2 0.2 0.2" holdable rotation="0 90 0" geometry="radius: 5; radiusTubular: 0.05; segmentsRadial: 100; segmentsTubular: 100"></a-torus>
-        <a-torus id="y" position="0 0 0" color="#00ff00" scale="0.2 0.2 0.2" holdable rotation="90 0 0" geometry="radius: 5; radiusTubular: 0.05; segmentsRadial: 100; segmentsTubular: 100"></a-torus>
-        <a-torus id="z" position="0 0 0" color="#0000ff" scale="0.2 0.2 0.2" holdable rotation="0 0 0" geometry="radius: 5; radiusTubular: 0.05; segmentsRadial: 100; segmentsTubular: 100"></a-torus>
-        <a-torus id="all" position="0 0 0" color="#ffffff" scale="0.2 0.2 0.2" holdable material="opacity: 0.5" rotation="0 0 0" geometry="radius: 6; radiusTubular: 0.05; segmentsRadial: 100; segmentsTubular: 100"></a-torus>
+    <a-entity id="transform" position="0 1.5 -0.5" scale="0.75 0.75 0.75">
+        <a-cylinder id="x" position="0 0 0" color="#ff0000" scale="0.05 0.05 0.05" holdable geometry="radius: 0.25; height: 10"></a-cylinder>
+        <a-cylinder id="y" position="0 0 0" color="#00ff00" scale="0.05 0.05 0.05" holdable rotation="0 0 90" geometry="radius: 0.25; height: 10"></a-cylinder>
+        <a-torus id="z" position="0 0 0" color="#0000ff" scale="0.05 0.05 0.05" holdable rotation="0 0 0" geometry="radius: 5; radiusTubular: 0.1; segmentsRadial: 100; segmentsTubular: 100"></a-torus>
+        <a-torus id="all" position="0 0 0" color="#ffffff" scale="0.05 0.05 0.05" holdable material="opacity: 0.5" rotation="0 0 0" geometry="radius: 6.5; radiusTubular: 0.1; segmentsRadial: 100; segmentsTubular: 100"></a-torus>
     </a-entity>
 
     <a-box position="0 1.5 -1.5" color="#4CC3D9"></a-box>
+    <!--<a-sphere position="0 1.25 -3" radius="1.25" color="#EF2D5E"></a-sphere>!-->
     <a-plane position="0 0 -4" rotation="-90 0 0" width="4" height="4" color="#7BC8A4"></a-plane>
 </a-scene>
 </body>
