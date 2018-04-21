@@ -149,7 +149,7 @@ function createTransform (transformType, document)
         transform.setAttribute('position', '0 1 -0.5');
         values = {
             x: {
-                tag: 'a-cone',
+                tag: 'a-box',
                 id: 'x',
                 position: '0.1 -0.145 0',
                 color: '#ff0000',
@@ -205,7 +205,7 @@ function createTransform (transformType, document)
     }
     else if(transformType === 'rotate')
     {
-        transform.setAttribute('position', '0 1.5 -0.5');
+        transform.setAttribute('position', '0 1 -0.5');
         transform.setAttribute('scale', '0.75 0.75 0.75');
         values = {
             x: {
@@ -223,7 +223,7 @@ function createTransform (transformType, document)
                 lineAttribute: 'start: 0, 0, 0; end: 0 0 0'
             },
             y: {
-                tag: 'a-box',
+                tag: 'a-cylinder',
                 id: 'y',
                 position: '0 0 0',
                 color: '#00ff00',
@@ -248,17 +248,17 @@ function createTransform (transformType, document)
             },
             zLine: {
                 tag: 'a-entity',
-                lineAttribute: 'start: -0.1, -0.145, 0; end: 0 -0.125 0; color: blue'
+                lineAttribute: 'start: 0, 0, 0; end: 0 0 0'
             },
             all: {
-                tag: 'a-box',
+                tag: 'a-torus',
                 id: 'all',
                 position: '0 0 0',
                 color: '#ffffff',
-                scale: '0.03 0.03 0.03',
+                scale: '0.05 0.05 0.05',
                 rotation: '0 0 0',
                 material: 'opacity: 0.5',
-                geometry: 'radius: 5; radiusTubular: 0.1; segmentsRadial: 100; segmentsTubular: 100',
+                geometry: 'radius: 6; radiusTubular: 0.1; segmentsRadial: 100; segmentsTubular: 100',
                 holdable: ''
             }
         }
@@ -268,7 +268,7 @@ function createTransform (transformType, document)
 
 var self = null;
 //true se si è verificato l'evento "intersezione"
-var flag = false;
+var intersection = false;
 var pp = 0;
 var transformCreated = false;
 var targetObject = null;
@@ -279,7 +279,7 @@ AFRAME.registerComponent('componente', {
             //mano da utilizzare per il raggio
             hand: {type: 'string', default: 'right', oneOf: ['left', 'right']},
             //controllo da gestire per l'oggetto selezionato
-            control: {type: 'string', default: 'translate', oneOf: ['translate', 'scale', 'rotate']},
+            control: {type: 'string', default: 'rotate', oneOf: ['translate', 'scale', 'rotate']},
             selectable: {type: 'string', default: ''}
         },
 
@@ -299,7 +299,7 @@ AFRAME.registerComponent('componente', {
             var curve = document.createElement('a-curve');
             curve.setAttribute('id','curve');
             document.querySelector('a-scene').appendChild(curve);
-            curve.addEventListener('loaded',function(event) {
+            curve.addEventListener('loaded',function() {
                 //#2 punti (figli)
                 var child0 = document.createElement('a-curve-point');
                 child0.setAttribute('id','punto0');
@@ -323,45 +323,48 @@ AFRAME.registerComponent('componente', {
             * dell'oggetto e arriva alla posizione della camera (posizione dell'utente) e l'oggetto intersecato segue questo
             * percorso*/
             this.el.addEventListener('raycaster-intersection', function (event) {
-                flag = true;
+                intersection = true;
                 //oggetto intersecato
-                var intersectedObject = event.detail.els[0];
-                targetObject = intersectedObject;
+                var intersectedObject = targetObject = event.detail.els[0];
                 //mano visibile
                 var isVisible = selectedHand(event.srcElement.components['componente'].data.hand, document).components['leap-hand'].isVisible;
                 //se l'elemento intersecato non è una mano (e nemmeno il piano)
                 ////if (isVisible && intersectedObject.getAttribute('[selezionabile]')) {
-                if (isVisible && intersectedObject.getAttribute('leap-hand') == null && intersectedObject !== document.querySelector('a-plane')) {
+                if (isVisible) {
                     //posizioni elemento intersecato e camera per successiva definizione del percorso
                     var endPath = intersectedObject.getAttribute('position');
                     pp = endPath.z;
-                    //var middle = ((endPath.x+origin.x)/2)+' '+((endPath.y+origin.y)/2)+' '+((endPath.z+origin.z)/2);
-                    document.querySelector('#punto0').setAttribute('position', endPath);
-                    //document.querySelector('#punto0').setAttribute('position', middle);
                     var p2 = {
                         x: origin.x,
                         y: origin.y + 1,
                         z: origin.z - 3
                     };
-                    document.querySelector('#punto2').setAttribute('position', p2);
-                    intersectedObject.setAttribute('alongpath', {
-                        curve: '#curve',
-                        delay: 1500
-                    });
-                    intersectedObject.addEventListener('movingended', function(event) {
-                        event.srcElement.removeAttribute('alongpath');
-                        if(!transformCreated) {
-                            //propagazione evento
-                            //creazione transform
-                            control = self.data.control;
-                            createTransform(self.data.control, document);
-                            transformCreated = true;
-                        }
-                    });
+                    //var middle = ((endPath.x+origin.x)/2)+' '+((endPath.y+origin.y)/2)+' '+((endPath.z+origin.z)/2);
+                    if (intersectedObject.getAttribute('selectable') !== null) {
+                        document.querySelector('#punto0').setAttribute('position', endPath);
+                        //document.querySelector('#punto0').setAttribute('position', middle);
+                        document.querySelector('#punto2').setAttribute('position', p2);
+                        intersectedObject.setAttribute('alongpath', {
+                            curve: '#curve',
+                            delay: 1500
+                        });
+                        intersectedObject.addEventListener('movingended', function (event) {
+                            event.srcElement.removeAttribute('alongpath');
+                            if (!transformCreated) {
+                                //propagazione evento
+                                //creazione transform
+                                control = self.data.control;
+                                createTransform(self.data.control, document);
+                                transformCreated = true;
+                            }
+                        });
+                    }
+                    else
+                        intersection = false;
                 }
             });
-            this.el.addEventListener('raycaster-intersection-cleared', function (event) {
-                flag = false;
+            this.el.addEventListener('raycaster-intersection-cleared', function () {
+                intersection = false;
             });
         },
 
@@ -384,25 +387,26 @@ AFRAME.registerComponent('componente', {
                     //hand raycaster
                     var origin = aframeHand.components["leap-hand"].intersector.raycaster.ray.origin;
                     //posizione camera per successivo calcolo posizione relativa (figli della camera)
-                    var cameraPosition = this.el.parentNode.getAttribute('position');
+                    //var cameraPosition = this.el.parentNode.getAttribute('position');
+                    var cameraPosition = document.querySelector('[camera]').getAttribute('position');
                     //posizione relativa per raycaster (figlio della camera)
                     var relativeOriginPosition = (origin.x - cameraPosition.x) + ' ' + (origin.y - cameraPosition.y) + ' ' + (origin.z - cameraPosition.z);
-                    //percorso meshline relativo
+                    //percorso meshline relativo (punto finale con target: il target qui non è ancora definito)
                     var path = relativeOriginPosition + ', ' + (origin.x - cameraPosition.x) + ' ' + (origin.y - cameraPosition.y) + ' ' + ((origin.z - cameraPosition.z) + pp);
                     //modifica del raycaster del componente con posizione della mano (coincide con la mesh)
                     this.el.setAttribute('raycaster', {
-                        showLine: true,
+                        //showLine: true,
                         origin: relativeOriginPosition
                     });
-                    this.el.setAttribute('line', {
+                    /*this.el.setAttribute('line', {
                         start: relativeOriginPosition,
                         end: path.split(', ')[1]
-                    });
-                    if(flag)
+                    });*/
+                    if(intersection)
                     {
-                        this.el.setAttribute('line', {
+                        /*this.el.setAttribute('line', {
                             color: '#74BEC1'
-                        });
+                        });*/
                         this.el.setAttribute('meshline', {
                             lineWidth: 20,
                             path: path,
@@ -412,9 +416,9 @@ AFRAME.registerComponent('componente', {
                     }
                     else
                     {
-                        this.el.setAttribute('line', {
+                        /*this.el.setAttribute('line', {
                             color: '#FFFFFF'
-                        });
+                        });*/
                         this.el.setAttribute('meshline', {
                             lineWidth: 20,
                             path: path,
@@ -425,9 +429,9 @@ AFRAME.registerComponent('componente', {
                 }
                 else
                 {
-                    this.el.setAttribute('raycaster', {
+                    /*this.el.setAttribute('raycaster', {
                         showLine: false
-                    });
+                    });*/
                     this.el.setAttribute('meshline', {
                         lineWidth: 0,
                         path: '0 0 0, 0 0 0'
@@ -435,15 +439,14 @@ AFRAME.registerComponent('componente', {
                 }
             }
             pp = 0;
-            flag = false;
-        },
+            intersection = false;
+        }
 
-        remove: function () {
+        /*remove: function () {
             while (this.el.firstChild) {
                 this.el.removeChild(this.el.firstChild);
             }
             this.el.parentNode.removeChild(this.el);
-        }
+        }*/
     }
 );
-

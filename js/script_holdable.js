@@ -1,26 +1,5 @@
-function selectHand (i)
-{
-    switch (i)
-    {
-        case 3:
-            //selezione della posizione del pollice sui tre assi
-            if(hand.type === 'right' && document.querySelector('#r').components['leap-hand'].getHand() !== null && document.querySelector('#r').components['leap-hand'].getHand() !== undefined && document.querySelector('#r').components['leap-hand'].getHand())
-                handTick = document.querySelector('#r').components['leap-hand'].getHand().pointables[0].tipPosition;
-            else if(hand.type === 'left' && document.querySelector('#l').components['leap-hand'].getHand() !== null && document.querySelector('#l').components['leap-hand'].getHand() !== undefined && document.querySelector('#l').components['leap-hand'].getHand())
-                handTick = document.querySelector('#l').components['leap-hand'].getHand().pointables[0].tipPosition;
-            break;
-        default:
-            //selezione della posizione del pollice sui tre assi
-            if(hand.type === 'right' && document.querySelector('#r').components['leap-hand'].getHand() !== null && document.querySelector('#r').components['leap-hand'].getHand() !== undefined && document.querySelector('#r').components['leap-hand'].getHand())
-                handTick = document.querySelector('#r').components['leap-hand'].getHand().pointables[0].tipPosition[i];
-            else if(hand.type === 'left' && document.querySelector('#l').components['leap-hand'].getHand() !== null && document.querySelector('#l').components['leap-hand'].getHand() !== undefined && document.querySelector('#l').components['leap-hand'].getHand())
-                handTick = document.querySelector('#l').components['leap-hand'].getHand().pointables[0].tipPosition[i];
-    }
-    return handTick;
-};
-
 var firstHandPosition = null; //posizione della mano nel momento in cui viene chiamato l'evento leap-holdstart
-var flag = false; //indica se l'evento sia stato emesso o meno
+var start = false; //indica se l'evento sia stato emesso o meno
 var target = null; //oggetto da trasformare
 var hand = null; //mano che innesca l'evento
 var targetOriginalValue = null; //valore iniziale del target per somma posizione
@@ -29,12 +8,27 @@ var el = null; //variabile d'appoggio
 var i = null; //indice asse
 var oldTransformPosition = null;
 var control = null;
+var handTick = null;
+var d = null;
 
+function selectHand () {
+    var hands = d.querySelectorAll('[leap-hand]');
+    for (var j = 0; j < hands.length; j++) {
+        if (hands[j].components['leap-hand'].getHand() !== undefined && hands[j].components['leap-hand'].getHand().type === hand.type) {
+            if (i !== 3 && control !== 'rotate')
+                handTick = hands[j].components['leap-hand'].getHand().pointables[0].tipPosition[i];
+            else
+                handTick = hands[j].components['leap-hand'].getHand().pointables[0].tipPosition;
+        }
+    }
+    console.log(handTick);
+}
 /* vedere: getBoundingClientRect method */
 AFRAME.registerComponent('holdable', {
 
     init: function ()
     {
+        d = document;
         this.el.addEventListener('leap-holdstart', this.onHoldStart.bind(this));
         this.el.addEventListener('leap-holdstop', this.onHoldStop.bind(this));
         el = this.el;
@@ -42,25 +36,13 @@ AFRAME.registerComponent('holdable', {
 
     tick: function()
     {
-        target = targetObject;
-        if(flag)
+        if(start)
         {
-            var handTick = null; //posizione del pollice nel tick corrente
-            //controllo sull'asse selezionato: tutti, x, y, z
-            if(axis === 'all')
-                i = 3;
-            else if(axis === 'x')
-                i = 0;
-            else if(axis === 'y')
-                i = 1;
-            else if(axis === 'z')
-                i = 2;
-
             if(i !== null) {
                 //selezione posizione mano in base all'asse
-                handTick = selectHand(i);
-
-                if(handTick !== null)
+                selectHand();
+                console.log(handTick);
+                if(handTick !== null && handTick !== undefined)
                 {
                     //modifica della scalatura in base all'asse scelto (differenza tra posizione pollice in holdstart e ad ogni tick)
                     switch (i)
@@ -75,13 +57,7 @@ AFRAME.registerComponent('holdable', {
                                 target.setAttribute('scale', (targetOriginalValue.x + (handTick - firstHandPosition[i])) + ' ' + targetOriginalValue.y + ' ' + targetOriginalValue.z);
                             }
                             else if(control === 'rotate') {
-                                if(selectHand(1) !== null) {
-                                    handTick = selectHand(1);
-                                    target.setAttribute('rotation', (targetOriginalValue.x + ((handTick - firstHandPosition[1]) * 360)) + ' ' + targetOriginalValue.y + ' ' + targetOriginalValue.z);
-
-                                } else
-                                //emette l'evento stop perché la mano non è più visibile
-                                    el.emit('leap-holdstop');
+                                target.setAttribute('rotation', (targetOriginalValue.x + ((handTick[1] - firstHandPosition[1]) * 360)) + ' ' + targetOriginalValue.y + ' ' + targetOriginalValue.z);
                             }
                             break;
                         case 1:
@@ -91,12 +67,7 @@ AFRAME.registerComponent('holdable', {
                             } else if(control === 'scale') {
                                 target.setAttribute('scale', targetOriginalValue.x + ' ' + (targetOriginalValue.y + (handTick - firstHandPosition[i])) + ' ' + targetOriginalValue.z);
                             } else if(control === 'rotate') {
-                                if(selectHand(0) !== null) {
-                                    handTick = selectHand(0);
-                                    target.setAttribute('rotation', targetOriginalValue.x + ' ' + (targetOriginalValue.y + ((handTick - firstHandPosition[0]) * 360)) + ' ' + targetOriginalValue.z);
-                                } else
-                                //emette l'evento stop perché la mano non è più visibile
-                                    el.emit('leap-holdstop');
+                                target.setAttribute('rotation', targetOriginalValue.x + ' ' + (targetOriginalValue.y + ((handTick[0] - firstHandPosition[0]) * 360)) + ' ' + targetOriginalValue.z);
                             }
                             break;
                         case 2:
@@ -106,13 +77,7 @@ AFRAME.registerComponent('holdable', {
                             } else if(control === 'scale') {
                                 target.setAttribute('scale', targetOriginalValue.x + ' ' +  targetOriginalValue.y + ' ' + (targetOriginalValue.z + (handTick - firstHandPosition[i])));
                             } else if(control === 'rotate') {
-                                if(selectHand(1) !== null && selectHand(0) !== null) {
-                                    handTick0 = selectHand(0);
-                                    handTick1 = selectHand(1);
-                                    target.setAttribute('rotation', targetOriginalValue.x + ' ' + targetOriginalValue.y + ' ' + (targetOriginalValue.z + ((handTick0 - firstHandPosition[0] + handTick1 - firstHandPosition[1]) * 180)));
-                                } else
-                                //emette l'evento stop perché la mano non è più visibile
-                                    el.emit('leap-holdstop');
+                                target.setAttribute('rotation', targetOriginalValue.x + ' ' + targetOriginalValue.y + ' ' + (targetOriginalValue.z + ((handTick[0] - firstHandPosition[0] + handTick[1] - firstHandPosition[1]) * 180)));
                             }
                             break;
                         case 3:
@@ -122,12 +87,7 @@ AFRAME.registerComponent('holdable', {
                             } else if(control === 'scale') {
                                 target.setAttribute('scale', (targetOriginalValue.x + (handTick[0] - firstHandPosition[0])) + ' ' + (targetOriginalValue.y + (handTick[1] - firstHandPosition[1])) + ' ' + (targetOriginalValue.z + (handTick[2] - firstHandPosition[2])));
                             } else if(control === 'rotate') {
-                                if(selectHand(3) !== null) {
-                                    handTick = selectHand(3);
-                                    target.setAttribute('rotation', (targetOriginalValue.x + ((handTick[1] - firstHandPosition[1]) * 360)) + ' ' + (targetOriginalValue.y + ((handTick[0] - firstHandPosition[0]) * 360)) + ' ' + (targetOriginalValue.z + ((handTick[0] - firstHandPosition[0] + handTick[1] - firstHandPosition[1]) * 180)));
-                                } else
-                                //emette l'evento stop perché la mano non è più visibile
-                                    el.emit('leap-holdstop');
+                                target.setAttribute('rotation', (targetOriginalValue.x + ((handTick[1] - firstHandPosition[1]) * 360)) + ' ' + (targetOriginalValue.y + ((handTick[0] - firstHandPosition[0]) * 360)) + ' ' + (targetOriginalValue.z + ((handTick[0] - firstHandPosition[0] + handTick[1] - firstHandPosition[1]) * 180)));
                             }
                             break;
                     }
@@ -143,14 +103,24 @@ AFRAME.registerComponent('holdable', {
 
     onHoldStart: function (e)
     {
+        target = targetObject;
         axis = e.srcElement.id;
+        //controllo sull'asse selezionato: tutti, x, y, z
+        if(axis === 'all')
+            i = 3;
+        else if(axis === 'x')
+            i = 0;
+        else if(axis === 'y')
+            i = 1;
+        else if(axis === 'z')
+            i = 2;
         if(e.detail.hand !== null && e.detail !== undefined && e.detail.hand)
         {
             //assegnamento mano che innescato l'evento
             hand = e.detail.hand;
             firstHandPosition = e.detail.hand.pointables[0].tipPosition;
             //assegnato target dallo script componente
-            flag = true;
+            start = true;
             //salvataggio colore precedente
             oldColor = document.querySelector('#' + axis).getAttribute('color');
             document.querySelector('#' + axis).setAttribute('color', '#ffff00');
@@ -162,15 +132,15 @@ AFRAME.registerComponent('holdable', {
             }
             else if(control === 'scale')
                 targetOriginalValue = target.getAttribute('scale');
-            else if(control === 'rotation')
+            else if(control === 'rotate')
                 targetOriginalValue = target.getAttribute('rotation');
         }
     },
 
-    onHoldStop: function (e)
+    onHoldStop: function ()
     {
         //l'evento emesso è stato "stoppato"
-        flag = false;
+        start = false;
         //assegnamento colore precedente
         document.querySelector('#' + axis).setAttribute('color', oldColor);
     }
