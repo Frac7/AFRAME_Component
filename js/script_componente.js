@@ -101,7 +101,7 @@ function createTransform (transformType, document)
             },
             xLine: {
                 tag: 'a-entity',
-                lineAttribute: 'start: 0.1, -0.145, 0; end: 0 -0.125 0; color: red'
+                lineAttribute: 'start: 0.1, -0.145, 0; end: 0 -0.125 0; color: #ff0000'
             },
             y: {
                 tag: 'a-cone',
@@ -115,7 +115,7 @@ function createTransform (transformType, document)
             },
             yLine: {
                 tag: 'a-entity',
-                lineAttribute: 'start: 0, -0.05, 0; end: 0 -0.125 0; color: green'
+                lineAttribute: 'start: 0, -0.05, 0; end: 0 -0.125 0; color: #00ff00'
             },
             z: {
                 tag: 'a-cone',
@@ -129,7 +129,7 @@ function createTransform (transformType, document)
             },
             zLine: {
                 tag: 'a-entity',
-                lineAttribute: 'start: -0.1, -0.145, 0; end: 0 -0.125 0; color: blue'
+                lineAttribute: 'start: -0.1, -0.145, 0; end: 0 -0.125 0; color: #0000ff'
             },
             all: {
                 tag: 'a-box',
@@ -160,7 +160,7 @@ function createTransform (transformType, document)
             },
             xLine: {
                 tag: 'a-entity',
-                lineAttribute: 'start: 0.1, -0.145, 0; end: 0 -0.125 0; color: red'
+                lineAttribute: 'start: 0.1, -0.145, 0; end: 0 -0.125 0; color: #ff0000'
             },
             y: {
                 tag: 'a-box',
@@ -174,7 +174,7 @@ function createTransform (transformType, document)
             },
             yLine: {
                 tag: 'a-entity',
-                lineAttribute: 'start: 0, -0.05, 0; end: 0 -0.125 0; color: green'
+                lineAttribute: 'start: 0, -0.05, 0; end: 0 -0.125 0; color: #00ff00'
             },
             z: {
                 tag: 'a-box',
@@ -188,7 +188,7 @@ function createTransform (transformType, document)
             },
             zLine: {
                 tag: 'a-entity',
-                lineAttribute: 'start: -0.1, -0.145, 0; end: 0 -0.125 0; color: blue'
+                lineAttribute: 'start: -0.1, -0.145, 0; end: 0 -0.125 0; color: #0000ff'
             },
             all: {
                 tag: 'a-box',
@@ -279,7 +279,7 @@ AFRAME.registerComponent('componente', {
             //mano da utilizzare per il raggio
             hand: {type: 'string', default: 'right', oneOf: ['left', 'right']},
             //controllo da gestire per l'oggetto selezionato
-            control: {type: 'string', default: 'rotate', oneOf: ['translate', 'scale', 'rotate']},
+            control: {type: 'string', default: 'translate', oneOf: ['translate', 'scale', 'rotate']},
             selectable: {type: 'string', default: ''}
         },
 
@@ -349,6 +349,9 @@ AFRAME.registerComponent('componente', {
                             delay: 1500
                         });
                         intersectedObject.addEventListener('movingended', function (event) {
+                            event.srcElement.setAttribute('alongpath', {
+                                triggerRadius: 0
+                            });
                             event.srcElement.removeAttribute('alongpath');
                             if (!transformCreated) {
                                 //propagazione evento
