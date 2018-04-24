@@ -17,7 +17,7 @@ var oldColor = function () {
         return '#00ff00';
     else if(axis === 'z')
         return '#0000ff';
-}
+};
 
 function selectHand () {
     var hands = d.querySelectorAll('[leap-hand]');

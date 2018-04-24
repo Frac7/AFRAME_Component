@@ -1,3 +1,10 @@
+var self = null;
+//true se si è verificato l'evento "intersezione"
+var intersection = false;
+var pp = 0;
+var transformCreated = false;
+var targetObject = null;
+
 function selectedHand (hand, document)
 {
     var hands = document.querySelectorAll('[leap-hand]');
@@ -72,8 +79,6 @@ function createControl (transform, document, values)
     all.setAttribute('position', values.all.position);
     all.setAttribute('color', values.all.color);
     all.setAttribute('scale', values.all.scale);
-    all.setAttribute('rotation', values.all.rotation);
-    all.setAttribute('material', values.all.material);
     all.setAttribute('geometry', values.all.geometry);
     all.setAttribute('holdable', values.all.holdable);
     transform.appendChild(all);
@@ -84,61 +89,60 @@ function createTransform (transformType, document)
     var values = null;
     var transform = document.createElement('a-entity');
     transform.setAttribute('id','transform');
+    transform.setAttribute('position', targetObject.getAttribute('position'));
+    //scala il transform in base alla distanza
     document.querySelector('a-scene').appendChild(transform);
     if(transformType === 'translate')
     {
-        transform.setAttribute('position', '0 1 -0.5');
         values = {
             x: {
                 tag: 'a-cone',
                 id: 'x',
-                position: '0.1 -0.145 0',
+                position: '0.2 -0.1 0',
                 color: '#ff0000',
-                scale: '0.05 0.05 0.05',
-                rotation: '0 0 -100',
+                scale: '0.1 0.1 0.1',
+                rotation: '0 0 -115',
                 geometry: 'radiusBottom: 0.25',
                 holdable: ''
             },
             xLine: {
                 tag: 'a-entity',
-                lineAttribute: 'start: 0.1, -0.145, 0; end: 0 -0.125 0; color: #ff0000'
+                lineAttribute: 'start: 0.2, -0.1, 0; end: 0 0 0; color: #ff0000'
             },
             y: {
                 tag: 'a-cone',
                 id: 'y',
-                position: '0 -0.05 0',
+                position: '0 0.2 0',
                 color: '#00ff00',
-                scale: '0.05 0.05 0.05',
+                scale: '0.1 0.1 0.1',
                 rotation: '0 0 0',
                 geometry: 'radiusBottom: 0.25',
                 holdable: ''
             },
             yLine: {
                 tag: 'a-entity',
-                lineAttribute: 'start: 0, -0.05, 0; end: 0 -0.125 0; color: #00ff00'
+                lineAttribute: 'start: 0, 0.2, 0; end: 0 0 0; color: #00ff00'
             },
             z: {
                 tag: 'a-cone',
                 id: 'z',
-                position: '-0.1 -0.145 0',
+                position: '-0.2 -0.1 0',
                 color: '#0000ff',
-                scale: '0.05 0.05 0.05',
-                rotation: '0 0 100',
+                scale: '0.1 0.1 0.1',
+                rotation: '0 0 115',
                 geometry: 'radiusBottom: 0.25',
                 holdable: ''
             },
             zLine: {
                 tag: 'a-entity',
-                lineAttribute: 'start: -0.1, -0.145, 0; end: 0 -0.125 0; color: #0000ff'
+                lineAttribute: 'start: -0.2, -0.1, 0; end: 0 0 0; color: #0000ff'
             },
             all: {
-                tag: 'a-box',
+                tag: 'a-sphere',
                 id: 'all',
-                position: '0 -0.125 0',
+                position: '0 0 0',
                 color: '#ffffff',
                 scale: '0.03 0.03 0.03',
-                rotation: '0 45 45',
-                material: 'opacity: 0.5',
                 geometry: '',
                 holdable: ''
             }
@@ -146,58 +150,55 @@ function createTransform (transformType, document)
     }
     else if(transformType === 'scale')
     {
-        transform.setAttribute('position', '0 1 -0.5');
         values = {
             x: {
                 tag: 'a-box',
                 id: 'x',
-                position: '0.1 -0.145 0',
+                position: '0.2 -0.1 0',
                 color: '#ff0000',
-                scale: '0.03 0.03 0.03',
+                scale: '0.06 0.06 0.06',
                 rotation: '0 45 0',
                 geometry: '',
                 holdable: ''
             },
             xLine: {
                 tag: 'a-entity',
-                lineAttribute: 'start: 0.1, -0.145, 0; end: 0 -0.125 0; color: #ff0000'
+                lineAttribute: 'start: 0.2, -0.1, 0; end: 0 0 0; color: #ff0000'
             },
             y: {
                 tag: 'a-box',
                 id: 'y',
-                position: '0 -0.05 0',
+                position: '0 0.2 0',
                 color: '#00ff00',
-                scale: '0.03 0.03 0.03',
+                scale: '0.06 0.06 0.06',
                 rotation: '0 45 0',
                 geometry: '',
                 holdable: ''
             },
             yLine: {
                 tag: 'a-entity',
-                lineAttribute: 'start: 0, -0.05, 0; end: 0 -0.125 0; color: #00ff00'
+                lineAttribute: 'start: 0, 0.2, 0; end: 0 0 0; color: #00ff00'
             },
             z: {
                 tag: 'a-box',
                 id: 'z',
-                position: '-0.1 -0.145 0',
+                position: '-0.2 -0.1 0',
                 color: '#0000ff',
-                scale: '0.03 0.03 0.03',
+                scale: '0.06 0.06 0.06',
                 rotation: '0 45 0',
                 geometry: '',
                 holdable: ''
             },
             zLine: {
                 tag: 'a-entity',
-                lineAttribute: 'start: -0.1, -0.145, 0; end: 0 -0.125 0; color: #0000ff'
+                lineAttribute: 'start: -0.2, -0.1, 0; end: 0 0 0; color: #0000ff'
             },
             all: {
                 tag: 'a-box',
                 id: 'all',
-                position: '0 -0.125 0',
+                position: '0 0 0',
                 color: '#ffffff',
-                scale: '0.03 0.03 0.03',
-                rotation: '0 0 0',
-                material: 'opacity: 0.5',
+                scale: '0.05 0.05 0.05',
                 geometry: '',
                 holdable: ''
             }
@@ -205,17 +206,15 @@ function createTransform (transformType, document)
     }
     else if(transformType === 'rotate')
     {
-        transform.setAttribute('position', '0 1 -0.5');
-        transform.setAttribute('scale', '0.75 0.75 0.75');
         values = {
             x: {
-                tag: 'a-cylinder',
+                tag: 'a-torus',
                 id: 'x',
                 position: '0 0 0',
                 color: '#ff0000',
                 scale: '0.05 0.05 0.05',
-                rotation: '0 0 0',
-                geometry: 'radius: 0.25; height: 10',
+                rotation: '0 90 0',
+                geometry: 'radius: 5; radiusTubular: 0.1; segmentsRadial: 100; segmentsTubular: 100',
                 holdable: ''
             },
             xLine: {
@@ -223,13 +222,13 @@ function createTransform (transformType, document)
                 lineAttribute: 'start: 0, 0, 0; end: 0 0 0'
             },
             y: {
-                tag: 'a-cylinder',
+                tag: 'a-torus',
                 id: 'y',
                 position: '0 0 0',
                 color: '#00ff00',
                 scale: '0.05 0.05 0.05',
-                rotation: '0 0 90',
-                geometry: 'radius: 0.25; height: 10',
+                rotation: '90 0 0',
+                geometry: 'radius: 5; radiusTubular: 0.1; segmentsRadial: 100; segmentsTubular: 100',
                 holdable: ''
             },
             yLine: {
@@ -256,8 +255,6 @@ function createTransform (transformType, document)
                 position: '0 0 0',
                 color: '#ffffff',
                 scale: '0.05 0.05 0.05',
-                rotation: '0 0 0',
-                material: 'opacity: 0.5',
                 geometry: 'radius: 6; radiusTubular: 0.1; segmentsRadial: 100; segmentsTubular: 100',
                 holdable: ''
             }
@@ -266,12 +263,6 @@ function createTransform (transformType, document)
     createControl(transform, document, values);
 }
 
-var self = null;
-//true se si è verificato l'evento "intersezione"
-var intersection = false;
-var pp = 0;
-var transformCreated = false;
-var targetObject = null;
 AFRAME.registerComponent('componente', {
         //raycaster (dipendenza dal componente a-frame)
         dependencies: ['raycaster'],
@@ -279,7 +270,7 @@ AFRAME.registerComponent('componente', {
             //mano da utilizzare per il raggio
             hand: {type: 'string', default: 'right', oneOf: ['left', 'right']},
             //controllo da gestire per l'oggetto selezionato
-            control: {type: 'string', default: 'translate', oneOf: ['translate', 'scale', 'rotate']},
+            control: {type: 'string', default: 'scale', oneOf: ['translate', 'scale', 'rotate']},
             selectable: {type: 'string', default: ''}
         },
 
@@ -323,13 +314,10 @@ AFRAME.registerComponent('componente', {
             * dell'oggetto e arriva alla posizione della camera (posizione dell'utente) e l'oggetto intersecato segue questo
             * percorso*/
             this.el.addEventListener('raycaster-intersection', function (event) {
-                intersection = true;
                 //oggetto intersecato
                 var intersectedObject = targetObject = event.detail.els[0];
                 //mano visibile
                 var isVisible = selectedHand(event.srcElement.components['componente'].data.hand, document).components['leap-hand'].isVisible;
-                //se l'elemento intersecato non è una mano (e nemmeno il piano)
-                ////if (isVisible && intersectedObject.getAttribute('[selezionabile]')) {
                 if (isVisible) {
                     //posizioni elemento intersecato e camera per successiva definizione del percorso
                     var endPath = intersectedObject.getAttribute('position');
@@ -341,6 +329,7 @@ AFRAME.registerComponent('componente', {
                     };
                     //var middle = ((endPath.x+origin.x)/2)+' '+((endPath.y+origin.y)/2)+' '+((endPath.z+origin.z)/2);
                     if (intersectedObject.getAttribute('selectable') !== null) {
+                        intersection = true;
                         document.querySelector('#punto0').setAttribute('position', endPath);
                         //document.querySelector('#punto0').setAttribute('position', middle);
                         document.querySelector('#punto2').setAttribute('position', p2);
@@ -349,16 +338,17 @@ AFRAME.registerComponent('componente', {
                             delay: 1500
                         });
                         intersectedObject.addEventListener('movingended', function (event) {
-                            event.srcElement.setAttribute('alongpath', {
-                                triggerRadius: 0
-                            });
-                            event.srcElement.removeAttribute('alongpath');
                             if (!transformCreated) {
                                 //propagazione evento
+                                event.srcElement.setAttribute('alongpath', {
+                                    triggerRadius: 0
+                                });
+                                event.srcElement.removeAttribute('alongpath');
                                 //creazione transform
                                 control = self.data.control;
                                 createTransform(self.data.control, document);
                                 transformCreated = true;
+                                event.srcElement.setAttribute('material', 'opacity: 0.5');
                             }
                         });
                     }
@@ -368,11 +358,11 @@ AFRAME.registerComponent('componente', {
             });
             this.el.addEventListener('raycaster-intersection-cleared', function () {
                 intersection = false;
+                pp = 0;
             });
         },
 
         tick: function () {
-            //document.querySelector('a-sphere').addEventListener('leap-holdstart', function (event) { console.log(event); });
             var aframeHand = selectedHand(this.data.hand, document);
             var hand;
             if(aframeHand)
@@ -441,8 +431,13 @@ AFRAME.registerComponent('componente', {
                     });
                 }
             }
-            pp = 0;
-            intersection = false;
+            if(document.querySelector('#transform') !== null)
+            {
+                var transformPosition = document.querySelector('#transform').getAttribute('position');
+                var cameraPosition = document.querySelector('[camera]').getAttribute('position');
+                var distance = Math.sqrt(Math.pow(transformPosition.x - cameraPosition.x, 2) + Math.pow(transformPosition.y - cameraPosition.y, 2) + Math.pow(transformPosition.z - cameraPosition.z, 2));
+                document.querySelector('#transform').setAttribute('scale', (distance) + ' ' + (distance) + ' ' + (distance));
+            }
         }
 
         /*remove: function () {
