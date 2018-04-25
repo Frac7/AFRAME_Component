@@ -207,7 +207,7 @@ function createTransform(transformType, document) {
                 color: '#ff0000',
                 scale: '0.05 0.05 0.05',
                 rotation: '0 90 0',
-                geometry: 'radius: 5; radiusTubular: 0.05; segmentsRadial: 100; segmentsTubular: 100',
+                geometry: 'radius: 5; radiusTubular: 0.1; segmentsRadial: 100; segmentsTubular: 100',
                 holdable: ''
             },
             xLine: {
@@ -221,7 +221,7 @@ function createTransform(transformType, document) {
                 color: '#00ff00',
                 scale: '0.05 0.05 0.05',
                 rotation: '90 0 0',
-                geometry: 'radius: 5; radiusTubular: 0.05; segmentsRadial: 100; segmentsTubular: 100',
+                geometry: 'radius: 5; radiusTubular: 0.1; segmentsRadial: 100; segmentsTubular: 100',
                 holdable: ''
             },
             yLine: {
@@ -235,7 +235,7 @@ function createTransform(transformType, document) {
                 color: '#0000ff',
                 scale: '0.05 0.05 0.05',
                 rotation: '0 0 0',
-                geometry: 'radius: 5; radiusTubular: 0.05; segmentsRadial: 100; segmentsTubular: 100',
+                geometry: 'radius: 5; radiusTubular: 0.1; segmentsRadial: 100; segmentsTubular: 100',
                 holdable: ''
             },
             zLine: {
@@ -248,7 +248,7 @@ function createTransform(transformType, document) {
                 position: '0 0 0',
                 color: '#ffffff',
                 scale: '0.05 0.05 0.05',
-                geometry: 'radius: 6; radiusTubular: 0.05; segmentsRadial: 100; segmentsTubular: 100',
+                geometry: 'radius: 6; radiusTubular: 0.1; segmentsRadial: 100; segmentsTubular: 100',
                 holdable: ''
             }
         }
@@ -283,13 +283,14 @@ AFRAME.registerComponent('componente', {
         //mano da utilizzare per il raggio
         hand: {type: 'string', default: 'right', oneOf: ['left', 'right']},
         //controllo da gestire per l'oggetto selezionato
-        control: {type: 'string', default: 'translate', oneOf: ['translate', 'scale', 'rotate']},
+        control: {type: 'string', default: 'rotate', oneOf: ['translate', 'scale', 'rotate']},
         selectable: {type: 'string', default: ''}
     },
 
     init: function () {
         self = this;
         this.el.setAttribute('raycaster', {
+            showLine: false,
             //evitare collisioni con la camera o con il raggio stesso
             near: 0.05,
             //lunghezza del raggio
@@ -317,10 +318,6 @@ AFRAME.registerComponent('componente', {
         if (validHand(hand)) {
             //posizione del palmo e riconoscimento gesto
             if (gestureRecognizer(hand)) {
-                this.el.setAttribute('raycaster', {
-                    //lunghezza del raggio
-                    far: 5
-                });
                 //hand raycaster
                 var origin = aframeHand.components["leap-hand"].intersector.raycaster.ray.origin;
                 //posizione relativa per raycaster (figlio della camera)
@@ -329,7 +326,9 @@ AFRAME.registerComponent('componente', {
                 var path = relativeOriginPosition + ', ' + (origin.x - cameraPosition.x) + ' ' + (origin.y - cameraPosition.y) + ' ' + ((origin.z - cameraPosition.z) + p);
                 //modifica del raycaster del componente con posizione della mano (coincide con la mesh)
                 this.el.setAttribute('raycaster', {
-                    origin: relativeOriginPosition
+                    showLine: false,
+                    origin: relativeOriginPosition,
+                    far: 5
                 });
                 if (intersection) {
                     this.el.setAttribute('meshline', {
@@ -350,6 +349,11 @@ AFRAME.registerComponent('componente', {
             }
             else {
                 this.el.removeAttribute('meshline');
+                this.el.setAttribute('raycaster', {
+                    showLine: false,
+                    origin: 0.05,
+                    far: 0.05
+                });
             }
         }
         var transform = document.querySelector('#transform');
@@ -370,7 +374,7 @@ AFRAME.registerComponent('componente', {
 
     raycasterIntersection: function (event) {
         //oggetto intersecato
-        var intersectedObject = targetObject = event.detail.els[0];
+        var intersectedObject = event.detail.els[0];
         //mano visibile
         var isVisible = selectedHand(event.srcElement.components['componente'].data.hand, document).components['leap-hand'].isVisible;
         if (isVisible) {
@@ -383,6 +387,7 @@ AFRAME.registerComponent('componente', {
                 z: - 3
             };
             if (intersectedObject.getAttribute('selectable') !== null) {
+                targetObject = intersectedObject;
                 intersection = true;
                 document.querySelector('#point0').setAttribute('position', endPath);
                 document.querySelector('#point2').setAttribute('position', startPath);
