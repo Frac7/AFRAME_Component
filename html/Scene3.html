@@ -9,6 +9,7 @@
     <script src="https://rawgit.com/protyze/aframe-curve-component/master/dist/aframe-curve-component.min.js"></script>
     <script src="https://rawgit.com/protyze/aframe-alongpath-component/master/dist/aframe-alongpath-component.min.js"></script>
     <script src="../js/script_componente.js"></script>
+    <script src="../js/script_holdable.js"></script>
 </head>
 <body>
 <a-scene inspector>
@@ -16,7 +17,7 @@
     <a-entity camera="near: 0.01" look-controls position="0 1.5 0">
         <a-entity leap-hand="hand: left"></a-entity>
         <a-entity leap-hand="hand: right"></a-entity>
-        <a-entity componente></a-entity>
+        <a-entity intersect-and-manipulate></a-entity>
     </a-entity>
     <a-box position="-1 0.5 -3" rotation="0 45 0" color="#4CC3D9"></a-box>
     <a-sphere position="0 1.25 -5" radius="1.25" color="#EF2D5E"></a-sphere>

@@ -276,7 +276,7 @@ function createPath (document) {
     curve.appendChild(child2);
 }
 
-AFRAME.registerComponent('componente', {
+AFRAME.registerComponent('intersect-and-manipulate', {
     //raycaster (dipendenza dal componente a-frame)
     dependencies: ['raycaster'],
     schema: {
@@ -284,7 +284,7 @@ AFRAME.registerComponent('componente', {
         hand: {type: 'string', default: 'right', oneOf: ['left', 'right']},
         //controllo da gestire per l'oggetto selezionato
         control: {type: 'string', default: 'rotate', oneOf: ['translate', 'scale', 'rotate']},
-        selectable: {type: 'string', default: ''}
+        tag: {type: 'string', default: 'selectable'}
     },
 
     init: function () {
@@ -376,7 +376,7 @@ AFRAME.registerComponent('componente', {
         //oggetto intersecato
         var intersectedObject = event.detail.els[0];
         //mano visibile
-        var isVisible = selectedHand(event.srcElement.components['componente'].data.hand, document).components['leap-hand'].isVisible;
+        var isVisible = selectedHand(event.srcElement.components['intersect-and-manipulate'].data.hand, document).components['leap-hand'].isVisible;
         if (isVisible) {
             //posizioni elemento intersecato e camera per successiva definizione del percorso
             var endPath = intersectedObject.getAttribute('position');
@@ -386,7 +386,7 @@ AFRAME.registerComponent('componente', {
                 y: 1,
                 z: - 3
             };
-            if (intersectedObject.getAttribute('selectable') !== null) {
+            if (intersectedObject.getAttribute(this.data.tag) !== null) {
                 targetObject = intersectedObject;
                 intersection = true;
                 document.querySelector('#point0').setAttribute('position', endPath);

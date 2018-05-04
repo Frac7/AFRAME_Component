@@ -4,7 +4,6 @@
     <title>Hello, WebVR! - A-Frame</title>
     <meta name="description" content="Hello, WebVR! - A-Frame">
     <script src="https://aframe.io/releases/0.6.0/aframe.min.js"></script>
-    <!--<script src="https://aframe.io/releases/0.8.0/aframe.min.js"></script>-->
     <script src="//unpkg.com/aframe-leap-hands/dist/aframe-leap-hands.min.js"></script>
     <script src="https://rawgit.com/andreasplesch/aframe-meshline-component/master/dist/aframe-meshline-component.min.js"></script>
     <script src="https://rawgit.com/protyze/aframe-curve-component/master/dist/aframe-curve-component.min.js"></script>
@@ -18,7 +17,7 @@
     <a-entity camera="near: 0.01" look-controls wasd-controls position="0 1.5 0">
         <a-entity leap-hand="hand: left; holdDistance: 0.5" position="0 -0.25 -0.5"></a-entity>
         <a-entity leap-hand="hand: right; holdDistance: 0.5" position="0 -0.25 -0.5"></a-entity>
-        <a-entity componente></a-entity>
+        <a-entity intersect-and-manipulate></a-entity>
     </a-entity>
 
     <a-box position="-1 0.5 -3" rotation="0 45 0" color="#4CC3D9"></a-box>
