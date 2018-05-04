@@ -16,11 +16,11 @@ The selected object is moved in front of camera using [aframe-alongpath](https:/
 _Immagine_
  
 ## Properties
-| Property | Default   | Description                              |
-|----------|-----------|------------------------------------------|
-| hand     | right     | Hand that triggers pose recognition      |
-| control  | translate | Control type attached to selected object |
-| tag      | selectble | Tag used to mark selectable objects      |
+| Property | Default    | Description                                                               |
+|----------|------------|---------------------------------------------------------------------------|
+| hand     | right      | Hand that triggers pose recognition, one of left, right                   |
+| control  | translate  | Control type attached to selected object, one of translate, scale, rotate |
+| tag      | selectable | Tag used to mark selectable objects                                       |
 
 ## Usage
 ```html
