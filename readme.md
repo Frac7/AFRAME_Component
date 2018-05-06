@@ -13,7 +13,7 @@ that intersects the pointed object.
 The selected object is moved in front of camera using [aframe-alongpath](https://github.com/protyze/aframe-alongpath-component)
  and the transform control is attached to it.
  
-_Immagine_
+![Example](/gif.gif)
  
 ## Properties
 | Property | Default    | Description                                                                     |
