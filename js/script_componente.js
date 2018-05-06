@@ -283,7 +283,7 @@ AFRAME.registerComponent('intersect-and-manipulate', {
         //mano da utilizzare per il raggio
         hand: {type: 'string', default: 'right', oneOf: ['left', 'right']},
         //controllo da gestire per l'oggetto selezionato
-        control: {type: 'string', default: 'rotate', oneOf: ['translate', 'scale', 'rotate']},
+        control: {type: 'string', default: 'scale', oneOf: ['translate', 'scale', 'rotate']},
         tag: {type: 'string', default: 'selectable'}
     },
 
