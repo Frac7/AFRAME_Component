@@ -40,4 +40,5 @@ The selected object is moved in front of camera using [aframe-alongpath](https:/
     </a-scene>
 </body>
 ```
-[More...](https://mycomponent-examples.glitch.me/)
+### More...
+[More examples on Glitch](https://mycomponent-examples.glitch.me/)
