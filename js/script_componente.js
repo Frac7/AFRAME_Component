@@ -1,7 +1,6 @@
 var self = null; //this (componente)
 //true se si è verificato l'evento "intersezione"
 var intersection = false;
-var p = 0; //profondità, asse z, oggetto puntato
 var transformCreated = false; //flag creazione transform (evita che venga creato più di una volta)
 var targetObject = null; //oggetto puntato
 
@@ -297,6 +296,9 @@ AFRAME.registerComponent('intersect-and-manipulate', {
             //lunghezza del raggio
             far: 0.05
         });
+        /*this.el.setAttribute('line', {
+            visible: false
+        });*/
         createPath(document);
         //event listener: il raggio ha intersecato qualcosa
         /*nel momento in cui un oggetto viene intersecato dal raggio, viene creato un percorso che parte dalla posizione
@@ -305,13 +307,11 @@ AFRAME.registerComponent('intersect-and-manipulate', {
         this.el.addEventListener('raycaster-intersection', this.raycasterIntersection.bind(this));
         this.el.addEventListener('raycaster-intersection-cleared', function () {
             intersection = false;
-            p = 0;
         });
     },
 
     tick: function () {
         var cameraPosition = document.querySelector('[camera]').getAttribute('position');
-        var cameraRotation = document.querySelector('[camera]').getAttribute('rotation');
         var aframeHand = selectedHand(this.data.hand, document);
         var hand;
         if (aframeHand)
@@ -321,25 +321,20 @@ AFRAME.registerComponent('intersect-and-manipulate', {
             //posizione del palmo e riconoscimento gesto
             if (gestureRecognizer(hand)) {
                 //hand raycaster
-                var origin = aframeHand.components["leap-hand"].intersector.raycaster.ray.origin;
-                var relativeOriginPosition = "";
-                var path = "";
-                if(cameraRotation.y < 180) {//posizione relativa per raycaster (figlio della camera)
-                    relativeOriginPosition = (origin.x - cameraPosition.x) + ' ' + (origin.y - cameraPosition.y) + ' ' + (origin.z - cameraPosition.z);
-                    //percorso meshline relativo (punto finale con target: il target qui non è ancora definito)
-                    path = relativeOriginPosition + ', ' + (origin.x - cameraPosition.x) + ' ' + (origin.y - cameraPosition.y) + ' ' + (origin.z - cameraPosition.z + p);
-                }
-                else {
-                    relativeOriginPosition = (-(origin.x - cameraPosition.x)) + ' ' + (origin.y - cameraPosition.y) + ' ' + (-(origin.z - cameraPosition.z));
-                    //percorso meshline relativo (punto finale con target: il target qui non è ancora definito)
-                    path = relativeOriginPosition + ', ' + (-(origin.x - cameraPosition.x)) + ' ' + (origin.y - cameraPosition.y) + ' ' + (-(origin.z - cameraPosition.z - p));
-                }
+                var origin = aframeHand.components['leap-hand'].intersector.raycaster.ray.origin;
+                var relativeOriginPosition = origin.clone();
+                document.querySelector('[camera]').components['camera'].el.object3D.updateMatrixWorld();
+                document.querySelector('[camera]').components['camera'].el.object3D.worldToLocal(relativeOriginPosition);
                 //modifica del raycaster del componente con posizione della mano (coincide con la mesh)
                 this.el.setAttribute('raycaster', {
                     showLine: false,
                     origin: relativeOriginPosition,
                     far: 5
                 });
+                //percorso meshline relativo
+                var relativeEndPosition = this.el.getAttribute('line').end.clone();
+                document.querySelector('[camera]').components['camera'].el.object3D.worldToLocal(relativeEndPosition);
+                var path = relativeOriginPosition.x + ' ' + (relativeOriginPosition.y + 0.01) + ' ' + relativeOriginPosition.z + ', ' + relativeEndPosition.x + ' '+ relativeOriginPosition.y + ' '+ relativeEndPosition.z;
                 if (intersection) {
                     this.el.setAttribute('meshline', {
                         lineWidth: 20,
@@ -375,30 +370,18 @@ AFRAME.registerComponent('intersect-and-manipulate', {
         }
     },
 
-    remove: function () {
-        while (this.el.firstChild) {
-            this.el.removeChild(this.el.firstChild);
-        }
-        this.el.parentNode.removeChild(this.el);
-    },
-
     raycasterIntersection: function (event) {
         //oggetto intersecato
         var intersectedObject = event.detail.els[0];
         //mano visibile
         var isVisible = selectedHand(event.srcElement.components['intersect-and-manipulate'].data.hand, document).components['leap-hand'].isVisible;
         if (isVisible) {
-            var cameraPosition = document.querySelector('[camera]').getAttribute('position');
-            var cameraRotation = document.querySelector('[camera]').getAttribute('rotation');
             //posizioni elemento intersecato e camera per successiva definizione del percorso
             var endPath = intersectedObject.getAttribute('position');
-            p = endPath.z;
-            var startPath = {
-                x: cameraPosition.x + 0,
-                //y: 1
-                y: cameraPosition.y - 0.5,
-                z: cameraRotation.y === 180? cameraPosition.z + 3: cameraPosition.z - 3
-            };
+            document.querySelector('[camera]').components['camera'].el.object3D.updateMatrixWorld();
+            var localPosition = new THREE.Vector3(0, -0.5, -3);
+            var startPath = document.querySelector('[camera]').components['camera'].el.object3D.localToWorld(localPosition);
+
             if (intersectedObject.getAttribute(this.data.tag) !== null) {
                 targetObject = intersectedObject;
                 intersection = true;
