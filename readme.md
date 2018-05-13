@@ -27,12 +27,12 @@ The selected object is moved in front of camera using [aframe-alongpath](https:/
 <head>
     <title>Hello, WebVR! - A-Frame</title>
     <script src="https://aframe.io/releases/0.8.0/aframe.min.js"></script>
-    <script src="js/script_componente.js"></script>
+    <script src="js/script.js"></script>
 </head>
 <body>
     <a-scene>
     <!-- Set hands and control as children of camera !-->
-        <a-entity camera="near: 0.01" look-controls wasd-controls position="0 1.5 0">
+        <a-entity camera="near: 0.01" look-controls position="0 1.5 0">
             <a-entity leap-hand="hand: left; holdDistance: 0.5"></a-entity>
             <a-entity leap-hand="hand: right; holdDistance: 0.5"></a-entity>
             <a-entity intersect-and-manipulate></a-entity>
