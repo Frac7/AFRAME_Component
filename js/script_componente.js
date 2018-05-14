@@ -37,6 +37,7 @@ function createControl(transform, document, values) {
     x.setAttribute('scale', values.x.scale);
     x.setAttribute('rotation', values.x.rotation);
     x.setAttribute('geometry', values.x.geometry);
+    x.setAttribute('material', values.x.material);
     x.setAttribute('holdable', values.x.holdable);
     transform.appendChild(x);
     //creazione linea x
@@ -51,6 +52,7 @@ function createControl(transform, document, values) {
     y.setAttribute('scale', values.y.scale);
     y.setAttribute('rotation', values.y.rotation);
     y.setAttribute('geometry', values.y.geometry);
+    y.setAttribute('material', values.y.material);
     y.setAttribute('holdable', values.y.holdable);
     transform.appendChild(y);
     //creazione linea y
@@ -65,6 +67,7 @@ function createControl(transform, document, values) {
     z.setAttribute('scale', values.z.scale);
     z.setAttribute('rotation', values.z.rotation);
     z.setAttribute('geometry', values.z.geometry);
+    z.setAttribute('material', values.z.material);
     z.setAttribute('holdable', values.z.holdable);
     transform.appendChild(z);
     //creazione linea z
@@ -78,6 +81,7 @@ function createControl(transform, document, values) {
     all.setAttribute('color', values.all.color);
     all.setAttribute('scale', values.all.scale);
     all.setAttribute('geometry', values.all.geometry);
+    all.setAttribute('material', values.all.material);
     all.setAttribute('holdable', values.all.holdable);
     transform.appendChild(all);
 }
@@ -100,6 +104,7 @@ function createTransform(transformType, document) {
                 scale: '0.1 0.1 0.1',
                 rotation: '0 -45 -90',
                 geometry: 'radiusBottom: 0.25',
+                material: 'depthTest: false',
                 holdable: ''
             },
             xLine: {
@@ -114,6 +119,7 @@ function createTransform(transformType, document) {
                 scale: '0.1 0.1 0.1',
                 rotation: '0 0 0',
                 geometry: 'radiusBottom: 0.25',
+                material: 'depthTest: false',
                 holdable: ''
             },
             yLine: {
@@ -128,6 +134,7 @@ function createTransform(transformType, document) {
                 scale: '0.1 0.1 0.1',
                 rotation: '0 45 90',
                 geometry: 'radiusBottom: 0.25',
+                material: 'depthTest: false',
                 holdable: ''
             },
             zLine: {
@@ -141,6 +148,7 @@ function createTransform(transformType, document) {
                 color: '#ffffff',
                 scale: '0.03 0.03 0.03',
                 geometry: '',
+                material: 'depthTest: false',
                 holdable: ''
             }
         }
@@ -154,6 +162,7 @@ function createTransform(transformType, document) {
                 scale: '0.06 0.06 0.06',
                 rotation: '0 45 0',
                 geometry: '',
+                material: 'depthTest: false',
                 holdable: ''
             },
             xLine: {
@@ -168,6 +177,7 @@ function createTransform(transformType, document) {
                 scale: '0.06 0.06 0.06',
                 rotation: '0 45 0',
                 geometry: '',
+                material: 'depthTest: false',
                 holdable: ''
             },
             yLine: {
@@ -182,6 +192,7 @@ function createTransform(transformType, document) {
                 scale: '0.06 0.06 0.06',
                 rotation: '0 45 0',
                 geometry: '',
+                material: 'depthTest: false',
                 holdable: ''
             },
             zLine: {
@@ -195,6 +206,7 @@ function createTransform(transformType, document) {
                 color: '#ffffff',
                 scale: '0.05 0.05 0.05',
                 geometry: '',
+                material: 'depthTest: false',
                 holdable: ''
             }
         }
@@ -208,6 +220,7 @@ function createTransform(transformType, document) {
                 scale: '0.05 0.05 0.05',
                 rotation: '0 90 0',
                 geometry: 'radius: 5; radiusTubular: 0.1; segmentsRadial: 100; segmentsTubular: 100',
+                material: 'depthTest: false',
                 holdable: ''
             },
             xLine: {
@@ -222,6 +235,7 @@ function createTransform(transformType, document) {
                 scale: '0.05 0.05 0.05',
                 rotation: '90 0 0',
                 geometry: 'radius: 5; radiusTubular: 0.1; segmentsRadial: 100; segmentsTubular: 100',
+                material: 'depthTest: false',
                 holdable: ''
             },
             yLine: {
@@ -236,6 +250,7 @@ function createTransform(transformType, document) {
                 scale: '0.05 0.05 0.05',
                 rotation: '0 0 0',
                 geometry: 'radius: 5; radiusTubular: 0.1; segmentsRadial: 100; segmentsTubular: 100',
+                material: 'depthTest: false',
                 holdable: ''
             },
             zLine: {
@@ -249,6 +264,7 @@ function createTransform(transformType, document) {
                 color: '#ffffff',
                 scale: '0.05 0.05 0.05',
                 geometry: 'radius: 6; radiusTubular: 0.1; segmentsRadial: 100; segmentsTubular: 100',
+                material: 'depthTest: false',
                 holdable: ''
             }
         }
@@ -332,9 +348,7 @@ AFRAME.registerComponent('intersect-and-manipulate', {
                     far: 5
                 });
                 //percorso meshline relativo
-                var relativeEndPosition = this.el.getAttribute('line').end.clone();
-                document.querySelector('[camera]').components['camera'].el.object3D.worldToLocal(relativeEndPosition);
-                var path = relativeOriginPosition.x + ' ' + (relativeOriginPosition.y + 0.01) + ' ' + relativeOriginPosition.z + ', ' + relativeEndPosition.x + ' '+ relativeOriginPosition.y + ' '+ relativeEndPosition.z;
+                var path = relativeOriginPosition.x + ' ' + relativeOriginPosition.y + ' ' + relativeOriginPosition.z + ', ' + relativeOriginPosition.x + ' ' + relativeOriginPosition.y + ' ' + (relativeOriginPosition.z - 5);
                 if (intersection) {
                     this.el.setAttribute('meshline', {
                         lineWidth: 20,
