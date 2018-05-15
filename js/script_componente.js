@@ -414,8 +414,6 @@ AFRAME.registerComponent('intersect-and-manipulate', {
             var startPath = document.querySelector('[camera]').components['camera'].el.object3D.localToWorld(localPosition);
 
             if (intersectedObject.getAttribute(this.data.tag) !== null) {
-                if(targetObject !== null && targetObject !== undefined)
-                    targetObject.setAttribute('material', 'opacity: 1.0');
                 intersection = true;
                 createPath(document);
                 document.querySelector('#point0').setAttribute('position', endPath);
@@ -427,7 +425,6 @@ AFRAME.registerComponent('intersect-and-manipulate', {
                 intersectedObject.addEventListener('movingstarted', function (event) {
                     transformCreated = false;
                 });
-                targetObject = intersectedObject;
                 intersectedObject.addEventListener('movingended', function (event) {
                     if (!transformCreated) {
                         //propagazione evento
@@ -435,6 +432,9 @@ AFRAME.registerComponent('intersect-and-manipulate', {
                             triggerRadius: 0
                         });
                         event.srcElement.removeAttribute('alongpath');
+                        if(targetObject !== null && targetObject !== undefined)
+                            targetObject.setAttribute('material', 'opacity: 1.0');
+                        targetObject = event.srcElement;
                         //creazione transform
                         control = self.data.control;
                         createTransform(self.data.control, document);

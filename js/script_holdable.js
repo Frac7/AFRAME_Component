@@ -1,3 +1,4 @@
+//TODO: oldPosition
 var firstHandPosition = null; //posizione della mano nel momento in cui viene chiamato l'evento leap-holdstart
 var start = false; //indica se l'evento sia stato emesso o meno
 var target = null; //oggetto da trasformare
