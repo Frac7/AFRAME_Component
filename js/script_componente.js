@@ -30,70 +30,93 @@ function createControl(transform, document, values) {
     var x, y, z, all;
     var xLine, yLine, zLine;
     //creazione freccia x
-    x = document.createElement(values.x.tag);
-    x.setAttribute('id', values.x.id);
+    x = document.querySelector('#x');
+    if(x === null || x === undefined) {
+        x = document.createElement(values.x.tag);
+        x.setAttribute('id', values.x.id);
+        transform.appendChild(x);
+    }
     x.setAttribute('position', values.x.position);
     x.setAttribute('color', values.x.color);
     x.setAttribute('scale', values.x.scale);
     x.setAttribute('rotation', values.x.rotation);
     x.setAttribute('geometry', values.x.geometry);
-    x.setAttribute('material', values.x.material);
     x.setAttribute('holdable', values.x.holdable);
-    transform.appendChild(x);
     //creazione linea x
-    xLine = document.createElement(values.xLine.tag);
+    xLine = document.querySelector('#xLine');
+    if(xLine === null || xLine === undefined) {
+        xLine = document.createElement(values.xLine.tag);
+        xLine.setAttribute('id', values.xLine.id);
+        transform.appendChild(xLine);
+    }
     xLine.setAttribute('line', values.xLine.lineAttribute);
-    transform.appendChild(xLine);
     //creazione freccia y
-    y = document.createElement(values.y.tag);
-    y.setAttribute('id', values.y.id);
+    y = document.querySelector('#y');
+    if(y === null || y === undefined) {
+        y = document.createElement(values.y.tag);
+        y.setAttribute('id', values.y.id);
+        transform.appendChild(y);
+    }
     y.setAttribute('position', values.y.position);
     y.setAttribute('color', values.y.color);
     y.setAttribute('scale', values.y.scale);
     y.setAttribute('rotation', values.y.rotation);
     y.setAttribute('geometry', values.y.geometry);
-    y.setAttribute('material', values.y.material);
     y.setAttribute('holdable', values.y.holdable);
-    transform.appendChild(y);
     //creazione linea y
-    yLine = document.createElement(values.yLine.tag);
+    yLine = document.querySelector('#yLine');
+    if(yLine === null || yLine === undefined) {
+        yLine = document.createElement(values.yLine.tag);
+        yLine.setAttribute('id', values.yLine.id);
+        transform.appendChild(yLine);
+    }
     yLine.setAttribute('line', values.yLine.lineAttribute);
-    transform.appendChild(yLine);
     //creazione freccia z
-    z = document.createElement(values.z.tag);
-    z.setAttribute('id', values.z.id);
+    z = document.querySelector('#z');
+    if(z === null || z === undefined) {
+        z = document.createElement(values.z.tag);
+        z.setAttribute('id', values.z.id);
+        transform.appendChild(z);
+    }
     z.setAttribute('position', values.z.position);
     z.setAttribute('color', values.z.color);
     z.setAttribute('scale', values.z.scale);
     z.setAttribute('rotation', values.z.rotation);
     z.setAttribute('geometry', values.z.geometry);
-    z.setAttribute('material', values.z.material);
     z.setAttribute('holdable', values.z.holdable);
-    transform.appendChild(z);
     //creazione linea z
-    zLine = document.createElement(values.zLine.tag);
+    zLine = document.querySelector('#zLine');
+    if(zLine === null || zLine === undefined) {
+        zLine = document.createElement(values.zLine.tag);
+        zLine.setAttribute('id', values.zLine.id);
+        transform.appendChild(zLine);
+    }
     zLine.setAttribute('line', values.zLine.lineAttribute);
-    transform.appendChild(zLine);
     //creazione controllo per tutti gli assi
-    all = document.createElement(values.all.tag);
-    all.setAttribute('id', values.all.id);
+    all = document.querySelector('#all');
+    if(all === null || all === undefined) {
+        all = document.createElement(values.all.tag);
+        all.setAttribute('id', values.all.id);
+        transform.appendChild(all);
+    }
     all.setAttribute('position', values.all.position);
     all.setAttribute('color', values.all.color);
     all.setAttribute('scale', values.all.scale);
     all.setAttribute('geometry', values.all.geometry);
-    all.setAttribute('material', values.all.material);
     all.setAttribute('holdable', values.all.holdable);
-    transform.appendChild(all);
 }
 
 //creazione transform (popolamento valori da usare per creare il controllo)
 function createTransform(transformType, document) {
     var values = null;
-    var transform = document.createElement('a-entity');
-    transform.setAttribute('id', 'transform');
+    var transform = document.querySelector('#transform');
+    if(transform === null || transform === undefined) {
+        transform = document.createElement('a-entity');
+        transform.setAttribute('id', 'transform');
+        document.querySelector('a-scene').appendChild(transform);
+    }
     transform.setAttribute('position', targetObject.getAttribute('position'));
     transform.setAttribute('rotation', document.querySelector('[camera]').getAttribute('rotation'));
-    document.querySelector('a-scene').appendChild(transform);
     if (transformType === 'translate') {
         values = {
             x: {
@@ -104,11 +127,11 @@ function createTransform(transformType, document) {
                 scale: '0.1 0.1 0.1',
                 rotation: '0 -45 -90',
                 geometry: 'radiusBottom: 0.25',
-                material: 'depthTest: false',
                 holdable: ''
             },
             xLine: {
                 tag: 'a-entity',
+                id: 'xLine',
                 lineAttribute: 'start: 0.2, 0, 0.2; end: 0 0 0; color: #ff0000'
             },
             y: {
@@ -119,11 +142,11 @@ function createTransform(transformType, document) {
                 scale: '0.1 0.1 0.1',
                 rotation: '0 0 0',
                 geometry: 'radiusBottom: 0.25',
-                material: 'depthTest: false',
                 holdable: ''
             },
             yLine: {
                 tag: 'a-entity',
+                id: 'yLine',
                 lineAttribute: 'start: 0, 0.2, 0; end: 0 0 0; color: #00ff00'
             },
             z: {
@@ -134,11 +157,11 @@ function createTransform(transformType, document) {
                 scale: '0.1 0.1 0.1',
                 rotation: '0 45 90',
                 geometry: 'radiusBottom: 0.25',
-                material: 'depthTest: false',
                 holdable: ''
             },
             zLine: {
                 tag: 'a-entity',
+                id: 'zLine',
                 lineAttribute: 'start: -0.2, 0, 0.2; end: 0 0 0; color: #0000ff'
             },
             all: {
@@ -148,7 +171,6 @@ function createTransform(transformType, document) {
                 color: '#ffffff',
                 scale: '0.03 0.03 0.03',
                 geometry: '',
-                material: 'depthTest: false',
                 holdable: ''
             }
         }
@@ -162,11 +184,11 @@ function createTransform(transformType, document) {
                 scale: '0.06 0.06 0.06',
                 rotation: '0 45 0',
                 geometry: '',
-                material: 'depthTest: false',
                 holdable: ''
             },
             xLine: {
                 tag: 'a-entity',
+                id: 'xLine',
                 lineAttribute: 'start: 0.2, 0, 0.2; end: 0 0 0; color: #ff0000'
             },
             y: {
@@ -177,11 +199,11 @@ function createTransform(transformType, document) {
                 scale: '0.06 0.06 0.06',
                 rotation: '0 45 0',
                 geometry: '',
-                material: 'depthTest: false',
                 holdable: ''
             },
             yLine: {
                 tag: 'a-entity',
+                id: 'yLine',
                 lineAttribute: 'start: 0, 0.2, 0; end: 0 0 0; color: #00ff00'
             },
             z: {
@@ -192,11 +214,11 @@ function createTransform(transformType, document) {
                 scale: '0.06 0.06 0.06',
                 rotation: '0 45 0',
                 geometry: '',
-                material: 'depthTest: false',
                 holdable: ''
             },
             zLine: {
                 tag: 'a-entity',
+                id: 'zLine',
                 lineAttribute: 'start: -0.2, 0, 0.2; end: 0 0 0; color: #0000ff'
             },
             all: {
@@ -206,7 +228,6 @@ function createTransform(transformType, document) {
                 color: '#ffffff',
                 scale: '0.05 0.05 0.05',
                 geometry: '',
-                material: 'depthTest: false',
                 holdable: ''
             }
         }
@@ -220,11 +241,11 @@ function createTransform(transformType, document) {
                 scale: '0.05 0.05 0.05',
                 rotation: '0 90 0',
                 geometry: 'radius: 5; radiusTubular: 0.1; segmentsRadial: 100; segmentsTubular: 100',
-                material: 'depthTest: false',
                 holdable: ''
             },
             xLine: {
                 tag: 'a-entity',
+                id: 'xLine',
                 lineAttribute: 'start: 0, 0, 0; end: 0 0 0'
             },
             y: {
@@ -235,11 +256,11 @@ function createTransform(transformType, document) {
                 scale: '0.05 0.05 0.05',
                 rotation: '90 0 0',
                 geometry: 'radius: 5; radiusTubular: 0.1; segmentsRadial: 100; segmentsTubular: 100',
-                material: 'depthTest: false',
                 holdable: ''
             },
             yLine: {
                 tag: 'a-entity',
+                id: 'yLine',
                 lineAttribute: 'start: 0, 0, 0; end: 0 0 0'
             },
             z: {
@@ -250,11 +271,11 @@ function createTransform(transformType, document) {
                 scale: '0.05 0.05 0.05',
                 rotation: '0 0 0',
                 geometry: 'radius: 5; radiusTubular: 0.1; segmentsRadial: 100; segmentsTubular: 100',
-                material: 'depthTest: false',
                 holdable: ''
             },
             zLine: {
                 tag: 'a-entity',
+                id: 'zLine',
                 lineAttribute: 'start: 0, 0, 0; end: 0 0 0'
             },
             all: {
@@ -264,7 +285,6 @@ function createTransform(transformType, document) {
                 color: '#ffffff',
                 scale: '0.05 0.05 0.05',
                 geometry: 'radius: 6; radiusTubular: 0.1; segmentsRadial: 100; segmentsTubular: 100',
-                material: 'depthTest: false',
                 holdable: ''
             }
         }
@@ -273,23 +293,24 @@ function createTransform(transformType, document) {
 }
 
 function createPath (document) {
-    /*definizione di diversi event listener: le entità inserite nell'html dinamicamente hanno bisogno
-          di essere caricate per poter assegnare degli attributi*/
     //definizione del percorso. il percorso viene creato con un componente esterno per a-frame
     //#1 curva
-    var curve = document.createElement('a-curve');
-    curve.setAttribute('id', 'curve');
-    document.querySelector('a-scene').appendChild(curve);
-    //#2 punti (figli)
-    var child0 = document.createElement('a-curve-point');
-    child0.setAttribute('id', 'point0');
-    child0.setAttribute('position', '0 0 0');
-    curve.appendChild(child0);
-    var child2 = document.createElement('a-curve-point');
-    child2.setAttribute('id', 'point2');
-    //child2: "origine"
-    child2.setAttribute('position', '0 0 0');
-    curve.appendChild(child2);
+    var curve = document.querySelector('#curve');
+    if(curve === null || curve === undefined) {
+        curve = document.createElement('a-curve');
+        curve.setAttribute('id', 'curve');
+        document.querySelector('a-scene').appendChild(curve);
+        //#2 punti (figli)
+        var child0 = document.createElement('a-curve-point');
+        child0.setAttribute('id', 'point0');
+        child0.setAttribute('position', '0 0 0');
+        curve.appendChild(child0);
+        var child2 = document.createElement('a-curve-point');
+        child2.setAttribute('id', 'point2');
+        //child2: "origine"
+        child2.setAttribute('position', '0 0 0');
+        curve.appendChild(child2);
+    }
 }
 
 AFRAME.registerComponent('intersect-and-manipulate', {
@@ -312,10 +333,6 @@ AFRAME.registerComponent('intersect-and-manipulate', {
             //lunghezza del raggio
             far: 0.05
         });
-        /*this.el.setAttribute('line', {
-            visible: false
-        });*/
-        createPath(document);
         //event listener: il raggio ha intersecato qualcosa
         /*nel momento in cui un oggetto viene intersecato dal raggio, viene creato un percorso che parte dalla posizione
         * dell'oggetto e arriva alla posizione della camera (posizione dell'utente) e l'oggetto intersecato segue questo
@@ -397,14 +414,20 @@ AFRAME.registerComponent('intersect-and-manipulate', {
             var startPath = document.querySelector('[camera]').components['camera'].el.object3D.localToWorld(localPosition);
 
             if (intersectedObject.getAttribute(this.data.tag) !== null) {
-                targetObject = intersectedObject;
+                if(targetObject !== null && targetObject !== undefined)
+                    targetObject.setAttribute('material', 'opacity: 1.0');
                 intersection = true;
+                createPath(document);
                 document.querySelector('#point0').setAttribute('position', endPath);
                 document.querySelector('#point2').setAttribute('position', startPath);
                 intersectedObject.setAttribute('alongpath', {
                     curve: '#curve',
                     delay: 1500
                 });
+                intersectedObject.addEventListener('movingstarted', function (event) {
+                    transformCreated = false;
+                });
+                targetObject = intersectedObject;
                 intersectedObject.addEventListener('movingended', function (event) {
                     if (!transformCreated) {
                         //propagazione evento

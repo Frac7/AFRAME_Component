@@ -18,6 +18,8 @@ function oldColor () {
         return '#00ff00';
     else if (axis === 'z')
         return '#0000ff';
+    else if (axis === 'all')
+        return '#ffffff';
 }
 
 function selectHand() {
@@ -123,6 +125,9 @@ AFRAME.registerComponent('holdable', {
             //assegnato target dallo script componente
             start = true;
             document.querySelector('#' + axis).setAttribute('color', '#ffff00');
+            document.querySelector('#' + axis + 'Line').setAttribute('line', {
+                color: '#ffff00'
+            });
             //salvataggio posizione precedente
             if (control === 'translate') {
                 targetOriginalValue = target.getAttribute('position');
@@ -140,5 +145,8 @@ AFRAME.registerComponent('holdable', {
         start = false;
         //assegnamento colore precedente
         document.querySelector('#' + axis).setAttribute('color', oldColor());
+        document.querySelector('#' + axis + 'Line').setAttribute('line', {
+            color: oldColor()
+        });
     }
 });
