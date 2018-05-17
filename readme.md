@@ -10,10 +10,12 @@ The recognized pose is the gesture of Spider Man, a metaphor to intersect object
 When the pose is detected, this component draws a ray using [aframe-meshline](https://github.com/andreasplesch/aframe-meshline-component)
 that intersects the pointed object.
 
+![Example1](/gif1.gif)
+
 The selected object is moved in front of camera using [aframe-alongpath](https://github.com/protyze/aframe-alongpath-component)
  and the transform control is attached to it.
  
-![Example1](/gif1.gif)![Example2](/gif.gif)
+![Example2](/gif.gif)
  
 ## Properties
 | Property | Default    | Description                                                                     |
