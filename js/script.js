@@ -1313,7 +1313,7 @@ AFRAME.registerComponent('holdable', {
         document.querySelector('#' + axis).setAttribute('color', oldColor());
         if(axis !== 'all')
             document.querySelector('#' + axis + 'Line').setAttribute('line', {
-                color: '#ffff00'
+                color: oldColor()
             });
     }
 });
