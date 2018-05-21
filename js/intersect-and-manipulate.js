@@ -4,6 +4,10 @@ var intersection = false;
 var transformCreated = false; //flag creazione transform (evita che venga creato più di una volta)
 var targetObject = null; //oggetto puntato
 var oldPosition = null;
+var controls = ['translate', 'scale', 'rotate'];
+var currentControl = 0;
+
+var gestureHand = null;
 
 //mano selezionata tramite componente
 function selectedHand(hand, document) {
@@ -119,6 +123,7 @@ function createTransform(transformType, document) {
     transform.setAttribute('position', targetObject.getAttribute('position'));
     transform.setAttribute('rotation', document.querySelector('[camera]').getAttribute('rotation'));
     if (transformType === 'translate') {
+        currentControl = 0;
         values = {
             x: {
                 tag: 'a-cone',
@@ -176,6 +181,7 @@ function createTransform(transformType, document) {
             }
         }
     } else if (transformType === 'scale') {
+        currentControl = 1;
         values = {
             x: {
                 tag: 'a-box',
@@ -233,6 +239,7 @@ function createTransform(transformType, document) {
             }
         }
     } else if (transformType === 'rotate') {
+        currentControl = 2;
         values = {
             x: {
                 tag: 'a-torus',
@@ -291,6 +298,10 @@ function createTransform(transformType, document) {
         }
     }
     createControl(transform, document, values);
+}
+
+function switchTransformGesture (hand) {
+    //TODO: riconoscimento gesture
 }
 
 function createPath (document) {
@@ -354,6 +365,8 @@ AFRAME.registerComponent('intersect-and-manipulate', {
         if (validHand(hand)) {
             //posizione del palmo e riconoscimento gesto
             if (gestureRecognizer(hand)) {
+                //temporaneo
+                gestureHand = aframeHand;
                 //hand raycaster
                 let origin = aframeHand.components['leap-hand'].intersector.raycaster.ray.origin;
                 let relativeOriginPosition = origin.clone();
@@ -401,11 +414,11 @@ AFRAME.registerComponent('intersect-and-manipulate', {
             let distance = new THREE.Vector3(cameraPosition.x, cameraPosition.y, cameraPosition.z).distanceTo(new THREE.Vector3(transformPosition.x, transformPosition.y, transformPosition.z));
             transform.setAttribute('scale', (distance) + ' ' + (distance) + ' ' + (distance));
 
-            //TODO: implementare
-            /*if(switchTransform) {
+            if(switchTransformGesture(gestureHand.components['leap-hand'].getHand())) {
                 //cambia il transform... in base a cosa si sceglie come cambiare?
                 //si potrebbe anche usare uno swipe e considerare i controlli come un array circolare
-            }*/
+                createTransform(controls[(currentControl + 1) % controls.length], document);
+            }
         }
     },
 

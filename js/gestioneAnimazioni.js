@@ -1,6 +1,6 @@
-var properties = ['material.opacity', 'material.color'];
+var properties = ['material.opacity', 'material.color', 'scale', 'rotation'];
 var values = [];
-var gestureAnimazione = true;
+var setted = false;
 //vengono definite qui le proprietà dell'animazione
 //quali traiettoria (key frames, alcuni punti nello spazio) per ora i key frames si introducono con la gesture della mano aperta;
 //un insieme di valori per scegliere quale proprietà manipolare (qui bisogna dare la possibilità all'utente di
@@ -16,8 +16,6 @@ function randomValues () {
         color = parseInt(Math.random() * 6);
         values = [opacity, colors[color]];
     }
-    gestureAnimazione = false; //momentaneamete è gestito così per i key frames
-    console.log(values);
 }
 
 //nell'altro script deve essere effettuato il riconoscimento della gesture che corrisponde al bottone per il key frame
@@ -40,10 +38,35 @@ function randomValues () {
 //riconoscimento gesto per selezionare key frame
 //problema: deve essere possibile modificare un key frame precedentemente salvato?
 
+//al momento l'animazione viene creata sul targetObject, quindi puntando altri elementi si passa direttamente a creare
+//un'altra animazione
+
+//si assume che venga utilizzata la mano destra per i key frames, tanto questo verrà sostituito dal bottone
+function gestureAnimazione (hand) {
+    //TODO: da rivedere perché il valore viene sovrascritto
+    let oldRotation = targetObject.getAttribute('rotation');
+    let oldScale = targetObject.getAttribute('scale');
+    targetObject.oldParameters.oldRotation = oldRotation;
+    targetObject.oldParameters.oldScale = oldScale;
+    return (hand && (Math.abs(hand.palmNormal[1]) < 0.5 && Math.abs(hand.palmNormal[0]) < 0.5) && hand.pointables[0].extended && hand.pointables[1].extended && hand.pointables[2].extended && hand.pointables[3].extended && hand.pointables[4].extended);
+}
+
+function gestureStartAnimation () {
+
+}
+
+function gestureStopAnimation () {
+
+}
+
+function gestureResumeAnimation () {
+
+}
+
 AFRAME.registerComponent('animate', {
     schema: {
-        trajectory: {type: 'string', default: ''},
-        property: {type: 'string', default: ''},
+        //per property e interpolation, nella gui, deve essere mostrato un elenco con le opzioni dispnibili
+        property: {type: 'string', oneOf: ['', 'material.color', 'material.opacity', 'rotation', 'scale'], default: ''},
         value: {type: 'string', default: ''},
         interpolation: {type: 'string', oneOf: ['linear', 'elastic', 'back'], default: 'linear'},
         repeat: {type: 'string', default: '1'},
@@ -57,8 +80,24 @@ AFRAME.registerComponent('animate', {
 
     tick: function () {
         if(targetObject !== null) {
+            if(!setted) {
+                targetObject.oldParameters = {
+                    oldScale: {
+                        x: null,
+                        y: null,
+                        z: null
+                    },
+                    oldRotation: {
+                        x: null,
+                        y: null,
+                        z: null
+                    }
+                };
+                setted = true;
+            }
             //gesture selezione key frame
-            if(gestureAnimazione) {
+            if(gestureAnimazione(gestureHand.components['leap-hand'].getHand())) {
+                console.log('gesture key frame');
                 //questa porzione di codice va integrata con la selezione nel menu:
                 //la gesture animazione verrà sostituita da un bottone per selezionare il key frame, alla pressione
                 //di questo bottone, tutte le proprietà dell'oggetto vengono salvate e viene creata l'animazione
@@ -69,33 +108,36 @@ AFRAME.registerComponent('animate', {
                 if (values.length !== []) {
                     //assegna i valori in base a properties e values, l'oggetto è targetObject (quindi oggetto precedentemente
                     //selezionato con il componente intersect-and-manipulate)
-                    let attributes = []; //attribute avrà sempre 2 locazioni perché sono due le proprietà da modificare
+                    let attributes = [];
                     for (let i = 0; i < properties.length; i++) {
-                        attributes[i] = 'property: ' + properties[i] + '; dur: ' + this.data.duration + '; easing: '
-                            + this.data.interpolation + '; to: ' + values[i];
-                        targetObject.setAttribute('animation__' + properties[i], attributes[i]);
-                        //da definire: start events, pause events, resume events; il from è stato omesso momentaneamete (start property)
+                        if(properties[i] === 'material.opacity' || properties[i] === 'material.color' || (properties[i] === 'scale' && targetObject.getAttribute('scale') !== targetObject.oldScale) || (properties[i] === 'rotation' && targetObject.getAttribute('rotation') !== targetObject.oldRotation)) {
+                            attributes[i] = 'property: ' + properties[i] + '; dur: ' + this.data.duration + '; easing: '
+                                + this.data.interpolation + '; to: ' + values[i] + '; delay: ' + this.data.delay + '; repeat: ' +
+                                this.data.repeat + '; startEvents: start; pauseEvents: end; resumeEvents: resume';
+                            targetObject.setAttribute('animation__' + properties[i], attributes[i]);
+                        }
                     }
-
                 } else
-                    targetObject.setAttribute('animation__visible', 'property: material.opacity; dur: ' + this.data.duration + '; easing: '
-                        + this.data.interpolation + '; to: 0');
+                    targetObject.setAttribute('animation__visible', 'property: material.opacity; dur: ' + this.data.duration
+                        + '; easing: ' + this.data.interpolation + '; to: 0; delay: ' + this.data.delay + '; repeat: '
+                        + this.data.repeat);
+                //salvataggio posizione per traiettoria oggetto
+                //da provare, in questo modo dovrebbe essere possibile avere un'unica traiettoria per un oggetto
+                //in questo modo sarebbe giusto necessario gestire la cancellazione di una traiettoria quando si
+                //vuole fare una nuova animazione sullo stesso oggetto
+                targetObject.trajectory.push(targetObject.getAttribute('position'));
             }
 
-            //TODO: implementare
-            /*//altre gestures per startare e stoppare l'animazione - da integrare col parametro del componente da wrappare
+            //altre gestures per startare e stoppare l'animazione - da integrare col parametro del componente da wrappare
             //verranno emessi degli eventi - c'è il listener nel componente animation
-            if(gestureStartAnimation) {
+            if(gestureStartAnimation)
+                this.el.emit('start');
 
-            }
+            if(gestureResumeAnimation)
+                this.el.emit('resume');
 
-            if(gestureStopAnimation) {
-
-            }*/
-
-            //TODO: per quanto riguarda scalatura e rotazione, registrare la modifica nell'evento holdable prima di salvare tutto per il key frame
-            //esempio, condizione per salvare: sequenza scala/rotazione + gesture key frame
-            //altrimenti si può controllare se tra un frame e l'altro cambia uno di questi parametri, se si si fa l'animazione apposita (molto più semplice)
+            if(gestureStopAnimation)
+                this.el.emit('end');
         }
     }
 });
