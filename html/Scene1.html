@@ -8,8 +8,10 @@
     <script src="https://rawgit.com/andreasplesch/aframe-meshline-component/master/dist/aframe-meshline-component.min.js"></script>
     <script src="https://rawgit.com/protyze/aframe-curve-component/master/dist/aframe-curve-component.min.js"></script>
     <script src="https://rawgit.com/protyze/aframe-alongpath-component/master/dist/aframe-alongpath-component.min.js"></script>
-    <script src="../js/script_componente.js"></script>
-    <script src="../js/script_holdable.js"></script>
+    <script src="https://unpkg.com/aframe-animation-component@^4.1.2/dist/aframe-animation-component.min.js"></script>
+    <script src="../js/intersect-and-manipulate.js"></script>
+    <script src="../js/holdable.js"></script>
+    <script src="../js/gestioneAnimazioni.js"></script>
 </head>
 <body>
 <a-scene inspector leap="vr: false">
@@ -18,11 +20,12 @@
         <a-entity leap-hand="hand: left; holdDistance: 0.5" position="0 -0.25 -0.5"></a-entity>
         <a-entity leap-hand="hand: right; holdDistance: 0.5" position="0 -0.25 -0.5"></a-entity>
         <a-entity intersect-and-manipulate></a-entity>
+        <a-entity animate></a-entity>
     </a-entity>
 
     <a-box position="-1 0.5 -3" rotation="0 45 0" color="#4CC3D9"></a-box>
     <a-sphere selectable position="0 1.25 -5" radius="1.25" color="#EF2D5E"></a-sphere>
-    <a-cylinder position="1 0.75 -3" radius="0.5" height="1.5" color="#FFC65D"></a-cylinder>
+    <a-cylinder selectable position="1 0.75 -3" radius="0.5" height="1.5" color="#FFC65D"></a-cylinder>
     <a-plane position="0 0 -4" rotation="-90 0 0" width="4" height="4" color="#7BC8A4"></a-plane>
 </a-scene>
 </body>

@@ -1,4 +1,3 @@
-//TODO: oldPosition
 var firstHandPosition = null; //posizione della mano nel momento in cui viene chiamato l'evento leap-holdstart
 var start = false; //indica se l'evento sia stato emesso o meno
 var target = null; //oggetto da trasformare
@@ -12,6 +11,7 @@ var control = null;
 var handTick = null;
 var d = null;
 
+//riprinstina il colore degli assi in hold stop
 function oldColor () {
     if (axis === 'x')
         return '#ff0000';
@@ -23,9 +23,10 @@ function oldColor () {
         return '#ffffff';
 }
 
+//mano che innesca l'evento hold start da cui recuperare la posizione delle dita
 function selectHand() {
-    var hands = d.querySelectorAll('[leap-hand]');
-    for (var j = 0; j < hands.length; j++) {
+    let hands = d.querySelectorAll('[leap-hand]');
+    for (let j = 0; j < hands.length; j++) {
         if (hands[j].components['leap-hand'].getHand() !== undefined && hands[j].components['leap-hand'].getHand().type === hand.type) {
             if (i !== 3 && control !== 'rotate')
                 handTick = hands[j].components['leap-hand'].getHand().pointables[0].tipPosition[i];
@@ -35,7 +36,6 @@ function selectHand() {
     }
 }
 
-/* vedere: getBoundingClientRect method */
 AFRAME.registerComponent('holdable', {
 
     init: function () {
@@ -51,7 +51,8 @@ AFRAME.registerComponent('holdable', {
                 //selezione posizione mano in base all'asse
                 selectHand();
                 if (handTick !== null && handTick !== undefined) {
-                    //modifica della scalatura in base all'asse scelto (differenza tra posizione pollice in holdstart e ad ogni tick)
+                    //modifica del parametro in base all'asse scelto, var i
+                    //(differenza tra posizione pollice in holdstart e ad ogni tick)
                     switch (i) {
                         case 0:
                             if (control === 'translate') {
@@ -87,13 +88,17 @@ AFRAME.registerComponent('holdable', {
                             }
                             break;
                         case 3:
+                            //la distanza viene calcolata solo qui perché all prevede lo stesso valore per tutti gli assi. nei casi diversi da all si tiene conto solo dello spostamento sull'asse scelto
+                            let allPosition = document.querySelector('#all').getAttribute('position');
+                            let distance = new THREE.Vector3(allPosition.x, allPosition.y, allPosition.z).distanceTo(new THREE.Vector3(handTick[0], handTick[1], handTick[2]));
                             if (control === 'translate') {
-                                target.setAttribute('position', (targetOriginalValue.x + (handTick[0] - firstHandPosition[0])) + ' ' + (targetOriginalValue.y + (handTick[1] - firstHandPosition[1])) + ' ' + (targetOriginalValue.z + (handTick[2] - firstHandPosition[2])));
-                                document.querySelector('#transform').setAttribute('position', (oldTransformPosition.x + (handTick[0] - firstHandPosition[0])) + ' ' + (oldTransformPosition.y + (handTick[1] - firstHandPosition[1])) + ' ' + (oldTransformPosition.z + (handTick[2] - firstHandPosition[2])));
+                                //TODO: questo controllo va rivisto perché non esiste, ci sono i piani
+                                target.setAttribute('position', (targetOriginalValue.x + distance) + ' ' + (targetOriginalValue.y + distance) + ' ' + (targetOriginalValue.z + distance));
+                                document.querySelector('#transform').setAttribute('position', (oldTransformPosition.x + distance) + ' ' + (oldTransformPosition.y + distance) + ' ' + (oldTransformPosition.z + distance));
                             } else if (control === 'scale') {
-                                target.setAttribute('scale', (targetOriginalValue.x + (handTick[0] - firstHandPosition[0])) + ' ' + (targetOriginalValue.y + (handTick[1] - firstHandPosition[1])) + ' ' + (targetOriginalValue.z + (handTick[2] - firstHandPosition[2])));
+                                target.setAttribute('scale', (targetOriginalValue.x + distance) + ' ' + (targetOriginalValue.y + distance) + ' ' + (targetOriginalValue.z + distance));
                             } else if (control === 'rotate') {
-                                target.setAttribute('rotation', (targetOriginalValue.x + ((handTick[1] - firstHandPosition[1]) * 360)) + ' ' + (targetOriginalValue.y + ((handTick[0] - firstHandPosition[0]) * 360)) + ' ' + (targetOriginalValue.z + ((handTick[0] - firstHandPosition[0] + handTick[1] - firstHandPosition[1]) * 180)));
+                                target.setAttribute('rotation', (targetOriginalValue.x + (distance * 360)) + ' ' + (targetOriginalValue.y + (distance * 360)) + ' ' + (targetOriginalValue.z + (distance * 360)));
                             }
                             break;
                     }
