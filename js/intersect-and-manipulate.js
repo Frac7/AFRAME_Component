@@ -42,7 +42,7 @@ function createControl(transform, document, values) {
         transform.appendChild(x);
     }
     x.setAttribute('position', values.x.position);
-    x.setAttribute('color', values.x.color);
+    x.setAttribute('material', values.x.material);
     x.setAttribute('scale', values.x.scale);
     x.setAttribute('rotation', values.x.rotation);
     x.setAttribute('geometry', values.x.geometry);
@@ -63,7 +63,7 @@ function createControl(transform, document, values) {
         transform.appendChild(y);
     }
     y.setAttribute('position', values.y.position);
-    y.setAttribute('color', values.y.color);
+    y.setAttribute('material', values.y.material);
     y.setAttribute('scale', values.y.scale);
     y.setAttribute('rotation', values.y.rotation);
     y.setAttribute('geometry', values.y.geometry);
@@ -84,7 +84,7 @@ function createControl(transform, document, values) {
         transform.appendChild(z);
     }
     z.setAttribute('position', values.z.position);
-    z.setAttribute('color', values.z.color);
+    z.setAttribute('material', values.z.material);
     z.setAttribute('scale', values.z.scale);
     z.setAttribute('rotation', values.z.rotation);
     z.setAttribute('geometry', values.z.geometry);
@@ -105,7 +105,7 @@ function createControl(transform, document, values) {
         transform.appendChild(all);
     }
     all.setAttribute('position', values.all.position);
-    all.setAttribute('color', values.all.color);
+    all.setAttribute('material', values.all.material);
     all.setAttribute('scale', values.all.scale);
     all.setAttribute('geometry', values.all.geometry);
     all.setAttribute('holdable', values.all.holdable);
@@ -126,13 +126,13 @@ function createTransform(transformType, document) {
         currentControl = 0;
         values = {
             x: {
-                tag: 'a-cone',
+                tag: 'a-entity',
                 id: 'x',
                 position: '0.2 0 0.2',
-                color: '#ff0000',
+                material: 'color: #ff0000',
                 scale: '0.1 0.1 0.1',
                 rotation: '0 -45 -90',
-                geometry: 'radiusBottom: 0.25',
+                geometry: 'primitive: cone; radiusBottom: 0.25',
                 holdable: ''
             },
             xLine: {
@@ -141,13 +141,13 @@ function createTransform(transformType, document) {
                 lineAttribute: 'start: 0.2, 0, 0.2; end: 0 0 0; color: #ff0000'
             },
             y: {
-                tag: 'a-cone',
+                tag: 'a-entity',
                 id: 'y',
                 position: '0 0.2 0',
-                color: '#00ff00',
+                material: 'color: #00ff00',
                 scale: '0.1 0.1 0.1',
                 rotation: '0 0 0',
-                geometry: 'radiusBottom: 0.25',
+                geometry: 'primitive: cone; radiusBottom: 0.25',
                 holdable: ''
             },
             yLine: {
@@ -156,13 +156,13 @@ function createTransform(transformType, document) {
                 lineAttribute: 'start: 0, 0.2, 0; end: 0 0 0; color: #00ff00'
             },
             z: {
-                tag: 'a-cone',
+                tag: 'a-entity',
                 id: 'z',
                 position: '-0.2 0 0.2',
-                color: '#0000ff',
+                material: 'color: #0000ff',
                 scale: '0.1 0.1 0.1',
                 rotation: '0 45 90',
-                geometry: 'radiusBottom: 0.25',
+                geometry: 'primitive: cone; radiusBottom: 0.25',
                 holdable: ''
             },
             zLine: {
@@ -171,12 +171,12 @@ function createTransform(transformType, document) {
                 lineAttribute: 'start: -0.2, 0, 0.2; end: 0 0 0; color: #0000ff'
             },
             all: {
-                tag: 'a-sphere',
+                tag: 'a-entity',
                 id: 'all',
                 position: '0 0 0',
-                color: '#ffffff',
+                material: 'color: #ffffff',
                 scale: '0.03 0.03 0.03',
-                geometry: '',
+                geometry: 'primitive: sphere',
                 holdable: ''
             }
         }
@@ -184,13 +184,13 @@ function createTransform(transformType, document) {
         currentControl = 1;
         values = {
             x: {
-                tag: 'a-box',
+                tag: 'a-entity',
                 id: 'x',
                 position: '0.2 0 0.2',
-                color: '#ff0000',
+                material: 'color: #ff0000',
                 scale: '0.06 0.06 0.06',
                 rotation: '0 45 0',
-                geometry: '',
+                geometry: 'primitive: box',
                 holdable: ''
             },
             xLine: {
@@ -199,13 +199,13 @@ function createTransform(transformType, document) {
                 lineAttribute: 'start: 0.2, 0, 0.2; end: 0 0 0; color: #ff0000'
             },
             y: {
-                tag: 'a-box',
+                tag: 'a-entity',
                 id: 'y',
                 position: '0 0.2 0',
-                color: '#00ff00',
+                material: 'color: #00ff00',
                 scale: '0.06 0.06 0.06',
                 rotation: '0 45 0',
-                geometry: '',
+                geometry: 'primitive: box',
                 holdable: ''
             },
             yLine: {
@@ -214,13 +214,13 @@ function createTransform(transformType, document) {
                 lineAttribute: 'start: 0, 0.2, 0; end: 0 0 0; color: #00ff00'
             },
             z: {
-                tag: 'a-box',
+                tag: 'a-entity',
                 id: 'z',
                 position: '-0.2 0 0.2',
-                color: '#0000ff',
+                material: 'color: #0000ff',
                 scale: '0.06 0.06 0.06',
                 rotation: '0 45 0',
-                geometry: '',
+                geometry: 'primitive: box',
                 holdable: ''
             },
             zLine: {
@@ -229,12 +229,12 @@ function createTransform(transformType, document) {
                 lineAttribute: 'start: -0.2, 0, 0.2; end: 0 0 0; color: #0000ff'
             },
             all: {
-                tag: 'a-box',
+                tag: 'a-entity',
                 id: 'all',
                 position: '0 0 0',
-                color: '#ffffff',
+                material: 'color: #ffffff',
                 scale: '0.05 0.05 0.05',
-                geometry: '',
+                geometry: 'primitive: box',
                 holdable: ''
             }
         }
@@ -242,57 +242,57 @@ function createTransform(transformType, document) {
         currentControl = 2;
         values = {
             x: {
-                tag: 'a-torus',
+                tag: '',
                 id: 'x',
                 position: '0 0 0',
-                color: '#ff0000',
+                material: 'color: #ff0000',
                 scale: '0.05 0.05 0.05',
                 rotation: '0 90 0',
-                geometry: 'radius: 5; radiusTubular: 0.1; segmentsRadial: 100; segmentsTubular: 100',
+                geometry: 'primitive: torus; radius: 5; radiusTubular: 0.1; segmentsRadial: 100; segmentsTubular: 100',
                 holdable: ''
             },
             xLine: {
                 tag: 'a-entity',
                 id: 'xLine',
-                lineAttribute: 'start: 0, 0, 0; end: 0 0 0'
+                lineAttribute: 'visible: false'
             },
             y: {
-                tag: 'a-torus',
+                tag: 'a-entity',
                 id: 'y',
                 position: '0 0 0',
-                color: '#00ff00',
+                material: 'color: #00ff00',
                 scale: '0.05 0.05 0.05',
                 rotation: '90 0 0',
-                geometry: 'radius: 5; radiusTubular: 0.1; segmentsRadial: 100; segmentsTubular: 100',
+                geometry: 'primitive: torus; radius: 5; radiusTubular: 0.1; segmentsRadial: 100; segmentsTubular: 100',
                 holdable: ''
             },
             yLine: {
                 tag: 'a-entity',
                 id: 'yLine',
-                lineAttribute: 'start: 0, 0, 0; end: 0 0 0'
+                lineAttribute: 'visible: false'
             },
             z: {
-                tag: 'a-torus',
+                tag: 'a-entity',
                 id: 'z',
                 position: '0 0 0',
-                color: '#0000ff',
+                material: 'color: #0000ff',
                 scale: '0.05 0.05 0.05',
                 rotation: '0 0 0',
-                geometry: 'radius: 5; radiusTubular: 0.1; segmentsRadial: 100; segmentsTubular: 100',
+                geometry: 'primitive: torus; radius: 5; radiusTubular: 0.1; segmentsRadial: 100; segmentsTubular: 100',
                 holdable: ''
             },
             zLine: {
                 tag: 'a-entity',
                 id: 'zLine',
-                lineAttribute: 'start: 0, 0, 0; end: 0 0 0'
+                lineAttribute: 'visible: false'
             },
             all: {
-                tag: 'a-torus',
+                tag: 'a-entity',
                 id: 'all',
                 position: '0 0 0',
-                color: '#ffffff',
+                material: 'color: #ffffff',
                 scale: '0.05 0.05 0.05',
-                geometry: 'radius: 6; radiusTubular: 0.1; segmentsRadial: 100; segmentsTubular: 100',
+                geometry: 'primitive: torus; radius: 6; radiusTubular: 0.1; segmentsRadial: 100; segmentsTubular: 100',
                 holdable: ''
             }
         }
@@ -301,9 +301,8 @@ function createTransform(transformType, document) {
 }
 
 function switchTransformGesture (hand) {
-    //TODO: lo switch è veloce, mettere un timer (tpo 2 secondi)
-    //TODO: in ogni caso c'è un problema nell'adattamento dei parametri del transform
-    //TODO: possibilità di nascondere il transform dalla scena
+    //TODO: lo switch è veloce, mettere un timer (tipo 2 secondi)
+    //TODO: possibilità di nascondere il transform dalla scena (document.querySelector('#transform').setAttribute('visible', false);
     //return (hand && (Math.abs(hand.direction[0]) < 0.5 && Math.abs(hand.direction[1]) < 0.5 && Math.abs(hand.direction[2]) < 1) &&hand.pointables[0].extended && hand.pointables[1].extended && hand.pointables[2].extended && hand.pointables[3].extended && hand.pointables[4].extended);
     return false;
 }
@@ -460,7 +459,7 @@ AFRAME.registerComponent('intersect-and-manipulate', {
                         if(targetObject !== null && targetObject !== undefined) {
                             targetObject.setAttribute('material', 'opacity: 1.0');
                             targetObject.setAttribute('position', oldPosition);
-                            //TODO: viene ripristinata la vecchia posizione solo se l'elemento non è stato traslato
+                            //TODO: ripristinare la vecchia posizione solo se l'elemento non è stato traslato
                         }
                         //aggiornamento vecchia posizione
                         oldPosition = endPath;

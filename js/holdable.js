@@ -130,7 +130,9 @@ AFRAME.registerComponent('holdable', {
             firstHandPosition = e.detail.hand.pointables[0].tipPosition;
             //assegnato target dallo script componente
             start = true;
-            document.querySelector('#' + axis).setAttribute('color', '#ffff00');
+            document.querySelector('#' + axis).setAttribute('material', {
+                color: '#ffff00'
+            });
             if(axis !== 'all')
                 document.querySelector('#' + axis + 'Line').setAttribute('line', {
                     color: '#ffff00'
@@ -151,7 +153,7 @@ AFRAME.registerComponent('holdable', {
         //l'evento emesso è stato "stoppato"
         start = false;
         //assegnamento colore precedente
-        document.querySelector('#' + axis).setAttribute('color', oldColor());
+        document.querySelector('#' + axis).setAttribute('material', {color: oldColor()});
         if(axis !== 'all')
             document.querySelector('#' + axis + 'Line').setAttribute('line', {
                 color: oldColor()
