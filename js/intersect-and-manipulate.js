@@ -301,7 +301,11 @@ function createTransform(transformType, document) {
 }
 
 function switchTransformGesture (hand) {
-    //TODO: riconoscimento gesture
+    //TODO: lo switch è veloce, mettere un timer (tpo 2 secondi)
+    //TODO: in ogni caso c'è un problema nell'adattamento dei parametri del transform
+    //TODO: possibilità di nascondere il transform dalla scena
+    //return (hand && (Math.abs(hand.direction[0]) < 0.5 && Math.abs(hand.direction[1]) < 0.5 && Math.abs(hand.direction[2]) < 1) &&hand.pointables[0].extended && hand.pointables[1].extended && hand.pointables[2].extended && hand.pointables[3].extended && hand.pointables[4].extended);
+    return false;
 }
 
 function createPath (document) {
@@ -332,7 +336,7 @@ AFRAME.registerComponent('intersect-and-manipulate', {
         //mano da utilizzare per il raggio
         hand: {type: 'string', default: 'right', oneOf: ['left', 'right']},
         //controllo da gestire per l'oggetto selezionato
-        control: {type: 'string', default: 'scale', oneOf: ['translate', 'scale', 'rotate']},
+        control: {type: 'string', default: 'translate', oneOf: ['translate', 'scale', 'rotate']},
         tag: {type: 'string', default: 'selectable'}
     },
 
@@ -358,7 +362,7 @@ AFRAME.registerComponent('intersect-and-manipulate', {
     tick: function () {
         let cameraPosition = document.querySelector('[camera]').getAttribute('position');
         let aframeHand = selectedHand(this.data.hand, document);
-        let hand;
+        let hand = null;
         if (aframeHand)
             hand = aframeHand.components['leap-hand'].getHand();
         //informazioni LeapMotion SDK
@@ -370,7 +374,7 @@ AFRAME.registerComponent('intersect-and-manipulate', {
                 //hand raycaster
                 let origin = aframeHand.components['leap-hand'].intersector.raycaster.ray.origin;
                 let relativeOriginPosition = origin.clone();
-                document.querySelector('[camera]').components['camera'].el.object3D.updateMatrixWorld();
+                //document.querySelector('[camera]').components['camera'].el.object3D.updateMatrixWorld();
                 document.querySelector('[camera]').components['camera'].el.object3D.worldToLocal(relativeOriginPosition);
                 //modifica del raycaster del componente con posizione della mano (coincide con la mesh)
                 this.el.setAttribute('raycaster', {
@@ -430,7 +434,7 @@ AFRAME.registerComponent('intersect-and-manipulate', {
         if (isVisible) {
             //posizioni elemento intersecato e camera per successiva definizione del percorso
             let endPath = intersectedObject.getAttribute('position');
-            document.querySelector('[camera]').components['camera'].el.object3D.updateMatrixWorld();
+            //document.querySelector('[camera]').components['camera'].el.object3D.updateMatrixWorld();
             let localPosition = new THREE.Vector3(0, -0.5, -3);
             let startPath = document.querySelector('[camera]').components['camera'].el.object3D.localToWorld(localPosition);
             if (intersectedObject.getAttribute(this.data.tag) !== null) {
@@ -456,6 +460,7 @@ AFRAME.registerComponent('intersect-and-manipulate', {
                         if(targetObject !== null && targetObject !== undefined) {
                             targetObject.setAttribute('material', 'opacity: 1.0');
                             targetObject.setAttribute('position', oldPosition);
+                            //TODO: viene ripristinata la vecchia posizione solo se l'elemento non è stato traslato
                         }
                         //aggiornamento vecchia posizione
                         oldPosition = endPath;

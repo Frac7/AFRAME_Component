@@ -1,4 +1,5 @@
-var properties = ['material.opacity', 'material.color', 'scale', 'rotation'];
+//var properties = ['material.opacity', 'material.color', 'scale', 'rotation'];
+var properties = ['material.opacity', 'material.color'];
 var values = [];
 var setted = false;
 //vengono definite qui le proprietà dell'animazione
@@ -9,12 +10,15 @@ var setted = false;
 
 //verranno tralasciate quindi le proprietà del transform
 function randomValues () {
-    let opacity = 0, colors = [], color = '';
+    let opacity, colors, color;
     opacity = Math.random();
     if(opacity !== 0) {
         colors = ['#0000FF', '#00FF00', '#FF0000', '#000000', '#FFFFFF', '#FF6400', '#FFE100'];
         color = parseInt(Math.random() * 6);
-        values = [opacity, colors[color]];
+        for(let i = 0; i < values.length; i++)
+            values.pop();
+        //values.push(opacity, colors[color], targetObject.getAttribute('scale'), targetObject.getAttribute('rotation'));
+        values.push(opacity, colors[color]);
     }
 }
 
@@ -43,24 +47,25 @@ function randomValues () {
 
 //si assume che venga utilizzata la mano destra per i key frames, tanto questo verrà sostituito dal bottone
 function gestureAnimazione (hand) {
-    //TODO: da rivedere perché il valore viene sovrascritto
-    let oldRotation = targetObject.getAttribute('rotation');
-    let oldScale = targetObject.getAttribute('scale');
-    targetObject.oldParameters.oldRotation = oldRotation;
-    targetObject.oldParameters.oldScale = oldScale;
+    //TODO: trovare un modo per creare un singolo key frame
     return (hand && (Math.abs(hand.palmNormal[1]) < 0.5 && Math.abs(hand.palmNormal[0]) < 0.5) && hand.pointables[0].extended && hand.pointables[1].extended && hand.pointables[2].extended && hand.pointables[3].extended && hand.pointables[4].extended);
 }
 
-function gestureStartAnimation () {
+//TODO: da rivedere tutte e tre le funzioni
 
+function gestureStartAnimation (hand) {
+    //palmo in basso e indice esteso
+    return (hand && !hand.pointables[0].extended && hand.pointables[1].extended && !hand.pointables[2].extended && !hand.pointables[3].extended && !hand.pointables[4].extended);
 }
 
-function gestureStopAnimation () {
-
+function gestureStopAnimation (hand) {
+    //palmo in basso e pollice esteso
+    return (hand && hand.pointables[0].extended && !hand.pointables[1].extended && !hand.pointables[2].extended && !hand.pointables[3].extended && !hand.pointables[4].extended);
 }
 
-function gestureResumeAnimation () {
-
+function gestureResumeAnimation (hand) {
+    //palmo in basso e mignolo esteso
+    return (hand && !hand.pointables[0].extended && !hand.pointables[1].extended && !hand.pointables[2].extended && !hand.pointables[3].extended && hand.pointables[4].extended);
 }
 
 AFRAME.registerComponent('animate', {
@@ -74,25 +79,11 @@ AFRAME.registerComponent('animate', {
         delay: {type: 'float', default: 0}
     },
 
-    init: function () {
-
-    },
-
     tick: function () {
         if(targetObject !== null) {
             if(!setted) {
-                targetObject.oldParameters = {
-                    oldScale: {
-                        x: null,
-                        y: null,
-                        z: null
-                    },
-                    oldRotation: {
-                        x: null,
-                        y: null,
-                        z: null
-                    }
-                };
+                targetObject.trajectory = [];
+                targetObject.keyFrames = [];
                 setted = true;
             }
             //gesture selezione key frame
@@ -102,25 +93,39 @@ AFRAME.registerComponent('animate', {
                 //la gesture animazione verrà sostituita da un bottone per selezionare il key frame, alla pressione
                 //di questo bottone, tutte le proprietà dell'oggetto vengono salvate e viene creata l'animazione
 
-                //genera e assegna i valori
+                //genera i valori
                 randomValues();
                 //assegna i valori solo se l'oggetto è visibile
                 if (values.length !== []) {
-                    //assegna i valori in base a properties e values, l'oggetto è targetObject (quindi oggetto precedentemente
-                    //selezionato con il componente intersect-and-manipulate)
+                    //assegna i valori in base a properties e values, l'oggetto è targetObject
+                    // (quindi oggetto precedentemente selezionato con il componente intersect-and-manipulate)
                     let attributes = [];
+                    let keyFrame = [];
                     for (let i = 0; i < properties.length; i++) {
-                        if(properties[i] === 'material.opacity' || properties[i] === 'material.color' || (properties[i] === 'scale' && targetObject.getAttribute('scale') !== targetObject.oldScale) || (properties[i] === 'rotation' && targetObject.getAttribute('rotation') !== targetObject.oldRotation)) {
-                            attributes[i] = 'property: ' + properties[i] + '; dur: ' + this.data.duration + '; easing: '
-                                + this.data.interpolation + '; to: ' + values[i] + '; delay: ' + this.data.delay + '; repeat: ' +
-                                this.data.repeat + '; startEvents: start; pauseEvents: end; resumeEvents: resume';
-                            targetObject.setAttribute('animation__' + properties[i], attributes[i]);
-                        }
+                        //per ora scala e rotazione vengono sempre registrati a prescindere dal cambiamento
+                        attributes[i] = 'property: ' + properties[i] + '; dur: ' + this.data.duration + '; easing: '
+                            + this.data.interpolation + '; to: ' + values[i] + '; delay: ' + this.data.delay + '; loop: ' +
+                            this.data.repeat + '; startEvents: start; pauseEvents: end; resumeEvents: resume';
+                        targetObject.setAttribute('animation__' + properties[i], attributes[i]);
+                        //salvataggio key frame (una locazione per ogni proprietà, formano un key frame)
+                        keyFrame.push({
+                            name: 'animation__' + properties[i],
+                            values: attributes[i]
+                        });
                     }
-                } else
-                    targetObject.setAttribute('animation__visible', 'property: material.opacity; dur: ' + this.data.duration
-                        + '; easing: ' + this.data.interpolation + '; to: 0; delay: ' + this.data.delay + '; repeat: '
-                        + this.data.repeat);
+                    //salvataggio singolo key frame (una locazione nell'array dei vari key frames)
+                    targetObject.keyFrames.push(keyFrame);
+                } else {
+                    let keyFrame = {
+                        name: 'animation__visible',
+                        values: 'property: material.opacity; dur: ' +this.data.duration
+                        + '; easing: ' + this.data.interpolation + '; to: 0; delay: ' + this.data.delay + '; loop: '
+                        + this.data.repeat
+                    };
+                    targetObject.setAttribute('animation__visible', keyFrame);
+                    //quando si recuperano i key frames è necessario effettuare un controllo del tipo su stringa o array
+                    targetObject.keyFrames.push(keyFrame);
+                }
                 //salvataggio posizione per traiettoria oggetto
                 //da provare, in questo modo dovrebbe essere possibile avere un'unica traiettoria per un oggetto
                 //in questo modo sarebbe giusto necessario gestire la cancellazione di una traiettoria quando si
@@ -130,14 +135,20 @@ AFRAME.registerComponent('animate', {
 
             //altre gestures per startare e stoppare l'animazione - da integrare col parametro del componente da wrappare
             //verranno emessi degli eventi - c'è il listener nel componente animation
-            if(gestureStartAnimation)
+            if(gestureStartAnimation(gestureHand.components['leap-hand'].getHand())) {
+                console.log('start');
                 this.el.emit('start');
+            }
 
-            if(gestureResumeAnimation)
+            if(gestureResumeAnimation(gestureHand.components['leap-hand'].getHand())) {
+                console.log('resume');
                 this.el.emit('resume');
+            }
 
-            if(gestureStopAnimation)
+            if(gestureStopAnimation(gestureHand.components['leap-hand'].getHand())) {
+                console.log('end');
                 this.el.emit('end');
+            }
         }
     }
 });
