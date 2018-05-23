@@ -716,12 +716,17 @@ var self = null; //this (componente)
 var intersection = false;
 var transformCreated = false; //flag creazione transform (evita che venga creato più di una volta)
 var targetObject = null; //oggetto puntato
+var oldPosition = null;
+var controls = ['translate', 'scale', 'rotate'];
+var currentControl = 0;
+
+var gestureHand = null;
 
 //mano selezionata tramite componente
 function selectedHand(hand, document) {
-    var hands = document.querySelectorAll('[leap-hand]');
+    let hands = document.querySelectorAll('[leap-hand]');
     if (hands) {
-        for (var i = 0; i < hands.length; i++)
+        for (let i = 0; i < hands.length; i++)
             if (hands[i].components['leap-hand'] && hands[i].components['leap-hand'].attrValue.hand === hand)
                 return hands[i];
     }
@@ -740,8 +745,8 @@ function validHand(hand) {
 
 //creazione controllo in base ad array di valori
 function createControl(transform, document, values) {
-    var x, y, z, all;
-    var xLine, yLine, zLine;
+    let x, y, z, all;
+    let xLine, yLine, zLine;
     //creazione freccia x
     x = document.querySelector('#x');
     if(x === null || x === undefined) {
@@ -750,7 +755,7 @@ function createControl(transform, document, values) {
         transform.appendChild(x);
     }
     x.setAttribute('position', values.x.position);
-    x.setAttribute('color', values.x.color);
+    x.setAttribute('material', values.x.material);
     x.setAttribute('scale', values.x.scale);
     x.setAttribute('rotation', values.x.rotation);
     x.setAttribute('geometry', values.x.geometry);
@@ -771,7 +776,7 @@ function createControl(transform, document, values) {
         transform.appendChild(y);
     }
     y.setAttribute('position', values.y.position);
-    y.setAttribute('color', values.y.color);
+    y.setAttribute('material', values.y.material);
     y.setAttribute('scale', values.y.scale);
     y.setAttribute('rotation', values.y.rotation);
     y.setAttribute('geometry', values.y.geometry);
@@ -792,7 +797,7 @@ function createControl(transform, document, values) {
         transform.appendChild(z);
     }
     z.setAttribute('position', values.z.position);
-    z.setAttribute('color', values.z.color);
+    z.setAttribute('material', values.z.material);
     z.setAttribute('scale', values.z.scale);
     z.setAttribute('rotation', values.z.rotation);
     z.setAttribute('geometry', values.z.geometry);
@@ -813,7 +818,7 @@ function createControl(transform, document, values) {
         transform.appendChild(all);
     }
     all.setAttribute('position', values.all.position);
-    all.setAttribute('color', values.all.color);
+    all.setAttribute('material', values.all.material);
     all.setAttribute('scale', values.all.scale);
     all.setAttribute('geometry', values.all.geometry);
     all.setAttribute('holdable', values.all.holdable);
@@ -821,8 +826,9 @@ function createControl(transform, document, values) {
 
 //creazione transform (popolamento valori da usare per creare il controllo)
 function createTransform(transformType, document) {
-    var values = null;
-    var transform = document.querySelector('#transform');
+    //TODO: il controllo per translate va rivisto perché non esiste, ci sono i piani
+    let values = null;
+    let transform = document.querySelector('#transform');
     if(transform === null || transform === undefined) {
         transform = document.createElement('a-entity');
         transform.setAttribute('id', 'transform');
@@ -831,15 +837,16 @@ function createTransform(transformType, document) {
     transform.setAttribute('position', targetObject.getAttribute('position'));
     transform.setAttribute('rotation', document.querySelector('[camera]').getAttribute('rotation'));
     if (transformType === 'translate') {
+        currentControl = 0;
         values = {
             x: {
-                tag: 'a-cone',
+                tag: 'a-entity',
                 id: 'x',
                 position: '0.2 0 0.2',
-                color: '#ff0000',
+                material: 'color: #ff0000',
                 scale: '0.1 0.1 0.1',
                 rotation: '0 -45 -90',
-                geometry: 'radiusBottom: 0.25',
+                geometry: 'primitive: cone; radiusBottom: 0.25',
                 holdable: ''
             },
             xLine: {
@@ -848,13 +855,13 @@ function createTransform(transformType, document) {
                 lineAttribute: 'start: 0.2, 0, 0.2; end: 0 0 0; color: #ff0000'
             },
             y: {
-                tag: 'a-cone',
+                tag: 'a-entity',
                 id: 'y',
                 position: '0 0.2 0',
-                color: '#00ff00',
+                material: 'color: #00ff00',
                 scale: '0.1 0.1 0.1',
                 rotation: '0 0 0',
-                geometry: 'radiusBottom: 0.25',
+                geometry: 'primitive: cone; radiusBottom: 0.25',
                 holdable: ''
             },
             yLine: {
@@ -863,13 +870,13 @@ function createTransform(transformType, document) {
                 lineAttribute: 'start: 0, 0.2, 0; end: 0 0 0; color: #00ff00'
             },
             z: {
-                tag: 'a-cone',
+                tag: 'a-entity',
                 id: 'z',
                 position: '-0.2 0 0.2',
-                color: '#0000ff',
+                material: 'color: #0000ff',
                 scale: '0.1 0.1 0.1',
                 rotation: '0 45 90',
-                geometry: 'radiusBottom: 0.25',
+                geometry: 'primitive: cone; radiusBottom: 0.25',
                 holdable: ''
             },
             zLine: {
@@ -878,25 +885,26 @@ function createTransform(transformType, document) {
                 lineAttribute: 'start: -0.2, 0, 0.2; end: 0 0 0; color: #0000ff'
             },
             all: {
-                tag: 'a-sphere',
+                tag: 'a-entity',
                 id: 'all',
                 position: '0 0 0',
-                color: '#ffffff',
+                material: 'color: #ffffff',
                 scale: '0.03 0.03 0.03',
-                geometry: '',
+                geometry: 'primitive: sphere',
                 holdable: ''
             }
         }
     } else if (transformType === 'scale') {
+        currentControl = 1;
         values = {
             x: {
-                tag: 'a-box',
+                tag: 'a-entity',
                 id: 'x',
                 position: '0.2 0 0.2',
-                color: '#ff0000',
+                material: 'color: #ff0000',
                 scale: '0.06 0.06 0.06',
                 rotation: '0 45 0',
-                geometry: '',
+                geometry: 'primitive: box',
                 holdable: ''
             },
             xLine: {
@@ -905,13 +913,13 @@ function createTransform(transformType, document) {
                 lineAttribute: 'start: 0.2, 0, 0.2; end: 0 0 0; color: #ff0000'
             },
             y: {
-                tag: 'a-box',
+                tag: 'a-entity',
                 id: 'y',
                 position: '0 0.2 0',
-                color: '#00ff00',
+                material: 'color: #00ff00',
                 scale: '0.06 0.06 0.06',
                 rotation: '0 45 0',
-                geometry: '',
+                geometry: 'primitive: box',
                 holdable: ''
             },
             yLine: {
@@ -920,13 +928,13 @@ function createTransform(transformType, document) {
                 lineAttribute: 'start: 0, 0.2, 0; end: 0 0 0; color: #00ff00'
             },
             z: {
-                tag: 'a-box',
+                tag: 'a-entity',
                 id: 'z',
                 position: '-0.2 0 0.2',
-                color: '#0000ff',
+                material: 'color: #0000ff',
                 scale: '0.06 0.06 0.06',
                 rotation: '0 45 0',
-                geometry: '',
+                geometry: 'primitive: box',
                 holdable: ''
             },
             zLine: {
@@ -935,69 +943,70 @@ function createTransform(transformType, document) {
                 lineAttribute: 'start: -0.2, 0, 0.2; end: 0 0 0; color: #0000ff'
             },
             all: {
-                tag: 'a-box',
+                tag: 'a-entity',
                 id: 'all',
                 position: '0 0 0',
-                color: '#ffffff',
+                material: 'color: #ffffff',
                 scale: '0.05 0.05 0.05',
-                geometry: '',
+                geometry: 'primitive: box',
                 holdable: ''
             }
         }
     } else if (transformType === 'rotate') {
+        currentControl = 2;
         values = {
             x: {
-                tag: 'a-torus',
+                tag: '',
                 id: 'x',
                 position: '0 0 0',
-                color: '#ff0000',
+                material: 'color: #ff0000',
                 scale: '0.05 0.05 0.05',
                 rotation: '0 90 0',
-                geometry: 'radius: 5; radiusTubular: 0.1; segmentsRadial: 100; segmentsTubular: 100',
+                geometry: 'primitive: torus; radius: 5; radiusTubular: 0.1; segmentsRadial: 100; segmentsTubular: 100',
                 holdable: ''
             },
             xLine: {
                 tag: 'a-entity',
                 id: 'xLine',
-                lineAttribute: 'start: 0, 0, 0; end: 0 0 0'
+                lineAttribute: 'visible: false'
             },
             y: {
-                tag: 'a-torus',
+                tag: 'a-entity',
                 id: 'y',
                 position: '0 0 0',
-                color: '#00ff00',
+                material: 'color: #00ff00',
                 scale: '0.05 0.05 0.05',
                 rotation: '90 0 0',
-                geometry: 'radius: 5; radiusTubular: 0.1; segmentsRadial: 100; segmentsTubular: 100',
+                geometry: 'primitive: torus; radius: 5; radiusTubular: 0.1; segmentsRadial: 100; segmentsTubular: 100',
                 holdable: ''
             },
             yLine: {
                 tag: 'a-entity',
                 id: 'yLine',
-                lineAttribute: 'start: 0, 0, 0; end: 0 0 0'
+                lineAttribute: 'visible: false'
             },
             z: {
-                tag: 'a-torus',
+                tag: 'a-entity',
                 id: 'z',
                 position: '0 0 0',
-                color: '#0000ff',
+                material: 'color: #0000ff',
                 scale: '0.05 0.05 0.05',
                 rotation: '0 0 0',
-                geometry: 'radius: 5; radiusTubular: 0.1; segmentsRadial: 100; segmentsTubular: 100',
+                geometry: 'primitive: torus; radius: 5; radiusTubular: 0.1; segmentsRadial: 100; segmentsTubular: 100',
                 holdable: ''
             },
             zLine: {
                 tag: 'a-entity',
                 id: 'zLine',
-                lineAttribute: 'start: 0, 0, 0; end: 0 0 0'
+                lineAttribute: 'visible: false'
             },
             all: {
-                tag: 'a-torus',
+                tag: 'a-entity',
                 id: 'all',
                 position: '0 0 0',
-                color: '#ffffff',
+                material: 'color: #ffffff',
                 scale: '0.05 0.05 0.05',
-                geometry: 'radius: 6; radiusTubular: 0.1; segmentsRadial: 100; segmentsTubular: 100',
+                geometry: 'primitive: torus; radius: 6; radiusTubular: 0.1; segmentsRadial: 100; segmentsTubular: 100',
                 holdable: ''
             }
         }
@@ -1005,20 +1014,26 @@ function createTransform(transformType, document) {
     createControl(transform, document, values);
 }
 
+function switchTransformGesture (hand) {
+    //TODO: gesture per switch
+    //TODO: possibilità di nascondere il transform dalla scena (document.querySelector('#transform').setAttribute('visible', false);
+    return false;
+}
+
 function createPath (document) {
     //definizione del percorso. il percorso viene creato con un componente esterno per a-frame
     //#1 curva
-    var curve = document.querySelector('#curve');
+    let curve = document.querySelector('#curve');
     if(curve === null || curve === undefined) {
         curve = document.createElement('a-curve');
         curve.setAttribute('id', 'curve');
         document.querySelector('a-scene').appendChild(curve);
         //#2 punti (figli)
-        var child0 = document.createElement('a-curve-point');
+        let child0 = document.createElement('a-curve-point');
         child0.setAttribute('id', 'point0');
         child0.setAttribute('position', '0 0 0');
         curve.appendChild(child0);
-        var child2 = document.createElement('a-curve-point');
+        let child2 = document.createElement('a-curve-point');
         child2.setAttribute('id', 'point2');
         //child2: "origine"
         child2.setAttribute('position', '0 0 0');
@@ -1033,7 +1048,7 @@ AFRAME.registerComponent('intersect-and-manipulate', {
         //mano da utilizzare per il raggio
         hand: {type: 'string', default: 'right', oneOf: ['left', 'right']},
         //controllo da gestire per l'oggetto selezionato
-        control: {type: 'string', default: 'scale', oneOf: ['translate', 'scale', 'rotate']},
+        control: {type: 'string', default: 'translate', oneOf: ['translate', 'scale', 'rotate']},
         tag: {type: 'string', default: 'selectable'}
     },
 
@@ -1047,9 +1062,9 @@ AFRAME.registerComponent('intersect-and-manipulate', {
             far: 0.05
         });
         //event listener: il raggio ha intersecato qualcosa
-        /*nel momento in cui un oggetto viene intersecato dal raggio, viene creato un percorso che parte dalla posizione
-        * dell'oggetto e arriva alla posizione della camera (posizione dell'utente) e l'oggetto intersecato segue questo
-        * percorso*/
+        //nel momento in cui un oggetto viene intersecato dal raggio, viene creato un percorso che parte dalla posizione
+        //dell'oggetto e arriva alla posizione della camera (posizione dell'utente) e l'oggetto intersecato segue questo
+        //percorso
         this.el.addEventListener('raycaster-intersection', this.raycasterIntersection.bind(this));
         this.el.addEventListener('raycaster-intersection-cleared', function () {
             intersection = false;
@@ -1057,19 +1072,21 @@ AFRAME.registerComponent('intersect-and-manipulate', {
     },
 
     tick: function () {
-        var cameraPosition = document.querySelector('[camera]').getAttribute('position');
-        var aframeHand = selectedHand(this.data.hand, document);
-        var hand;
+        let cameraPosition = document.querySelector('[camera]').getAttribute('position');
+        let aframeHand = selectedHand(this.data.hand, document);
+        let hand = null;
         if (aframeHand)
             hand = aframeHand.components['leap-hand'].getHand();
         //informazioni LeapMotion SDK
         if (validHand(hand)) {
             //posizione del palmo e riconoscimento gesto
             if (gestureRecognizer(hand)) {
+                //temporaneo
+                gestureHand = aframeHand;
                 //hand raycaster
-                var origin = aframeHand.components['leap-hand'].intersector.raycaster.ray.origin;
-                var relativeOriginPosition = origin.clone();
-                document.querySelector('[camera]').components['camera'].el.object3D.updateMatrixWorld();
+                let origin = aframeHand.components['leap-hand'].intersector.raycaster.ray.origin;
+                let relativeOriginPosition = origin.clone();
+                //document.querySelector('[camera]').components['camera'].el.object3D.updateMatrixWorld();
                 document.querySelector('[camera]').components['camera'].el.object3D.worldToLocal(relativeOriginPosition);
                 //modifica del raycaster del componente con posizione della mano (coincide con la mesh)
                 this.el.setAttribute('raycaster', {
@@ -1078,7 +1095,7 @@ AFRAME.registerComponent('intersect-and-manipulate', {
                     far: 5
                 });
                 //percorso meshline relativo
-                var path = relativeOriginPosition.x + ' ' + relativeOriginPosition.y + ' ' + relativeOriginPosition.z + ', ' + relativeOriginPosition.x + ' ' + relativeOriginPosition.y + ' ' + (relativeOriginPosition.z - 5);
+                let path = relativeOriginPosition.x + ' ' + relativeOriginPosition.y + ' ' + relativeOriginPosition.z + ', ' + relativeOriginPosition.x + ' ' + relativeOriginPosition.y + ' ' + (relativeOriginPosition.z - 5);
                 if (intersection) {
                     this.el.setAttribute('meshline', {
                         lineWidth: 20,
@@ -1105,28 +1122,35 @@ AFRAME.registerComponent('intersect-and-manipulate', {
                 });
             }
         }
-        var transform = document.querySelector('#transform');
+        let transform = document.querySelector('#transform');
         if (transform !== null) {
             //scala il transform in base alla distanza
-            var transformPosition = document.querySelector('#transform').getAttribute('position');
-            var distance = Math.sqrt(Math.pow(transformPosition.x - cameraPosition.x, 2) + Math.pow(transformPosition.y - cameraPosition.y, 2) + Math.pow(transformPosition.z - cameraPosition.z, 2));
+            let transformPosition = document.querySelector('#transform').getAttribute('position');
+            //let distance = Math.sqrt(Math.pow(transformPosition.x - cameraPosition.x, 2) + Math.pow(transformPosition.y - cameraPosition.y, 2) + Math.pow(transformPosition.z - cameraPosition.z, 2));
+            let distance = new THREE.Vector3(cameraPosition.x, cameraPosition.y, cameraPosition.z).distanceTo(new THREE.Vector3(transformPosition.x, transformPosition.y, transformPosition.z));
             transform.setAttribute('scale', (distance) + ' ' + (distance) + ' ' + (distance));
+
+            if(switchTransformGesture(gestureHand.components['leap-hand'].getHand())) {
+                //cambia il transform... in base a cosa si sceglie come cambiare?
+                //si potrebbe anche usare uno swipe e considerare i controlli come un array circolare
+                createTransform(controls[(currentControl + 1) % controls.length], document);
+            }
         }
     },
 
     raycasterIntersection: function (event) {
         //oggetto intersecato
-        var intersectedObject = event.detail.els[0];
+        let intersectedObject = event.detail.els[0];
         //mano visibile
-        var isVisible = selectedHand(event.srcElement.components['intersect-and-manipulate'].data.hand, document).components['leap-hand'].isVisible;
+        let isVisible = selectedHand(event.srcElement.components['intersect-and-manipulate'].data.hand, document).components['leap-hand'].isVisible;
         if (isVisible) {
             //posizioni elemento intersecato e camera per successiva definizione del percorso
-            var endPath = intersectedObject.getAttribute('position');
-            document.querySelector('[camera]').components['camera'].el.object3D.updateMatrixWorld();
-            var localPosition = new THREE.Vector3(0, -0.5, -3);
-            var startPath = document.querySelector('[camera]').components['camera'].el.object3D.localToWorld(localPosition);
-
+            let endPath = intersectedObject.getAttribute('position');
+            //document.querySelector('[camera]').components['camera'].el.object3D.updateMatrixWorld();
+            let localPosition = new THREE.Vector3(0, -0.5, -3);
+            let startPath = document.querySelector('[camera]').components['camera'].el.object3D.localToWorld(localPosition);
             if (intersectedObject.getAttribute(this.data.tag) !== null) {
+                //inizia il percorso del nuovo oggetto
                 intersection = true;
                 createPath(document);
                 document.querySelector('#point0').setAttribute('position', endPath);
@@ -1145,12 +1169,18 @@ AFRAME.registerComponent('intersect-and-manipulate', {
                             triggerRadius: 0
                         });
                         event.srcElement.removeAttribute('alongpath');
-                        if(targetObject !== null && targetObject !== undefined)
+                        if(targetObject !== null && targetObject !== undefined) {
                             targetObject.setAttribute('material', 'opacity: 1.0');
+                            //se l'elemento non è stato traslato
+                            if(oldPosition !== null)
+                                targetObject.setAttribute('position', oldPosition);
+                        }
+                        //aggiornamento vecchia posizione
+                        oldPosition = endPath;
                         targetObject = event.srcElement;
                         //creazione transform
                         control = self.data.control;
-                        createTransform(self.data.control, document);
+                        createTransform(control, document);
                         transformCreated = true;
                         event.srcElement.setAttribute('material', 'opacity: 0.5');
                     }
@@ -1176,6 +1206,7 @@ var control = null;
 var handTick = null;
 var d = null;
 
+//riprinstina il colore degli assi in hold stop
 function oldColor () {
     if (axis === 'x')
         return '#ff0000';
@@ -1187,9 +1218,10 @@ function oldColor () {
         return '#ffffff';
 }
 
+//mano che innesca l'evento hold start da cui recuperare la posizione delle dita
 function selectHand() {
-    var hands = d.querySelectorAll('[leap-hand]');
-    for (var j = 0; j < hands.length; j++) {
+    let hands = d.querySelectorAll('[leap-hand]');
+    for (let j = 0; j < hands.length; j++) {
         if (hands[j].components['leap-hand'].getHand() !== undefined && hands[j].components['leap-hand'].getHand().type === hand.type) {
             if (i !== 3 && control !== 'rotate')
                 handTick = hands[j].components['leap-hand'].getHand().pointables[0].tipPosition[i];
@@ -1199,7 +1231,6 @@ function selectHand() {
     }
 }
 
-/* vedere: getBoundingClientRect method */
 AFRAME.registerComponent('holdable', {
 
     init: function () {
@@ -1215,7 +1246,8 @@ AFRAME.registerComponent('holdable', {
                 //selezione posizione mano in base all'asse
                 selectHand();
                 if (handTick !== null && handTick !== undefined) {
-                    //modifica della scalatura in base all'asse scelto (differenza tra posizione pollice in holdstart e ad ogni tick)
+                    //modifica del parametro in base all'asse scelto, var i
+                    //(differenza tra posizione pollice in holdstart e ad ogni tick)
                     switch (i) {
                         case 0:
                             if (control === 'translate') {
@@ -1251,13 +1283,16 @@ AFRAME.registerComponent('holdable', {
                             }
                             break;
                         case 3:
+                            //la distanza viene calcolata solo qui perché all prevede lo stesso valore per tutti gli assi. nei casi diversi da all si tiene conto solo dello spostamento sull'asse scelto
+                            let allPosition = document.querySelector('#all').getAttribute('position');
+                            let distance = new THREE.Vector3(allPosition.x, allPosition.y, allPosition.z).distanceTo(new THREE.Vector3(handTick[0], handTick[1], handTick[2]));
                             if (control === 'translate') {
-                                target.setAttribute('position', (targetOriginalValue.x + (handTick[0] - firstHandPosition[0])) + ' ' + (targetOriginalValue.y + (handTick[1] - firstHandPosition[1])) + ' ' + (targetOriginalValue.z + (handTick[2] - firstHandPosition[2])));
-                                document.querySelector('#transform').setAttribute('position', (oldTransformPosition.x + (handTick[0] - firstHandPosition[0])) + ' ' + (oldTransformPosition.y + (handTick[1] - firstHandPosition[1])) + ' ' + (oldTransformPosition.z + (handTick[2] - firstHandPosition[2])));
+                                target.setAttribute('position', (targetOriginalValue.x + distance) + ' ' + (targetOriginalValue.y + distance) + ' ' + (targetOriginalValue.z + distance));
+                                document.querySelector('#transform').setAttribute('position', (oldTransformPosition.x + distance) + ' ' + (oldTransformPosition.y + distance) + ' ' + (oldTransformPosition.z + distance));
                             } else if (control === 'scale') {
-                                target.setAttribute('scale', (targetOriginalValue.x + (handTick[0] - firstHandPosition[0])) + ' ' + (targetOriginalValue.y + (handTick[1] - firstHandPosition[1])) + ' ' + (targetOriginalValue.z + (handTick[2] - firstHandPosition[2])));
+                                target.setAttribute('scale', (targetOriginalValue.x + distance) + ' ' + (targetOriginalValue.y + distance) + ' ' + (targetOriginalValue.z + distance));
                             } else if (control === 'rotate') {
-                                target.setAttribute('rotation', (targetOriginalValue.x + ((handTick[1] - firstHandPosition[1]) * 360)) + ' ' + (targetOriginalValue.y + ((handTick[0] - firstHandPosition[0]) * 360)) + ' ' + (targetOriginalValue.z + ((handTick[0] - firstHandPosition[0] + handTick[1] - firstHandPosition[1]) * 180)));
+                                target.setAttribute('rotation', (targetOriginalValue.x + (distance * 360)) + ' ' + (targetOriginalValue.y + (distance * 360)) + ' ' + (targetOriginalValue.z + (distance * 360)));
                             }
                             break;
                     }
@@ -1272,6 +1307,9 @@ AFRAME.registerComponent('holdable', {
     },
 
     onHoldStart: function (e) {
+        if(control === 'translate')
+            oldPosition = null;
+        //la vecchia posizione viene sovrascritta da null nel caso di traslazione dell'oggetto
         target = targetObject;
         axis = e.srcElement.id;
         //controllo sull'asse selezionato: tutti, x, y, z
@@ -1289,7 +1327,9 @@ AFRAME.registerComponent('holdable', {
             firstHandPosition = e.detail.hand.pointables[0].tipPosition;
             //assegnato target dallo script componente
             start = true;
-            document.querySelector('#' + axis).setAttribute('color', '#ffff00');
+            document.querySelector('#' + axis).setAttribute('material', {
+                color: '#ffff00'
+            });
             if(axis !== 'all')
                 document.querySelector('#' + axis + 'Line').setAttribute('line', {
                     color: '#ffff00'
@@ -1310,7 +1350,9 @@ AFRAME.registerComponent('holdable', {
         //l'evento emesso è stato "stoppato"
         start = false;
         //assegnamento colore precedente
-        document.querySelector('#' + axis).setAttribute('color', oldColor());
+        document.querySelector('#' + axis).setAttribute('material', {
+            color: oldColor()
+        });
         if(axis !== 'all')
             document.querySelector('#' + axis + 'Line').setAttribute('line', {
                 color: oldColor()

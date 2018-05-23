@@ -1,7 +1,9 @@
-//var properties = ['material.opacity', 'material.color', 'scale', 'rotation'];
+//TODO: gestire le proprietà del transform per l'animazione
+//var properties = ['material.opacity', 'material.color', 'position', 'scale', 'rotation'];
 var properties = ['material.opacity', 'material.color'];
 var values = [];
 var setted = false;
+var currentFrame = 0;
 //vengono definite qui le proprietà dell'animazione
 //quali traiettoria (key frames, alcuni punti nello spazio) per ora i key frames si introducono con la gesture della mano aperta;
 //un insieme di valori per scegliere quale proprietà manipolare (qui bisogna dare la possibilità all'utente di
@@ -10,15 +12,16 @@ var setted = false;
 
 //verranno tralasciate quindi le proprietà del transform
 function randomValues () {
+    while(values.length)
+        values.pop();
     let opacity, colors, color;
     opacity = Math.random();
     if(opacity !== 0) {
         colors = ['#0000FF', '#00FF00', '#FF0000', '#000000', '#FFFFFF', '#FF6400', '#FFE100'];
         color = parseInt(Math.random() * 6);
-        for(let i = 0; i < values.length; i++)
-            values.pop();
-        //values.push(opacity, colors[color], targetObject.getAttribute('scale'), targetObject.getAttribute('rotation'));
+        //values.push(opacity, colors[color], targetObject.getAttribute('position'), targetObject.getAttribute('scale'), targetObject.getAttribute('rotation'));
         values.push(opacity, colors[color]);
+        console.log(values);
     }
 }
 
@@ -45,68 +48,34 @@ function randomValues () {
 //al momento l'animazione viene creata sul targetObject, quindi puntando altri elementi si passa direttamente a creare
 //un'altra animazione
 
-//si assume che venga utilizzata la mano destra per i key frames, tanto questo verrà sostituito dal bottone
-function gestureAnimazione (hand) {
-    //TODO: trovare un modo per creare un singolo key frame
-    return (hand && (Math.abs(hand.palmNormal[1]) < 0.5 && Math.abs(hand.palmNormal[0]) < 0.5) && hand.pointables[0].extended && hand.pointables[1].extended && hand.pointables[2].extended && hand.pointables[3].extended && hand.pointables[4].extended);
-}
+//per gestire start/stop/resum si emette l'evento con nome corrispondente all'azione
 
-//TODO: da rivedere tutte e tre le funzioni
-
-function gestureStartAnimation (hand) {
-    //palmo in basso e indice esteso
-    return (hand && !hand.pointables[0].extended && hand.pointables[1].extended && !hand.pointables[2].extended && !hand.pointables[3].extended && !hand.pointables[4].extended);
-}
-
-function gestureStopAnimation (hand) {
-    //palmo in basso e pollice esteso
-    return (hand && hand.pointables[0].extended && !hand.pointables[1].extended && !hand.pointables[2].extended && !hand.pointables[3].extended && !hand.pointables[4].extended);
-}
-
-function gestureResumeAnimation (hand) {
-    //palmo in basso e mignolo esteso
-    return (hand && !hand.pointables[0].extended && !hand.pointables[1].extended && !hand.pointables[2].extended && !hand.pointables[3].extended && hand.pointables[4].extended);
-}
-
-AFRAME.registerComponent('animate', {
-    schema: {
-        //per property e interpolation, nella gui, deve essere mostrato un elenco con le opzioni dispnibili
-        property: {type: 'string', oneOf: ['', 'material.color', 'material.opacity', 'rotation', 'scale'], default: ''},
-        value: {type: 'string', default: ''},
-        interpolation: {type: 'string', oneOf: ['linear', 'elastic', 'back'], default: 'linear'},
-        repeat: {type: 'string', default: '1'},
-        duration: {type: 'float', default: 1000},
-        delay: {type: 'float', default: 0}
-    },
-
-    tick: function () {
-        if(targetObject !== null) {
-            if(!setted) {
-                targetObject.trajectory = [];
-                targetObject.keyFrames = [];
-                setted = true;
-            }
-            //gesture selezione key frame
-            if(gestureAnimazione(gestureHand.components['leap-hand'].getHand())) {
-                console.log('gesture key frame');
+//funzione temporanea: quando l'elemento è pronto viene generato un key frame ogni 10 secondi
+function createKeyFrames (self) {
+    //ogni tot viene creato un key frame: crea un key frame ogni 10 secondi, massimo 3 key frames
+        let timer = setInterval(function () {
+            if(targetObject.keyFrames.length > 3)
+                clearInterval(timer);
+            else {
+                console.log('key frame ' + targetObject.keyFrames.length);
                 //questa porzione di codice va integrata con la selezione nel menu:
                 //la gesture animazione verrà sostituita da un bottone per selezionare il key frame, alla pressione
                 //di questo bottone, tutte le proprietà dell'oggetto vengono salvate e viene creata l'animazione
 
                 //genera i valori
+                //al posto di questa funzione, si prelevano i valori dalla gui
                 randomValues();
                 //assegna i valori solo se l'oggetto è visibile
-                if (values.length !== []) {
+                if (values.length) {
                     //assegna i valori in base a properties e values, l'oggetto è targetObject
                     // (quindi oggetto precedentemente selezionato con il componente intersect-and-manipulate)
                     let attributes = [];
                     let keyFrame = [];
                     for (let i = 0; i < properties.length; i++) {
                         //per ora scala e rotazione vengono sempre registrati a prescindere dal cambiamento
-                        attributes[i] = 'property: ' + properties[i] + '; dur: ' + this.data.duration + '; easing: '
-                            + this.data.interpolation + '; to: ' + values[i] + '; delay: ' + this.data.delay + '; loop: ' +
-                            this.data.repeat + '; startEvents: start; pauseEvents: end; resumeEvents: resume';
-                        targetObject.setAttribute('animation__' + properties[i], attributes[i]);
+                        attributes[i] = 'property: ' + properties[i] + '; dur: ' + self.data.duration + '; easing: '
+                            + self.data.interpolation + '; to: ' + values[i] + '; delay: ' + self.data.delay + '; loop: ' +
+                            self.data.repeat + '; startEvents: start; pauseEvents: end; resumeEvents: resume';
                         //salvataggio key frame (una locazione per ogni proprietà, formano un key frame)
                         keyFrame.push({
                             name: 'animation__' + properties[i],
@@ -118,36 +87,62 @@ AFRAME.registerComponent('animate', {
                 } else {
                     let keyFrame = {
                         name: 'animation__visible',
-                        values: 'property: material.opacity; dur: ' +this.data.duration
-                        + '; easing: ' + this.data.interpolation + '; to: 0; delay: ' + this.data.delay + '; loop: '
-                        + this.data.repeat
+                        values: 'property: material.opacity; dur: ' + self.data.duration
+                        + '; easing: ' + self.data.interpolation + '; to: 0; delay: ' + self.data.delay + '; loop: '
+                        + self.data.repeat
                     };
-                    targetObject.setAttribute('animation__visible', keyFrame);
                     //quando si recuperano i key frames è necessario effettuare un controllo del tipo su stringa o array
                     targetObject.keyFrames.push(keyFrame);
                 }
-                //salvataggio posizione per traiettoria oggetto
-                //da provare, in questo modo dovrebbe essere possibile avere un'unica traiettoria per un oggetto
-                //in questo modo sarebbe giusto necessario gestire la cancellazione di una traiettoria quando si
-                //vuole fare una nuova animazione sullo stesso oggetto
-                targetObject.trajectory.push(targetObject.getAttribute('position'));
+                console.log(targetObject.keyFrames);
             }
+        }, 10000);
+        //prova inizio animazione
+        setTimeout(function () {
+           animate();
+        }, 45000);
+}
 
-            //altre gestures per startare e stoppare l'animazione - da integrare col parametro del componente da wrappare
-            //verranno emessi degli eventi - c'è il listener nel componente animation
-            if(gestureStartAnimation(gestureHand.components['leap-hand'].getHand())) {
-                console.log('start');
-                this.el.emit('start');
-            }
+function animate () {
+    if(targetObject.keyFrames.length && targetObject.keyFrames[currentFrame] !== undefined) {
+        //assegna il nuovo key frame
+        for(let i = 0; i < targetObject.keyFrames[currentFrame].length; i++)
+            targetObject.setAttribute(targetObject.keyFrames[currentFrame][i].name, targetObject.keyFrames[currentFrame][i].values);
+        //emette l'evento per iniziare l'animazione
+        targetObject.emit('start');
+        currentFrame++;
+        console.log('animazione ' + currentFrame);
+    }
+}
 
-            if(gestureResumeAnimation(gestureHand.components['leap-hand'].getHand())) {
-                console.log('resume');
-                this.el.emit('resume');
-            }
+AFRAME.registerComponent('animate', {
+    schema: {
+        //per property e interpolation, nella gui, deve essere mostrato un elenco con le opzioni dispnibili
+        trajectory: {type: 'string', default: ''},
+        property: {type: 'string', oneOf: ['', 'material.color', 'material.opacity', 'rotation', 'scale'], default: ''},
+        value: {type: 'string', default: ''},
+        //property e value verranno selezionati dalla gui, i valori selezionati devono essere assegnati a questi due valori
+        //i quali sostituiranno la funziona che genera valori random
+        interpolation: {type: 'string', oneOf: ['linear', 'elastic', 'back'], default: 'linear'},
+        repeat: {type: 'string', default: '1'},
+        duration: {type: 'float', default: 5000},
+        delay: {type: 'float', default: 1000}
+    },
 
-            if(gestureStopAnimation(gestureHand.components['leap-hand'].getHand())) {
-                console.log('end');
-                this.el.emit('end');
+    tick: function () {
+        if(targetObject !== null) {
+            //questa porzione di codice viene eseguita una sola volta
+            if(!setted) {
+                targetObject.keyFrames = [];
+                setted = true;
+                //"test" del componente: partenza della prima animazione
+                createKeyFrames(this);
+                //registrazione event listener sull'oggetto taggato
+                //nell'event listener della fine di un'animazione si fa partire la successiva
+                targetObject.addEventListener('animationcomplete', function () {
+                    console.log('animazione completata');
+                    animate();
+                });
             }
         }
     }

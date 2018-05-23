@@ -92,7 +92,6 @@ AFRAME.registerComponent('holdable', {
                             let allPosition = document.querySelector('#all').getAttribute('position');
                             let distance = new THREE.Vector3(allPosition.x, allPosition.y, allPosition.z).distanceTo(new THREE.Vector3(handTick[0], handTick[1], handTick[2]));
                             if (control === 'translate') {
-                                //TODO: questo controllo va rivisto perché non esiste, ci sono i piani
                                 target.setAttribute('position', (targetOriginalValue.x + distance) + ' ' + (targetOriginalValue.y + distance) + ' ' + (targetOriginalValue.z + distance));
                                 document.querySelector('#transform').setAttribute('position', (oldTransformPosition.x + distance) + ' ' + (oldTransformPosition.y + distance) + ' ' + (oldTransformPosition.z + distance));
                             } else if (control === 'scale') {
@@ -113,6 +112,9 @@ AFRAME.registerComponent('holdable', {
     },
 
     onHoldStart: function (e) {
+        if(control === 'translate')
+            oldPosition = null;
+        //la vecchia posizione viene sovrascritta da null nel caso di traslazione dell'oggetto
         target = targetObject;
         axis = e.srcElement.id;
         //controllo sull'asse selezionato: tutti, x, y, z
@@ -153,7 +155,9 @@ AFRAME.registerComponent('holdable', {
         //l'evento emesso è stato "stoppato"
         start = false;
         //assegnamento colore precedente
-        document.querySelector('#' + axis).setAttribute('material', {color: oldColor()});
+        document.querySelector('#' + axis).setAttribute('material', {
+            color: oldColor()
+        });
         if(axis !== 'all')
             document.querySelector('#' + axis + 'Line').setAttribute('line', {
                 color: oldColor()

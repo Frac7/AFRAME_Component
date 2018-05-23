@@ -113,6 +113,7 @@ function createControl(transform, document, values) {
 
 //creazione transform (popolamento valori da usare per creare il controllo)
 function createTransform(transformType, document) {
+    //TODO: il controllo per translate va rivisto perché non esiste, ci sono i piani
     let values = null;
     let transform = document.querySelector('#transform');
     if(transform === null || transform === undefined) {
@@ -301,9 +302,8 @@ function createTransform(transformType, document) {
 }
 
 function switchTransformGesture (hand) {
-    //TODO: lo switch è veloce, mettere un timer (tipo 2 secondi)
+    //TODO: gesture per switch
     //TODO: possibilità di nascondere il transform dalla scena (document.querySelector('#transform').setAttribute('visible', false);
-    //return (hand && (Math.abs(hand.direction[0]) < 0.5 && Math.abs(hand.direction[1]) < 0.5 && Math.abs(hand.direction[2]) < 1) &&hand.pointables[0].extended && hand.pointables[1].extended && hand.pointables[2].extended && hand.pointables[3].extended && hand.pointables[4].extended);
     return false;
 }
 
@@ -458,8 +458,9 @@ AFRAME.registerComponent('intersect-and-manipulate', {
                         event.srcElement.removeAttribute('alongpath');
                         if(targetObject !== null && targetObject !== undefined) {
                             targetObject.setAttribute('material', 'opacity: 1.0');
-                            targetObject.setAttribute('position', oldPosition);
-                            //TODO: ripristinare la vecchia posizione solo se l'elemento non è stato traslato
+                            //se l'elemento non è stato traslato
+                            if(oldPosition !== null)
+                                targetObject.setAttribute('position', oldPosition);
                         }
                         //aggiornamento vecchia posizione
                         oldPosition = endPath;
