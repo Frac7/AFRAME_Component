@@ -109,11 +109,52 @@ function createControl(transform, document, values) {
     all.setAttribute('scale', values.all.scale);
     all.setAttribute('geometry', values.all.geometry);
     all.setAttribute('holdable', values.all.holdable);
+    //piani transform
+    //TODO: piani transform
+    /*if(currentControl === 0) {
+        all.removeAttribute('geometry');
+        all.removeAttribute('material');
+        let planeXY = document.createElement('a-plane');
+        planeXY.setAttribute('translatePlane');
+        let planeYZ = document.createElement('a-plane');
+        planeYZ.setAttribute('translatePlane');
+        let planeZX = document.createElement('a-plane');
+        planeZX.setAttribute('translatePlane');
+        all.appendChild(planeXY);
+        all.appendChild(planeYZ);
+        all.appendChild(planeZX);
+        //attributi
+        planeXY.setAttribute('rotation', '0 -45 -90');
+        planeXY.setAttribute('material', {
+            side: 'double'
+        });
+        planeXY.setAttribute('width', 1);
+        planeXY.setAttribute('height', 1);
+        planeXY.setAttribute('position', '-0.364 0.5 0.364');
+        planeXY.setAttribute('rotation', '0 45 90');
+        planeXY.setAttribute('material', {
+            side: 'double'
+        });
+        planeYZ.setAttribute('width', 1);
+        planeYZ.setAttribute('height', 1);
+        planeYZ.setAttribute('position', '0.364 0.5 -0.364');
+        planeZX.setAttribute('rotation', '90 135 0');
+        planeZX.setAttribute('material', {
+            side: 'double'
+        });
+        planeZX.setAttribute('width', 1);
+        planeZX.setAttribute('height', 1);
+        planeZX.setAttribute('position', '0 0 0');
+    } else {
+        let array = document.querySelectorAll('[translatePlane]');
+        for(let i = 0; i < array.length; i++) {
+            array[i].setAttribute('visible', false);
+        }
+    }*/
 }
 
 //creazione transform (popolamento valori da usare per creare il controllo)
 function createTransform(transformType, document) {
-    //TODO: il controllo per translate va rivisto perché non esiste, ci sono i piani
     let values = null;
     let transform = document.querySelector('#transform');
     if(transform === null || transform === undefined) {
@@ -335,7 +376,7 @@ AFRAME.registerComponent('intersect-and-manipulate', {
         //mano da utilizzare per il raggio
         hand: {type: 'string', default: 'right', oneOf: ['left', 'right']},
         //controllo da gestire per l'oggetto selezionato
-        control: {type: 'string', default: 'translate', oneOf: ['translate', 'scale', 'rotate']},
+        control: {type: 'string', default: 'scale', oneOf: ['translate', 'scale', 'rotate']},
         tag: {type: 'string', default: 'selectable'}
     },
 
