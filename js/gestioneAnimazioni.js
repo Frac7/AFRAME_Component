@@ -1,3 +1,16 @@
+//TODO: modalità editing animazione: clonare l'oggetto per tutta la scena tante volte quanti sono i key frames, col numero.
+//TODO: nella modalità di editing, indicare il frame selezionato (che si sta modificando)
+//TODO: mettendo gli altri in bianco e nero/trasparenti/con wireframe... o con un indicatore
+
+//TODO: variabile per modalità di editing, true o false
+//per definire i key frames si definisce prima la posizione (quindi la traiettoria)
+//una volta definita la posizione del key frame si preme il bottone per il key frame
+//con editing true l'oggetto viene clonato nella sua traiettoria con tutte le sue proprietà
+
+//la prima volta che si preme il bottone per il key frame segna l'inizio dell'animazione
+
+var editingMode = false;
+
 var properties = ['material.opacity', 'material.color', 'position', 'scale', 'rotation'];
 var values = [];
 var setted = false;
@@ -9,7 +22,7 @@ var currentFrame = 0;
 //e infine in base alle proprietà i valori da usare
 
 //funzione di prova stringa transform
-function stringfy(object) {
+function stringify(object) {
     //prova traslazione, scala e rotazione di uno ad ogni frame
     return ((object.x + (Math.random()/10)) + ' ' + (object.y + (Math.random()/10)) + ' ' + (object.z + (Math.random()/10)));
 }
@@ -22,7 +35,7 @@ function randomValues () {
     colors = ['#0000FF', '#00FF00', '#FF0000', '#000000', '#FFFFFF', '#FF6400', '#FFE100'];
     color = parseInt(Math.random() * 6);
     //gli attributi del transform vengono gestiti dentro la scena, quindi sarebbe utile gestire lo switch della tipologia di transform
-    values.push(opacity, colors[color], stringfy(targetObject.getAttribute('position')), stringfy(targetObject.getAttribute('scale')), stringfy(targetObject.getAttribute('rotation')));
+    values.push(opacity, colors[color], stringify(targetObject.getAttribute('position')), stringify(targetObject.getAttribute('scale')), stringify(targetObject.getAttribute('rotation')));
     console.log(values);
 }
 
@@ -68,7 +81,7 @@ function createKeyFrames (self) {
                         dur: self.data.duration,
                         easing: self.data.interpolation,
                         to: values[i],
-                        delay: targetObject.keyFrames.length === 0? self.data.delay: 100, //0.1 secondi
+                        delay: self.data.delay,
                         loop: self.data.repeat,
                         startEvents: 'start',
                         pauseEvents: 'stop',
@@ -85,22 +98,19 @@ function createKeyFrames (self) {
             }
             console.log(targetObject.keyFrames);
         }, 10000);
-        //prova inizio animazione
-        setTimeout(function () {
-           animate();
-        }, 45000);
+        if(!editingMode)
+            //prova inizio animazione
+            setTimeout(function () {
+               animate();
+            }, 45000);
 }
 
 function animate () {
     if(targetObject.keyFrames.length && targetObject.keyFrames[currentFrame] !== undefined) {
-        console.log(targetObject.getAttribute('material').color);
         //assegna il nuovo key frame
-        for(let i = 0; i < targetObject.keyFrames[currentFrame].length; i++) {
-            //adattamento durata in base al numero dei key frames
-            targetObject.keyFrames[currentFrame][i].values.dur /= targetObject.keyFrames.length;
+        for(let i = 0; i < targetObject.keyFrames[currentFrame].length; i++)
             //assegnamento proprietà
             targetObject.setAttribute(targetObject.keyFrames[currentFrame][i].name, targetObject.keyFrames[currentFrame][i].values);
-        }
         //emette l'evento per iniziare l'animazione
         targetObject.emit('start');
         currentFrame++;
@@ -110,6 +120,8 @@ function animate () {
 
 AFRAME.registerComponent('animate', {
     schema: {
+        editMode: {type: 'boolean', default: false}, //quando questa proprietà è true, l'utente vede l'oggetto clonato
+        //in base ai key frames all'interno della scena
         //per property e interpolation, nella gui, deve essere mostrato un elenco con le opzioni dispnibili
         trajectory: {type: 'string', default: ''},
         property: {type: 'string', oneOf: ['', 'material.color', 'material.opacity', 'rotation', 'scale'], default: ''},
@@ -120,6 +132,10 @@ AFRAME.registerComponent('animate', {
         repeat: {type: 'string', default: '1'},
         duration: {type: 'float', default: 5000},
         delay: {type: 'float', default: 1000}
+    },
+
+    init: function () {
+        editingMode = this.data.editMode;
     },
 
     tick: function () {
@@ -136,6 +152,22 @@ AFRAME.registerComponent('animate', {
                     console.log('animazione completata');
                     animate();
                 });
+            }
+            //edit mode key frame attivo: questa porzione di codice deve essere eseguita una sola volta
+            //magari innescata da un evento
+            //TODO: per ora mostra solo i key frames con le proprietà, nessun feedback per l'utente
+            if(this.data.editMode) {
+                let clone = null;
+                for(let i = 0; i < targetObject.keyFrames.length; i++) {
+                    //scorri i key frames
+                    targetObject.flushToDOM(true);
+                    clone = targetObject.cloneNode(true);
+                    document.querySelector('a-scene').appendChild(clone); //fai tanti cloni quanti sono i key frames
+                }
+                for(let j = 0; j < targetObject.keyFrames[i].length; j++) {
+                    //scorri le varie proprietà nel key frame
+                    clone.setAttribute(targetObject.keyFrames[i][j].name.slice(11), targetObject.keyFrames[i][j].values.to);
+                }
             }
         }
     }
