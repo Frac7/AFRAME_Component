@@ -60,11 +60,9 @@ AFRAME.registerComponent('holdable', {
                                 target.setAttribute('position', (targetOriginalValue.x + (handTick - firstHandPosition[0])) + ' ' + targetOriginalValue.y + ' ' + targetOriginalValue.z);
                                 //spostamento assi assieme all'oggetto target
                                 document.querySelector('#transform').setAttribute('position', (oldTransformPosition.x + ((handTick - firstHandPosition[0])) + ' ' + oldTransformPosition.y + ' ' + oldTransformPosition.z));
-                            }
-                            else if (control === 'scale') {
+                            } else if (control === 'scale') {
                                 target.setAttribute('scale', (targetOriginalValue.x + (handTick - firstHandPosition[0])) + ' ' + targetOriginalValue.y + ' ' + targetOriginalValue.z);
-                            }
-                            else if (control === 'rotate') {
+                            } else if (control === 'rotate') {
                                 target.setAttribute('rotation', (targetOriginalValue.x + ((handTick[1] - firstHandPosition[1]) * 360)) + ' ' + targetOriginalValue.y + ' ' + targetOriginalValue.z);
                             }
                             break;
@@ -102,13 +100,11 @@ AFRAME.registerComponent('holdable', {
                             }
                             break;
                     }
-                }
-                else
+                } else
                 //emette l'evento stop perché la mano non è più visibile
                     el.emit('leap-holdstop');
             }
-        }
-        else
+        } else
             targetOriginalValue = i = hand = target = null;
     },
 
@@ -144,8 +140,7 @@ AFRAME.registerComponent('holdable', {
             if (control === 'translate') {
                 targetOriginalValue = target.getAttribute('position');
                 oldTransformPosition = document.querySelector('#transform').getAttribute('position');
-            }
-            else if (control === 'scale')
+            } else if (control === 'scale')
                 targetOriginalValue = target.getAttribute('scale');
             else if (control === 'rotate')
                 targetOriginalValue = target.getAttribute('rotation');

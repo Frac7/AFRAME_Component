@@ -4,6 +4,7 @@ var intersection = false;
 var transformCreated = false; //flag creazione transform (evita che venga creato più di una volta)
 var targetObject = null; //oggetto puntato
 var oldPosition = null;
+var oldOpacity = null;
 var controls = ['translate', 'scale', 'rotate'];
 var currentControl = 0;
 
@@ -431,8 +432,7 @@ AFRAME.registerComponent('intersect-and-manipulate', {
                         color: '#74BEC1',
                         lineWidthStyler: '1 - p'
                     });
-                }
-                else {
+                } else {
                     this.el.setAttribute('meshline', {
                         lineWidth: 20,
                         path: path,
@@ -440,8 +440,7 @@ AFRAME.registerComponent('intersect-and-manipulate', {
                         lineWidthStyler: '1 - p'
                     });
                 }
-            }
-            else {
+            } else {
                 this.el.removeAttribute('meshline');
                 this.el.setAttribute('raycaster', {
                     showLine: false,
@@ -498,7 +497,7 @@ AFRAME.registerComponent('intersect-and-manipulate', {
                         });
                         event.srcElement.removeAttribute('alongpath');
                         if(targetObject !== null && targetObject !== undefined) {
-                            targetObject.setAttribute('material', 'opacity: 1.0');
+                            targetObject.setAttribute('material', 'opacity: ' + oldOpacity);
                             //se l'elemento non è stato traslato
                             if(oldPosition !== null)
                                 targetObject.setAttribute('position', oldPosition);
@@ -506,6 +505,7 @@ AFRAME.registerComponent('intersect-and-manipulate', {
                         //aggiornamento vecchia posizione
                         oldPosition = endPath;
                         targetObject = event.srcElement;
+                        oldOpacity = targetObject.getAttribute('material').opacity;
                         //creazione transform
                         control = self.data.control;
                         createTransform(control, document);
@@ -513,8 +513,7 @@ AFRAME.registerComponent('intersect-and-manipulate', {
                         event.srcElement.setAttribute('material', 'opacity: 0.5');
                     }
                 });
-            }
-            else
+            } else
                 intersection = false;
         }
     }

@@ -1,30 +1,33 @@
-//TODO: modalità editing animazione: clonare l'oggetto per tutta la scena tante volte quanti sono i key frames, col numero.
-//TODO: nella modalità di editing, indicare il frame selezionato (che si sta modificando)
-//TODO: mettendo gli altri in bianco e nero/trasparenti/con wireframe... o con un indicatore
-
-//TODO: variabile per modalità di editing, true o false
 //per definire i key frames si definisce prima la posizione (quindi la traiettoria)
 //una volta definita la posizione del key frame si preme il bottone per il key frame
 //con editing true l'oggetto viene clonato nella sua traiettoria con tutte le sue proprietà
 
 //la prima volta che si preme il bottone per il key frame segna l'inizio dell'animazione
 
+//true se l'entità puntata è stata clonata in tutti i suoi key frames
+var stopClone = false;
+//editing key frame non abilitato
 var editingMode = false;
 
-var properties = ['material.opacity', 'material.color', 'position', 'scale', 'rotation'];
-var values = [];
-var setted = false;
-var currentFrame = 0;
+
+var properties = ['material.opacity', 'material.color', 'position', 'scale', 'rotation']; //proprietà da modificare
+var values = []; //valori da associare alle proprietà
+var setted = false; //inizializzazione vettore key frames
+var currentFrame = 0; //frame in riproduzione nell'animazione; si può usare anche per la modifica del key frame
+
 //vengono definite qui le proprietà dell'animazione
 //quali traiettoria (key frames, alcuni punti nello spazio) per ora i key frames si generano con un timer;
 //un insieme di valori per scegliere quale proprietà manipolare (qui bisogna dare la possibilità all'utente di
 //switchare controllo per il transform, magari con una gesture)
 //e infine in base alle proprietà i valori da usare
-
 //funzione di prova stringa transform
-function stringify(object) {
-    //prova traslazione, scala e rotazione di uno ad ogni frame
-    return ((object.x + (Math.random()/10)) + ' ' + (object.y + (Math.random()/10)) + ' ' + (object.z + (Math.random()/10)));
+function stringify(object, flag) {
+    //prova traslazione, scala e rotazione, per ora viene modificata solo la posizione
+    //se nel tempo del timer si modifica una delle proprietà del transform dell'oggetto, la modifica viene registrata
+    if(flag)
+        return ((object.x + (targetObject.keyFrames.length + 1) * 2.5) + ' ' + (object.y + targetObject.keyFrames.length * 0.01) + ' ' + (object.z + targetObject.keyFrames.length));
+    else
+        return (object.x + ' ' + object.y + ' ' + object.z);
 }
 
 function randomValues () {
@@ -35,7 +38,7 @@ function randomValues () {
     colors = ['#0000FF', '#00FF00', '#FF0000', '#000000', '#FFFFFF', '#FF6400', '#FFE100'];
     color = parseInt(Math.random() * 6);
     //gli attributi del transform vengono gestiti dentro la scena, quindi sarebbe utile gestire lo switch della tipologia di transform
-    values.push(opacity, colors[color], stringify(targetObject.getAttribute('position')), stringify(targetObject.getAttribute('scale')), stringify(targetObject.getAttribute('rotation')));
+    values.push(opacity, colors[color], stringify(targetObject.getAttribute('position'), true), stringify(targetObject.getAttribute('scale'), false), stringify(targetObject.getAttribute('rotation'), false));
     console.log(values);
 }
 
@@ -97,12 +100,45 @@ function createKeyFrames (self) {
                 targetObject.keyFrames.push(keyFrame);
             }
             console.log(targetObject.keyFrames);
-        }, 10000);
+        }, 5000);
         if(!editingMode)
-            //prova inizio animazione
+            //prova inizio animazione (quando la editing mode non è attiva)
             setTimeout(function () {
                animate();
-            }, 45000);
+            }, 25000);
+        else
+            setTimeout(function () {
+                createEditor();
+            }, 25000);
+
+}
+
+function createEditor () {
+    //edit mode key frame attivo: questa porzione di codice deve essere eseguita una sola volta
+    //magari innescata da un evento
+    if(!stopClone) {
+        let clone = null;
+        for(let i = 0; i < targetObject.keyFrames.length; i++) {
+            //scorri i key frames
+            targetObject.flushToDOM(true);
+            clone = targetObject.cloneNode(true);
+            for(let j = 0; j < targetObject.keyFrames[i].length; j++) {
+                //scorri le varie proprietà nel key frame
+                if(currentFrame === i) { //frame selezionato dall'utente
+                    createFeedback(clone.getAttribute('position'));
+                    let array = targetObject.keyFrames[i][j].name.slice(11).split('.');
+                    if (array.length > 1)
+                        clone.setAttribute(array[0], array[1] + ': ' + targetObject.keyFrames[i][j].values.to);
+                    else
+                        clone.setAttribute(array[0], targetObject.keyFrames[i][j].values.to);
+                } else {
+                    clone.setAttribute('material', 'color: #555555; opacity: 0.5');
+                }
+            }
+            document.querySelector('a-scene').appendChild(clone); //fai tanti cloni quanti sono i key frames
+        }
+        stopClone = true;
+    }
 }
 
 function animate () {
@@ -116,6 +152,19 @@ function animate () {
         currentFrame++;
         console.log('animazione ' + currentFrame);
     }
+}
+
+//TODO
+function createFeedback (position) {
+    let triangle = document.createElement('a-entity');
+    let text = document.createElement('a-entity');
+    triangle.setAttribute('geometry', 'primitive: triangle');
+    triangle.setAttribute('material', 'color: #0061ff; side: double');
+    triangle.setAttribute('rotation', '0 0 180');
+    triangle.setAttribute('position', position.x + ' ' + (position.y + 3) + ' ' + position.z);
+    text.setAttribute('text-geometry', 'value: ' + currentFrame);
+    text.setAttribute('position', (position.x + 0.5) + ' ' + (position.y + 2.75) + ' ' + position.z);
+    text.setAttribute('material', 'color: #ffffff');
 }
 
 AFRAME.registerComponent('animate', {
@@ -139,35 +188,21 @@ AFRAME.registerComponent('animate', {
     },
 
     tick: function () {
+        //il componente funziona solo dopo che un certo oggetto è stato puntato
         if(targetObject !== null) {
             //questa porzione di codice viene eseguita una sola volta
             if(!setted) {
+                //inizializzazione array key frames dell'oggetto targettato
                 targetObject.keyFrames = [];
                 setted = true;
                 //"test" del componente: partenza della prima animazione
                 createKeyFrames(this);
-                //registrazione event listener sull'oggetto taggato
-                //nell'event listener della fine di un'animazione si fa partire la successiva
+                //registrazione event listener sull'oggetto taggato, nell'event listener della fine di un'animazione
+                //si fa partire la successiva
                 targetObject.addEventListener('animationcomplete', function () {
                     console.log('animazione completata');
                     animate();
                 });
-            }
-            //edit mode key frame attivo: questa porzione di codice deve essere eseguita una sola volta
-            //magari innescata da un evento
-            //TODO: per ora mostra solo i key frames con le proprietà, nessun feedback per l'utente
-            if(this.data.editMode) {
-                let clone = null;
-                for(let i = 0; i < targetObject.keyFrames.length; i++) {
-                    //scorri i key frames
-                    targetObject.flushToDOM(true);
-                    clone = targetObject.cloneNode(true);
-                    document.querySelector('a-scene').appendChild(clone); //fai tanti cloni quanti sono i key frames
-                }
-                for(let j = 0; j < targetObject.keyFrames[i].length; j++) {
-                    //scorri le varie proprietà nel key frame
-                    clone.setAttribute(targetObject.keyFrames[i][j].name.slice(11), targetObject.keyFrames[i][j].values.to);
-                }
             }
         }
     }
