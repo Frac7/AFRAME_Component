@@ -717,6 +717,7 @@ var intersection = false;
 var transformCreated = false; //flag creazione transform (evita che venga creato più di una volta)
 var targetObject = null; //oggetto puntato
 var oldPosition = null;
+var oldOpacity = null;
 var controls = ['translate', 'scale', 'rotate'];
 var currentControl = 0;
 
@@ -822,11 +823,72 @@ function createControl(transform, document, values) {
     all.setAttribute('scale', values.all.scale);
     all.setAttribute('geometry', values.all.geometry);
     all.setAttribute('holdable', values.all.holdable);
+    //piani transform
+    if(currentControl === 0) {
+        //ingrandire il controllo translate
+        x.setAttribute('scale', '0.15 0.15 0.15');
+        x.setAttribute('position', '0.3 0 0.3');
+        y.setAttribute('scale', '0.15 0.15 0.15');
+        y.setAttribute('position', '0 0.3 0');
+        z.setAttribute('scale', '0.15 0.15 0.15');
+        z.setAttribute('position', '-0.3 0 0.3');
+        xLine.setAttribute('scale', '1.5 1.5 1.5');
+        yLine.setAttribute('scale', '1.5 1.5 1.5');
+        zLine.setAttribute('scale', '1.5 1.5 1.5');
+        all.setAttribute('scale', '0.05 0.05 0.05');
+        //piani
+        /*all.removeAttribute('geometry');
+        all.removeAttribute('material');
+        all.setAttribute('scale', '0.075 0.075 0.075');
+        let planeXY = document.createElement('a-plane');
+        planeXY.setAttribute('translatePlane');
+        let planeYZ = document.createElement('a-plane');
+        planeYZ.setAttribute('translatePlane');
+        let planeZX = document.createElement('a-plane');
+        planeZX.setAttribute('translatePlane');
+        all.appendChild(planeXY);
+        all.appendChild(planeYZ);
+        all.appendChild(planeZX);
+        //attributi
+        planeXY.setAttribute('rotation', '0 -45 0');
+        planeXY.setAttribute('material', {
+            side: 'double',
+            color: '#ffff00',
+            opacity: '0.5'
+        });
+        planeXY.setAttribute('width', 1);
+        planeXY.setAttribute('height', 1);
+        planeXY.setAttribute('position', '0.35 0.5 0.35');
+
+        planeYZ.setAttribute('rotation', '0 45 0');
+        planeYZ.setAttribute('material', {
+            side: 'double',
+            color: '#00ffff',
+            opacity: '0.5'
+        });
+        planeYZ.setAttribute('width', 1);
+        planeYZ.setAttribute('height', 1);
+        planeYZ.setAttribute('position', '-0.35 0.5 0.35');
+
+        planeZX.setAttribute('rotation', '90 135 0');
+        planeZX.setAttribute('material', {
+            side: 'double',
+            color: '#ff00ff',
+            opacity: '0.5'
+        });
+        planeZX.setAttribute('width', 1);
+        planeZX.setAttribute('height', 1);
+        planeZX.setAttribute('position', '0 0 0.7');*/
+    } else {
+        let array = document.querySelectorAll('[translatePlane]');
+        for(let i = 0; i < array.length; i++) {
+            array[i].setAttribute('visible', false);
+        }
+    }
 }
 
 //creazione transform (popolamento valori da usare per creare il controllo)
 function createTransform(transformType, document) {
-    //TODO: il controllo per translate va rivisto perché non esiste, ci sono i piani
     let values = null;
     let transform = document.querySelector('#transform');
     if(transform === null || transform === undefined) {
@@ -1103,8 +1165,7 @@ AFRAME.registerComponent('intersect-and-manipulate', {
                         color: '#74BEC1',
                         lineWidthStyler: '1 - p'
                     });
-                }
-                else {
+                } else {
                     this.el.setAttribute('meshline', {
                         lineWidth: 20,
                         path: path,
@@ -1112,8 +1173,7 @@ AFRAME.registerComponent('intersect-and-manipulate', {
                         lineWidthStyler: '1 - p'
                     });
                 }
-            }
-            else {
+            } else {
                 this.el.removeAttribute('meshline');
                 this.el.setAttribute('raycaster', {
                     showLine: false,
@@ -1170,7 +1230,7 @@ AFRAME.registerComponent('intersect-and-manipulate', {
                         });
                         event.srcElement.removeAttribute('alongpath');
                         if(targetObject !== null && targetObject !== undefined) {
-                            targetObject.setAttribute('material', 'opacity: 1.0');
+                            targetObject.setAttribute('material', 'opacity: ' + oldOpacity);
                             //se l'elemento non è stato traslato
                             if(oldPosition !== null)
                                 targetObject.setAttribute('position', oldPosition);
@@ -1178,6 +1238,7 @@ AFRAME.registerComponent('intersect-and-manipulate', {
                         //aggiornamento vecchia posizione
                         oldPosition = endPath;
                         targetObject = event.srcElement;
+                        oldOpacity = targetObject.getAttribute('material').opacity;
                         //creazione transform
                         control = self.data.control;
                         createTransform(control, document);
@@ -1185,8 +1246,7 @@ AFRAME.registerComponent('intersect-and-manipulate', {
                         event.srcElement.setAttribute('material', 'opacity: 0.5');
                     }
                 });
-            }
-            else
+            } else
                 intersection = false;
         }
     }
@@ -1254,11 +1314,9 @@ AFRAME.registerComponent('holdable', {
                                 target.setAttribute('position', (targetOriginalValue.x + (handTick - firstHandPosition[0])) + ' ' + targetOriginalValue.y + ' ' + targetOriginalValue.z);
                                 //spostamento assi assieme all'oggetto target
                                 document.querySelector('#transform').setAttribute('position', (oldTransformPosition.x + ((handTick - firstHandPosition[0])) + ' ' + oldTransformPosition.y + ' ' + oldTransformPosition.z));
-                            }
-                            else if (control === 'scale') {
+                            } else if (control === 'scale') {
                                 target.setAttribute('scale', (targetOriginalValue.x + (handTick - firstHandPosition[0])) + ' ' + targetOriginalValue.y + ' ' + targetOriginalValue.z);
-                            }
-                            else if (control === 'rotate') {
+                            } else if (control === 'rotate') {
                                 target.setAttribute('rotation', (targetOriginalValue.x + ((handTick[1] - firstHandPosition[1]) * 360)) + ' ' + targetOriginalValue.y + ' ' + targetOriginalValue.z);
                             }
                             break;
@@ -1296,13 +1354,11 @@ AFRAME.registerComponent('holdable', {
                             }
                             break;
                     }
-                }
-                else
+                } else
                 //emette l'evento stop perché la mano non è più visibile
                     el.emit('leap-holdstop');
             }
-        }
-        else
+        } else
             targetOriginalValue = i = hand = target = null;
     },
 
@@ -1338,8 +1394,7 @@ AFRAME.registerComponent('holdable', {
             if (control === 'translate') {
                 targetOriginalValue = target.getAttribute('position');
                 oldTransformPosition = document.querySelector('#transform').getAttribute('position');
-            }
-            else if (control === 'scale')
+            } else if (control === 'scale')
                 targetOriginalValue = target.getAttribute('scale');
             else if (control === 'rotate')
                 targetOriginalValue = target.getAttribute('rotation');

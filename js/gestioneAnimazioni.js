@@ -27,8 +27,7 @@ function createKeyFrames (self) {
             console.log('Valori generati: ');
             console.log(targetObject.keyFrames);
             clearInterval(timer);
-        }
-        else {
+        } else {
             index++;
             console.log('Key frame ' + index);
             //questa porzione di codice va integrata con la selezione nel menu:
@@ -109,15 +108,17 @@ function createTrajectory (self) {
     LeapMotionController.on('gesture', function(gesture) {
         if(setted) { //l'array dei keyframes per il targetObject esiste
             if (gesture.type === 'swipe' && gesture.state === 'stop' && targetObject.keyFrames.length === 3) { //swipe frame
-                let n = 0;
                 if (gesture.direction[0] > 0) {
                     console.log('Swipe right');
-                    n = -1;
+                    currentFrame++;
                 } else {
                     console.log('Swipe left');
-                    n = 1;
+                    currentFrame--;
                 }
-                currentFrame = Math.abs((currentFrame + n) % targetObject.keyFrames.length);
+                if(currentFrame > (targetObject.keyFrames.length - 1))
+                    currentFrame = 0;
+                if(currentFrame < 0)
+                    currentFrame = targetObject.keyFrames.length - 1;
                 createFeedback();
             }
             if (gesture.type === 'screenTap' && gesture.state === 'stop' && targetObject.keyFrames.length < 3) {
@@ -256,7 +257,7 @@ function createFeedback () {
                 triangle.setAttribute('material', 'color: #0061ff; side: double');
                 triangle.setAttribute('rotation', '0 0 180');
                 triangle.setAttribute('position', '0 0 0');
-                text.setAttribute('position', '-0.25 0 0');
+                text.setAttribute('position', '-0.2 0 0');
                 text.setAttribute('material', 'color: #ffffff');
                 text.setAttribute('scale', '1 1 0.1');
                 container.appendChild(text);

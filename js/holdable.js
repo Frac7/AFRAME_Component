@@ -55,7 +55,6 @@ AFRAME.registerComponent('holdable', {
                     //(differenza tra posizione pollice in holdstart e ad ogni tick)
                     switch (i) {
                         case 0:
-                            //TODO: piani transform
                             if (control === 'translate') {
                                 target.setAttribute('position', (targetOriginalValue.x + (handTick - firstHandPosition[0])) + ' ' + targetOriginalValue.y + ' ' + targetOriginalValue.z);
                                 //spostamento assi assieme all'oggetto target

@@ -111,10 +111,22 @@ function createControl(transform, document, values) {
     all.setAttribute('geometry', values.all.geometry);
     all.setAttribute('holdable', values.all.holdable);
     //piani transform
-    //TODO: piani transform
-    /*if(currentControl === 0) {
-        all.removeAttribute('geometry');
+    if(currentControl === 0) {
+        //ingrandire il controllo translate
+        x.setAttribute('scale', '0.15 0.15 0.15');
+        x.setAttribute('position', '0.3 0 0.3');
+        y.setAttribute('scale', '0.15 0.15 0.15');
+        y.setAttribute('position', '0 0.3 0');
+        z.setAttribute('scale', '0.15 0.15 0.15');
+        z.setAttribute('position', '-0.3 0 0.3');
+        xLine.setAttribute('scale', '1.5 1.5 1.5');
+        yLine.setAttribute('scale', '1.5 1.5 1.5');
+        zLine.setAttribute('scale', '1.5 1.5 1.5');
+        all.setAttribute('scale', '0.05 0.05 0.05');
+        //piani
+        /*all.removeAttribute('geometry');
         all.removeAttribute('material');
+        all.setAttribute('scale', '0.075 0.075 0.075');
         let planeXY = document.createElement('a-plane');
         planeXY.setAttribute('translatePlane');
         let planeYZ = document.createElement('a-plane');
@@ -125,33 +137,41 @@ function createControl(transform, document, values) {
         all.appendChild(planeYZ);
         all.appendChild(planeZX);
         //attributi
-        planeXY.setAttribute('rotation', '0 -45 -90');
+        planeXY.setAttribute('rotation', '0 -45 0');
         planeXY.setAttribute('material', {
-            side: 'double'
+            side: 'double',
+            color: '#ffff00',
+            opacity: '0.5'
         });
         planeXY.setAttribute('width', 1);
         planeXY.setAttribute('height', 1);
-        planeXY.setAttribute('position', '-0.364 0.5 0.364');
-        planeXY.setAttribute('rotation', '0 45 90');
-        planeXY.setAttribute('material', {
-            side: 'double'
+        planeXY.setAttribute('position', '0.35 0.5 0.35');
+
+        planeYZ.setAttribute('rotation', '0 45 0');
+        planeYZ.setAttribute('material', {
+            side: 'double',
+            color: '#00ffff',
+            opacity: '0.5'
         });
         planeYZ.setAttribute('width', 1);
         planeYZ.setAttribute('height', 1);
-        planeYZ.setAttribute('position', '0.364 0.5 -0.364');
+        planeYZ.setAttribute('position', '-0.35 0.5 0.35');
+
         planeZX.setAttribute('rotation', '90 135 0');
         planeZX.setAttribute('material', {
-            side: 'double'
+            side: 'double',
+            color: '#ff00ff',
+            opacity: '0.5'
         });
         planeZX.setAttribute('width', 1);
         planeZX.setAttribute('height', 1);
-        planeZX.setAttribute('position', '0 0 0');
+        planeZX.setAttribute('position', '0 0 0.7');*/
     } else {
         let array = document.querySelectorAll('[translatePlane]');
         for(let i = 0; i < array.length; i++) {
             array[i].setAttribute('visible', false);
         }
-    }*/
+    }
 }
 
 //creazione transform (popolamento valori da usare per creare il controllo)
