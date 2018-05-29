@@ -4,7 +4,6 @@
 //switchare controllo per il transform, magari con una gesture)
 //e infine in base alle proprietà i valori da usare
 //funzione temporanea, di prova
-
 function randomValues () {
     while(values.length)
         values.pop();
@@ -17,7 +16,6 @@ function randomValues () {
 }
 
 //funzione temporanea
-
 function createKeyFrames (self) {
     let index = 0;
     console.log('Generazione valori');
@@ -33,7 +31,6 @@ function createKeyFrames (self) {
             //questa porzione di codice va integrata con la selezione nel menu:
             //il timer verrà sostituito da un bottone per selezionare il key frame, alla pressione
             //di questo bottone, tutte le proprietà dell'oggetto vengono salvate e viene creata l'animazione
-
             //genera i valori
             //al posto di questa funzione, si prelevano i valori dalla gui
             randomValues();
@@ -80,28 +77,22 @@ function createKeyFrames (self) {
 //values e che prende le proprietà dell'oggetto e le assegna al key frame
 //si può utilizzare anche un event listener sull'oggetto puntato, quando l'utente clicca sul bottone per modificare
 //il key frame, viene emesso un evento (e qui viene definito il listener)
-
 //flag per la creazione iniziale della trajettoria
 var trajectoryCreated = false;
-
 //per definire i key frames si definisce prima la posizione (quindi la traiettoria)
 //una volta definita la posizione del key frame si preme il bottone per il key frame
 //con editing true l'oggetto viene clonato nella sua traiettoria con tutte le sue proprietà
-
 //la prima volta che si preme il bottone per il key frame segna l'inizio dell'animazione
-
 //true se l'entità puntata è stata clonata in tutti i suoi key frames
 var stopClone = false;
 //editing key frame non abilitato
 var editingMode = false;
-
 var properties = ['material.opacity', 'material.color', 'scale', 'rotation']; //proprietà da modificare
 var values = []; //valori da associare alle proprietà
 var setted = false; //inizializzazione vettore key frames
 var currentFrame = 0; //frame in riproduzione nell'animazione; si può usare anche per la modifica del key frame
 
 //creazione della traiettoria per l'oggetto dell'animazione
-
 function createTrajectory (self) {
     console.log('Creazione traiettoria');
     //definizione key frames con un tap, giusto per provare
@@ -147,14 +138,12 @@ function createTrajectory (self) {
 }
 
 //funzione di prova stringa transform
-
 function stringify(object) {
     //se nel tempo del timer si modifica una delle proprietà del transform dell'oggetto, la modifica viene registrata
     return (object.x + ' ' + object.y + ' ' + object.z);
 }
 
 //questa funzione salva i valori dell'oggetto puntato alla pressione del bottone per il salvataggio del keyframe
-
 function saveKeyFrame() {
     //svuota l'array dei valori
     while(values.length)
@@ -185,12 +174,9 @@ function saveKeyFrame() {
 
 //viene quindi salvata la posizione e poi vengono assegnate queste proprietà all'animazione
 //(supponiamo che non siano state generate random ma che siano state selezionate dall'utente)
-
 //viene recuperato l'array dei valori
 //le proprietà dell'oggetto presenti in properties devono essere modificate con i valori presenti in values
-
 //dopo aver creato il key frame, si sposta l'oggetto e si modificano le proprietà, si seleziona un nuovo key frame
-
 //per gestire start/stop/resum si emette l'evento con nome corrispondente all'azione
 
 function setKeyFrameAttributes(clone, i) { //clone e key frame scelto
@@ -205,7 +191,6 @@ function setKeyFrameAttributes(clone, i) { //clone e key frame scelto
 
 //NB: il primo key frame è l'oggetto puntato. qui si generano valori anche per l'oggetto puntato, quindi si ignora
 //il suo stato iniziale. con una gui si prelevano i valori definiti dall'utente al posto dei random values
-
 function createEditor () {
     targetObject.clones = [];
     //edit mode key frame attivo: questa porzione di codice deve essere eseguita una sola volta
@@ -297,6 +282,8 @@ AFRAME.registerComponent('animate', {
     tick: function () {
         //il componente funziona solo dopo che un certo oggetto è stato puntato
         if (targetObject !== null) {
+            //aggiornamento variabile globale
+            editingMode = this.data.editMode;
             //questa porzione di codice viene eseguita una sola volta
             if (!setted) {
                 //inizializzazione array key frames dell'oggetto targettato
@@ -315,9 +302,25 @@ AFRAME.registerComponent('animate', {
                     animate();
                 });
                 setted = true;
-                /*targetObject.addEventListener('keyFrameCreated', function () { //la gui deve emettere questo evento alla pressione del bottone
+                //al momento non viene utilizzato
+                targetObject.addEventListener('keyFrameCreated', function () { //la gui deve emettere questo evento alla pressione del bottone
                     saveKeyFrame();
-                });*/
+                });
+            } else {
+                //si può provare cambiando la modalità dall'inspector
+                let feedback = document.querySelector('#containerFeedback');
+                //passaggio dalla modalità di animazione alla modalità di editor
+                if(editingMode && feedback !== null && !feedback.getAttribute('visible')) {
+                    feedback.setAttribute('visible', true);
+                    for(let i = 1; i < targetObject.clones.length; i++)
+                        targetObject.clones[i].setAttribute('visible', true);
+                }
+                //passaggio dalla modalità di editor alla modalità di animazione
+                if(!editingMode && feedback !== null && feedback.getAttribute('visible')) {
+                    feedback.setAttribute('visible', false);
+                    for(let i = 1; i < targetObject.clones.length; i++)
+                        targetObject.clones[i].setAttribute('visible', false);
+                }
             }
         }
     }
