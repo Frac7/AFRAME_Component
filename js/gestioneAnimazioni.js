@@ -3,7 +3,7 @@
 //un insieme di valori per scegliere quale proprietà manipolare (qui bisogna dare la possibilità all'utente di
 //switchare controllo per il transform, magari con una gesture)
 //e infine in base alle proprietà i valori da usare
-//funzione temporanea, di prova
+//funzione temporanea
 function randomValues () {
     while(values.length)
         values.pop();
@@ -38,10 +38,12 @@ function createKeyFrames (self) {
             //(quindi oggetto precedentemente selezionato con il componente intersect-and-manipulate)
             let attributes = [];
             for (let i = 0; i < properties.length; i++) {
+                let array = properties[i].split('.');
                 attributes[i] = {
                     property: properties[i],
                     dur: self.data.duration,
-                    easing: self.data.interpolation,
+                    easing: self.data.interpolation, // più uno perché non si conta la posizione
+                    from: index !== 1? targetObject.keyFrames[index - 2][i + 1].values.to: (array.length > 1? targetObject.getAttribute(array[0])[array[1]]: targetObject.getAttribute(properties[i])),
                     to: values[i],
                     delay: self.data.delay,
                     loop: self.data.repeat,
@@ -62,7 +64,7 @@ function createKeyFrames (self) {
     //prova inizio animazione (quando la editing mode non è attiva)
         setTimeout(function () {
             console.log('Animate');
-            animate();
+            animateAll();
         }, 20000);
     else
         setTimeout(function () {
@@ -92,49 +94,41 @@ var values = []; //valori da associare alle proprietà
 var setted = false; //inizializzazione vettore key frames
 var currentFrame = 0; //frame in riproduzione nell'animazione; si può usare anche per la modifica del key frame
 
+var easingFunctions = ['linear', 'easeInQuad', 'easeOutQuad',	'easeInOutQuad',
+    'easeInCubic', 'easeOutCubic', 'easeInOutCubic',
+    'easeInQuart', 'easeOutQuart', 'easeInOutQuart',
+    'easeInQuint', 'easeOutQuint', 'easeInOutQuint',
+    'easeInSine', 'easeOutSine', 'easeInOutSine',
+    'easeInExpo', 'easeOutExpo', 'easeInOutExpo',
+    'easeInCirc', 'easeOutCirc', 'easeInOutCirc',
+    'easeInBack', 'easeOutBack', 'easeInOutBack',
+    'easeInElastic', 'easeOutElastic', 'easeInOutElastic'];
+var currentEasingFunction = 0;
+
 //creazione della traiettoria per l'oggetto dell'animazione
-function createTrajectory (self) {
+function createPoint (self) {
     console.log('Creazione traiettoria');
     //definizione key frames con un tap, giusto per provare
-    LeapMotionController.on('gesture', function(gesture) {
-        if(setted) { //l'array dei keyframes per il targetObject esiste
-            if (gesture.type === 'swipe' && gesture.state === 'stop' && targetObject.keyFrames.length === 3) { //swipe frame
-                if (gesture.direction[0] > 0) {
-                    console.log('Swipe right');
-                    currentFrame++;
-                } else {
-                    console.log('Swipe left');
-                    currentFrame--;
-                }
-                if(currentFrame > (targetObject.keyFrames.length - 1))
-                    currentFrame = 0;
-                if(currentFrame < 0)
-                    currentFrame = targetObject.keyFrames.length - 1;
-                createFeedback();
-            }
-            if (gesture.type === 'screenTap' && gesture.state === 'stop' && targetObject.keyFrames.length < 3) {
-                console.log('Hai creato un key frame, creati: ' + (targetObject.keyFrames.length + 1));
-                //salvataggio posizine come primo valore del key frame
-                let keyFrame = [{
-                    name: 'animation__position',
-                    values: {
-                        property: 'position',
-                        dur: self.data.duration,
-                        easing: self.data.interpolation,
-                        to: stringify(targetObject.getAttribute('position')),
-                        delay: self.data.delay,
-                        loop: self.data.repeat,
-                        startEvents: 'start',
-                        pauseEvents: 'stop',
-                        resumeEvents: 'resume'
-                    }
-                }];
-                targetObject.keyFrames.push(keyFrame);
-                if (targetObject.keyFrames.length > 2)
-                    targetObject.emit('trajectoryCreated');
-            }
+    console.log('Hai creato un key frame, creati: ' + (targetObject.keyFrames.length + 1));
+    //salvataggio posizine come primo valore del key frame
+    let keyFrame = [{
+        name: 'animation__position',
+        values: {
+            property: 'position',
+            dur: self.data.duration,
+            easing: self.data.interpolation,
+            from: targetObject.keyFrames.length !== 0? targetObject.keyFrames[targetObject.keyFrames.length - 1][0].values.to: stringify(targetObject.getAttribute('position')),
+            to: stringify(targetObject.getAttribute('position')),
+            delay: self.data.delay,
+            loop: self.data.repeat,
+            startEvents: 'start',
+            pauseEvents: 'stop',
+            resumeEvents: 'resume'
         }
-    });
+    }];
+    targetObject.keyFrames.push(keyFrame);
+    if (targetObject.keyFrames.length > 2)
+        targetObject.emit('trajectoryCreated');
 }
 
 //funzione di prova stringa transform
@@ -144,7 +138,7 @@ function stringify(object) {
 }
 
 //questa funzione salva i valori dell'oggetto puntato alla pressione del bottone per il salvataggio del keyframe
-function saveKeyFrame() {
+function saveKeyFrame(self) {
     //svuota l'array dei valori
     while(values.length)
         values.pop();
@@ -153,10 +147,12 @@ function saveKeyFrame() {
     //salva il nuovo key frame
     let attributes = [];
     for (let i = 0; i < properties.length; i++) {
+        let array = properties[i].split('.');
         attributes[i] = {
             property: properties[i],
-            dur: self.data.duration,
+            dur: currentFrame !== 0? self.data.duration: 100,
             easing: self.data.interpolation,
+            from: currentFrame !== 0? targetObject.keyFrames[currentFrame - 1][i + 1].values.to: (array.length > 1? targetObject.getAttribute(array[0])[array[1]]: targetObject.getAttribute(properties[i])),
             to: values[i],
             delay: self.data.delay,
             loop: self.data.repeat,
@@ -183,9 +179,9 @@ function setKeyFrameAttributes(clone, i) { //clone e key frame scelto
     for (let j = 0; j < targetObject.keyFrames[i].length; j++) { //scorre le varie proprietà del frame
         let array = targetObject.keyFrames[i][j].name.slice(11).split('.');
         if (array.length > 1)
-            clone.setAttribute(array[0], array[1] + ': ' + targetObject.keyFrames[i][j].values.to);
+            clone.setAttribute(array[0], array[1] + ': ' + targetObject.keyFrames[i][j].values.from);
         else
-            clone.setAttribute(array[0], targetObject.keyFrames[i][j].values.to);
+            clone.setAttribute(array[0], targetObject.keyFrames[i][j].values.from);
     }
 }
 
@@ -200,9 +196,8 @@ function createEditor () {
         for(let i = 0; i < targetObject.keyFrames.length; i++) {
             if(i !== 0) {
                 //scorri i key frames
-                targetObject.flushToDOM(true);
+                //targetObject.flushToDOM(true);
                 clone = targetObject.cloneNode(true);
-                //tanti cloni quanti sono i key frames - 1
                 document.querySelector('a-scene').appendChild(clone);
             } else
                 clone = targetObject; //il primo key frames è il target object, gli si assegnano le proprietà del primo key frame
@@ -212,12 +207,10 @@ function createEditor () {
     }
 }
 
-function animate () {
+function animateAll () { //usata fuori dall'editor
     if(targetObject.keyFrames.length && targetObject.keyFrames[currentFrame] !== undefined) {
         //assegna il nuovo key frame
-        for(let i = 0; i < targetObject.keyFrames[currentFrame].length; i++)
-            //assegnamento proprietà
-            targetObject.setAttribute(targetObject.keyFrames[currentFrame][i].name, targetObject.keyFrames[currentFrame][i].values);
+        animate(targetObject);
         //emette l'evento per iniziare l'animazione
         targetObject.emit('start');
         currentFrame++;
@@ -252,11 +245,40 @@ function createFeedback () {
             document.querySelector('#containerFeedback').setAttribute('rotation', document.querySelector('[camera]').getAttribute('rotation')); //si può spostare per un controllo dinamico
             document.querySelector('#containerFeedback').setAttribute('position', position.x + ' ' + (position.y + 2.5) + ' ' + position.z);
             document.querySelector('#textFeedback').setAttribute('text-geometry', 'value: ' + (currentFrame + 1));
+            //assegnameto proprietà editor: from values
             setKeyFrameAttributes(targetObject.clones[i], i);
         } else
             targetObject.clones[i].setAttribute('material', 'color: #555555; opacity: 0.5');
     }
 
+}
+
+//anima singolo frame
+function animate (targetObjectParameter) {
+    for(let i = 0; i < targetObject.keyFrames[currentFrame].length; i++)
+        //assegnamento proprietà: to values
+        targetObjectParameter.setAttribute(targetObject.keyFrames[currentFrame][i].name, targetObject.keyFrames[currentFrame][i].values);
+}
+
+function previewEasing (self) {
+    //questa funzione mostra un'anteprima della funzione di easing scelta
+    //agisce sul frame corrente nella modalità editing
+    if(editingMode) {
+        let index = 0;
+        //fai l'animazione tre volte
+        let timer = setInterval(function () {
+            if(index > 2)
+                clearInterval(timer);
+            else {
+                index++;
+                console.log(index);
+                animate(targetObject.clones[currentFrame]);
+                targetObject.clones[currentFrame].emit('start');
+            }
+        //}, self.data.dur);
+        }, 5000);
+        createFeedback();
+    }
 }
 
 AFRAME.registerComponent('animate', {
@@ -269,10 +291,19 @@ AFRAME.registerComponent('animate', {
         value: {type: 'string', default: ''},
         //property e value verranno selezionati dalla gui, i valori selezionati devono essere assegnati a questi due valori
         //i quali sostituiranno la funziona che genera valori random
-        interpolation: {type: 'string', oneOf: ['linear', 'elastic', 'back'], default: 'linear'},
-        repeat: {type: 'string', default: '1'},
+        interpolation: {type: 'string', oneOf:
+            ['linear', 'easeInQuad', 'easeOutQuad',	'easeInOutQuad',
+            'easeInCubic', 'easeOutCubic', 'easeInOutCubic',
+            'easeInQuart', 'easeOutQuart', 'easeInOutQuart',
+            'easeInQuint', 'easeOutQuint', 'easeInOutQuint',
+            'easeInSine', 'easeOutSine', 'easeInOutSine',
+            'easeInExpo', 'easeOutExpo', 'easeInOutExpo',
+            'easeInCirc', 'easeOutCirc', 'easeInOutCirc',
+            'easeInBack', 'easeOutBack', 'easeInOutBack',
+            'easeInElastic', 'easeOutElastic', 'easeInOutElastic'], default: 'linear'},
+        repeat: {type: 'int', default: 1},
         duration: {type: 'float', default: 5000},
-        delay: {type: 'float', default: 1000}
+        delay: {type: 'float', default: 0}
     },
 
     init: function () {
@@ -280,21 +311,55 @@ AFRAME.registerComponent('animate', {
     },
 
     tick: function () {
+        //tasti
+        let self = this;
+        //aggiornamento variabile globale
+        editingMode = this.data.editMode;
+        document.getElementsByTagName('body')[0].onkeyup = function (event) {
+            if(targetObject !== null) {
+                switch (event.which) {
+                    case 66: //b: crea traiettoria
+                        targetObject.emit('createTrajectory');
+                        break;
+                    case 67: //c: anteprima funzione di easing
+                        previewEasing(self);
+                        break;
+                    case 69: //e: modalità di editing on/off
+                        self.data.editMode = !self.data.editMode;
+                        break;
+                    case 70: //f: switch easing function
+                        currentEasingFunction++;
+                        if(currentEasingFunction === easingFunctions.length)
+                            currentEasingFunction = 0;
+                        self.data.easing = easingFunctions[currentEasingFunction];
+                        console.log(self.data.easing);
+                        break;
+                    case 88: //x: frame +
+                        currentFrame++;
+                        if(currentFrame === targetObject.keyFrames.length)
+                            currentFrame = 0;
+                        createFeedback();
+                        break;
+                    case 89: //y: frame -
+                        currentFrame--;
+                        if(currentFrame < 0)
+                            currentFrame = targetObject.keyFrames.length - 1;
+                        createFeedback();
+                        break;
+                }
+            }
+        };
         //il componente funziona solo dopo che un certo oggetto è stato puntato
         if (targetObject !== null) {
-            //aggiornamento variabile globale
-            editingMode = this.data.editMode;
             //questa porzione di codice viene eseguita una sola volta
             if (!setted) {
                 //inizializzazione array key frames dell'oggetto targettato
                 targetObject.keyFrames = [];
-                let self = this;
-                //crea la traiettoria se questa non esiste (a prescindere dalla modalità di edting)
+                //crea la traiettoria
                 targetObject.addEventListener('createTrajectory', function () {
-                    createTrajectory(self);
-                }); //il numero di key frames è bloccato a 3
-                targetObject.emit('createTrajectory');
-                //"test" del componente: partenza della prima animazione
+                    createPoint(self);
+                });
+                //"test" del componente
                 targetObject.addEventListener('trajectoryCreated', function () {
                     createKeyFrames(self);
                 });
@@ -302,7 +367,8 @@ AFRAME.registerComponent('animate', {
                 //si fa partire la successiva
                 targetObject.addEventListener('animationcomplete', function () {
                     console.log('Animazione completata');
-                    animate();
+                    if(!editingMode)
+                        animateAll();
                 });
                 setted = true;
                 //al momento non viene utilizzato
@@ -314,6 +380,7 @@ AFRAME.registerComponent('animate', {
                 let feedback = document.querySelector('#containerFeedback');
                 //passaggio dalla modalità di animazione alla modalità di editor
                 if(editingMode && feedback !== null && !feedback.getAttribute('visible')) {
+                    currentFrame = 0;
                     feedback.setAttribute('visible', true);
                     for(let i = 1; i < targetObject.clones.length; i++)
                         targetObject.clones[i].setAttribute('visible', true);
@@ -324,7 +391,7 @@ AFRAME.registerComponent('animate', {
                     feedback.setAttribute('visible', false);
                     for(let i = 1; i < targetObject.clones.length; i++)
                         targetObject.clones[i].setAttribute('visible', false);
-                    animate();
+                    animateAll();
                 }
                 //lo scopo dell'editor è quello di creare l'animazione dalla scena, quindi non si verificherà mai la
                 //condizione animazione prima di editor
