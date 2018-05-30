@@ -288,10 +288,13 @@ AFRAME.registerComponent('animate', {
             if (!setted) {
                 //inizializzazione array key frames dell'oggetto targettato
                 targetObject.keyFrames = [];
-                //crea la traiettoria se questa non esiste (a prescindere dalla modalità di edting)
-                createTrajectory(this); //il numero di key frames è bloccato a 3
-                //"test" del componente: partenza della prima animazione
                 let self = this;
+                //crea la traiettoria se questa non esiste (a prescindere dalla modalità di edting)
+                targetObject.addEventListener('createTrajectory', function () {
+                    createTrajectory(self);
+                }); //il numero di key frames è bloccato a 3
+                targetObject.emit('createTrajectory');
+                //"test" del componente: partenza della prima animazione
                 targetObject.addEventListener('trajectoryCreated', function () {
                     createKeyFrames(self);
                 });
@@ -317,10 +320,14 @@ AFRAME.registerComponent('animate', {
                 }
                 //passaggio dalla modalità di editor alla modalità di animazione
                 if(!editingMode && feedback !== null && feedback.getAttribute('visible')) {
+                    currentFrame = 0;
                     feedback.setAttribute('visible', false);
                     for(let i = 1; i < targetObject.clones.length; i++)
                         targetObject.clones[i].setAttribute('visible', false);
+                    animate();
                 }
+                //lo scopo dell'editor è quello di creare l'animazione dalla scena, quindi non si verificherà mai la
+                //condizione animazione prima di editor
             }
         }
     }
