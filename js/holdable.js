@@ -111,7 +111,7 @@ AFRAME.registerComponent('holdable', {
         if(control === 'translate')
             oldPosition = null;
         //la vecchia posizione viene sovrascritta da null nel caso di traslazione dell'oggetto
-        target = targetObject;
+        target = targetObject.aframeEl;
         axis = e.srcElement.id;
         //controllo sull'asse selezionato: tutti, x, y, z
         if (axis === 'all')

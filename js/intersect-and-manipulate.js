@@ -2,7 +2,9 @@ var self = null; //this (componente)
 //true se si è verificato l'evento "intersezione"
 var intersection = false;
 var transformCreated = false; //flag creazione transform (evita che venga creato più di una volta)
-var targetObject = null; //oggetto puntato
+var targetObject = {
+    aframeEl: null
+}; //oggetto puntato
 var oldPosition = null;
 var oldOpacity = null;
 var controls = ['translate', 'scale', 'rotate'];
@@ -194,7 +196,7 @@ function createTransform(transformType, document) {
         transform.setAttribute('id', 'transform');
         document.querySelector('a-scene').appendChild(transform);
     }
-    transform.setAttribute('position', targetObject.getAttribute('position'));
+    transform.setAttribute('position', targetObject.aframeEl.getAttribute('position'));
     transform.setAttribute('rotation', document.querySelector('[camera]').getAttribute('rotation'));
     if (transformType === 'translate') {
         currentControl = 0;
@@ -515,16 +517,16 @@ AFRAME.registerComponent('intersect-and-manipulate', {
                             triggerRadius: 0
                         });
                         event.srcElement.removeAttribute('alongpath');
-                        if(targetObject !== null && targetObject !== undefined) {
-                            targetObject.setAttribute('material', 'opacity: ' + oldOpacity);
+                        if(targetObject.aframeEl !== null && targetObject.aframeEl !== undefined) {
+                            targetObject.aframeEl.setAttribute('material', 'opacity: ' + oldOpacity);
                             //se l'elemento non è stato traslato
                             if(oldPosition !== null)
-                                targetObject.setAttribute('position', oldPosition);
+                                targetObject.aframeEl.setAttribute('position', oldPosition);
                         }
                         //aggiornamento vecchia posizione
                         oldPosition = endPath;
-                        targetObject = event.srcElement;
-                        oldOpacity = targetObject.getAttribute('material').opacity;
+                        targetObject.aframeEl = event.srcElement;
+                        oldOpacity = targetObject.aframeEl.getAttribute('material').opacity;
                         //creazione transform
                         control = self.data.control;
                         createTransform(control, document);

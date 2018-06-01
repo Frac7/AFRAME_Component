@@ -13,7 +13,7 @@ function randomValues () {
     colors = ['#0000FF', '#00FF00', '#FF0000', '#000000', '#FFFFFF', '#FF6400', '#FFE100'];
     color = parseInt(Math.random() * 6);
     //gli attributi del transform vengono gestiti dentro la scena, quindi sarebbe utile gestire lo switch della tipologia di transform
-    values.push(opacity, colors[color], stringify(targetObject.getAttribute('scale')), stringify(targetObject.getAttribute('rotation')));
+    values.push(opacity, colors[color], stringify(targetObject.aframeEl.getAttribute('scale')), stringify(targetObject.aframeEl.getAttribute('rotation')));
 }
 
 //funzione temporanea
@@ -44,7 +44,7 @@ function createKeyFrames (self) {
                     property: properties[i],
                     dur: self.data.duration,
                     easing: self.data.interpolation, // più uno perché non si conta la posizione
-                    from: index !== 1? targetObject.keyFrames[index - 2][i + 1].values.to: (array.length > 1? targetObject.getAttribute(array[0])[array[1]]: targetObject.getAttribute(properties[i])),
+                    from: index !== 1? targetObject.keyFrames[index - 2][i + 1].values.to: (array.length > 1? targetObject.aframeEl.getAttribute(array[0])[array[1]]: targetObject.aframeEl.getAttribute(properties[i])),
                     to: values[i],
                     delay: self.data.delay,
                     loop: self.data.repeat,
@@ -70,7 +70,6 @@ function createKeyFrames (self) {
     else
         setTimeout(function () {
             console.log('Editor');
-            createEditor();
             createFeedback(); //la prima volta che l'editor è creato, il frame corrente è zero
         }, 20000);
 
@@ -86,8 +85,6 @@ var trajectoryCreated = false;
 //una volta definita la posizione del key frame si preme il bottone per il key frame
 //con editing true l'oggetto viene clonato nella sua traiettoria con tutte le sue proprietà
 //la prima volta che si preme il bottone per il key frame segna l'inizio dell'animazione
-//true se l'entità puntata è stata clonata in tutti i suoi key frames
-var stopClone = false;
 //editing key frame non abilitato
 var editingMode = false;
 var properties = ['material.opacity', 'material.color', 'scale', 'rotation']; //proprietà da modificare
@@ -106,8 +103,19 @@ var easingFunctions = ['linear', 'easeInQuad', 'easeOutQuad',	'easeInOutQuad',
     'easeInElastic', 'easeOutElastic', 'easeInOutElastic'];
 var currentEasingFunction = 0;
 
+function addEventListeners () {
+    //clonare gli event listener
+    targetObject.aframeEl.addEventListener('animationcomplete', function () {
+        console.log('Animazione completata');
+        if(!editingMode)
+            animateAll();
+    });
+    targetObject.aframeEl.addEventListener('keyFrameCreated', function () { //la gui deve emettere questo evento alla pressione del bottone
+        saveKeyFrame();
+    });
+    //vengono copiati solo questi event listener perché gli altri non verranno più emessi
+}
 function deleteKeyFrame () {
-    //TODO: possibilità di cambiare i ìl riferimento al target object...
     if(currentFrame !== 0) { //non elimina il targetObject
         //aggiorna to/from
         if(currentFrame !== (targetObject.keyFrames.length - 1)) //non aggiorna il to/from se viene eliminato l'ultimo key frame
@@ -123,7 +131,7 @@ function deleteKeyFrame () {
         if(currentFrame >= targetObject.keyFrames.length)
             currentFrame = 0;
         createFeedback();
-    } /*else {
+    } else {
         if(targetObject.clones.length !== 1) { //c'è almeno un altro clone oltre il target object
             targetObject.clones[currentFrame].parentNode.removeChild(targetObject.clones[currentFrame]);
             targetObject.clones.splice(currentFrame, 1);
@@ -132,11 +140,12 @@ function deleteKeyFrame () {
             currentFrame++;
             if (currentFrame >= targetObject.keyFrames.length)
                 currentFrame = 0;
-            targetObject = targetObject.clones[currentFrame];
-            console.log(targetObject);
+            targetObject.aframeEl = targetObject.clones[0]; //nuovo key frame zero
+            addEventListeners();
             createFeedback();
         }
-    }*/
+    } //non dare la possibilità di rimuovere il key frame zero, bensì rimuovere l'oggetto dalla gui (da discutere)
+    // se si dovesse dare all'utente la possibilità di rimuovere l'oggetto, target object deve essere inizializzato diversamente
 }
 
 //creazione della traiettoria per l'oggetto dell'animazione
@@ -151,8 +160,8 @@ function createPoint (self) {
             property: 'position',
             dur: self.data.duration,
             easing: self.data.interpolation,
-            from: targetObject.keyFrames.length !== 0? targetObject.keyFrames[targetObject.keyFrames.length - 1][0].values.to: stringify(targetObject.getAttribute('position')),
-            to: stringify(targetObject.getAttribute('position')),
+            from: targetObject.keyFrames.length !== 0? targetObject.keyFrames[targetObject.keyFrames.length - 1][0].values.to: stringify(targetObject.aframeEl.getAttribute('position')),
+            to: stringify(targetObject.aframeEl.getAttribute('position')),
             delay: self.data.delay,
             loop: self.data.repeat,
             startEvents: 'start',
@@ -161,8 +170,12 @@ function createPoint (self) {
         }
     }];
     targetObject.keyFrames.push(keyFrame);
-    if (targetObject.keyFrames.length > 2)
-        targetObject.emit('trajectoryCreated');
+    createClone();
+    if (targetObject.keyFrames.length > 2) {
+        for(let i = 0; i < targetObject.keyFrames[0].length; i++)
+            targetObject.aframeEl.setAttribute(targetObject.keyFrames[0][i].name, targetObject.keyFrames[0][i].values);
+        targetObject.aframeEl.emit('trajectoryCreated');
+    }
 }
 
 //funzione di prova stringa transform
@@ -173,11 +186,13 @@ function stringify(object) {
 
 //questa funzione salva i valori dell'oggetto puntato alla pressione del bottone per il salvataggio del keyframe
 function saveKeyFrame(self) {
+    //TODO: in questa modalità, prevedere quale sia l'ultimo key frame e spostare il target object alla posizione iniziale
+    //(quindi conviene avere un evento per la conferma della traiettoria, come nel test)
     //svuota l'array dei valori
     while(values.length)
         values.pop();
     //inserisce i nuovi valori
-    values.push(targetObject.getAttribute('material').opacity, targetObject.getAttribute('material').color, stringify(targetObject.getAttribute('scale')), stringify(targetObject.getAttribute('rotation')));
+    values.push(targetObject.aframeEl.getAttribute('material').opacity, targetObject.aframeEl.getAttribute('material').color, stringify(targetObject.aframeEl.getAttribute('scale')), stringify(targetObject.aframeEl.getAttribute('rotation')));
     //salva il nuovo key frame
     let attributes = [];
     for (let i = 0; i < properties.length; i++) {
@@ -186,7 +201,7 @@ function saveKeyFrame(self) {
             property: properties[i],
             dur: currentFrame !== 0? self.data.duration: 100,
             easing: self.data.interpolation,
-            from: currentFrame !== 0? targetObject.keyFrames[currentFrame - 1][i + 1].values.to: (array.length > 1? targetObject.getAttribute(array[0])[array[1]]: targetObject.getAttribute(properties[i])),
+            from: currentFrame !== 0? targetObject.keyFrames[currentFrame - 1][i + 1].values.to: (array.length > 1? targetObject.aframeEl.getAttribute(array[0])[array[1]]: targetObject.aframeEl.getAttribute(properties[i])),
             to: values[i],
             delay: self.data.delay,
             loop: self.data.repeat,
@@ -221,33 +236,23 @@ function setKeyFrameAttributes(clone, i) { //clone e key frame scelto
 
 //NB: il primo key frame è l'oggetto puntato. qui si generano valori anche per l'oggetto puntato, quindi si ignora
 //il suo stato iniziale. con una gui si prelevano i valori definiti dall'utente al posto dei random values
-//TODO: variante con salvataggio di un clone per volta
-function createEditor () {
-    targetObject.clones = [];
-    //edit mode key frame attivo: questa porzione di codice deve essere eseguita una sola volta
-    //magari innescata da un evento
-    if(!stopClone) {
-        let clone = null;
-        for(let i = 0; i < targetObject.keyFrames.length; i++) {
-            if(i !== 0) {
-                //scorri i key frames
-                targetObject.flushToDOM(true);
-                clone = targetObject.cloneNode(false);
-                document.querySelector('a-scene').appendChild(clone);
-            } else
-                clone = targetObject; //il primo key frames è il target object, gli si assegnano le proprietà del primo key frame
-            targetObject.clones.push(clone);
-        }
-        stopClone = true;
-    }
+function createClone () {
+    let clone = null;
+    if(targetObject.keyFrames.length !== 1) {
+        targetObject.aframeEl.flushToDOM(true);
+        clone = targetObject.aframeEl.cloneNode(false);
+        document.querySelector('a-scene').appendChild(clone);
+    } else
+        clone = targetObject.aframeEl; //il primo key frames è il target object, gli si assegnano le proprietà del primo key frame
+    targetObject.clones.push(clone);
 }
 
 function animateAll () { //usata fuori dall'editor
     if(targetObject.keyFrames.length && targetObject.keyFrames[currentFrame] !== undefined) {
         //assegna il nuovo key frame
-        animate(targetObject);
+        animate(targetObject.aframeEl);
         //emette l'evento per iniziare l'animazione
-        targetObject.emit('start');
+        targetObject.aframeEl.emit('start');
         currentFrame++;
         console.log('Animazione ' + currentFrame);
     }
@@ -355,10 +360,10 @@ AFRAME.registerComponent('animate', {
         //aggiornamento variabile globale
         editingMode = this.data.editMode;
         document.getElementsByTagName('body')[0].onkeyup = function (event) {
-            if(targetObject !== null) {
+            if(targetObject.aframeEl !== null) {
                 switch (event.which) {
                     case 66: //b: crea traiettoria
-                        targetObject.emit('createTrajectory');
+                        targetObject.aframeEl.emit('createTrajectory');
                         break;
                     case 67: //c: anteprima funzione di easing
                         previewEasing(self);
@@ -395,32 +400,24 @@ AFRAME.registerComponent('animate', {
             }
         };
         //il componente funziona solo dopo che un certo oggetto è stato puntato
-        if (targetObject !== null) {
+        if (targetObject.aframeEl !== null) {
             //questa porzione di codice viene eseguita una sola volta
             if (!setted) {
                 //inizializzazione array key frames dell'oggetto targettato
                 targetObject.keyFrames = [];
                 targetObject.clones = [];
+                setted = true;
                 //crea la traiettoria
-                targetObject.addEventListener('createTrajectory', function () {
+                targetObject.aframeEl.addEventListener('createTrajectory', function () {
                     createPoint(self);
                 });
                 //"test" del componente
-                targetObject.addEventListener('trajectoryCreated', function () {
+                targetObject.aframeEl.addEventListener('trajectoryCreated', function () {
                     createKeyFrames(self);
                 });
                 //registrazione event listener sull'oggetto taggato, nell'event listener della fine di un'animazione
                 //si fa partire la successiva
-                targetObject.addEventListener('animationcomplete', function () {
-                    console.log('Animazione completata');
-                    if(!editingMode)
-                        animateAll();
-                });
-                setted = true;
-                //al momento non viene utilizzato
-                targetObject.addEventListener('keyFrameCreated', function () { //la gui deve emettere questo evento alla pressione del bottone
-                    saveKeyFrame();
-                });
+                addEventListeners();
             } else {
                 //si può provare cambiando la modalità dall'inspector
                 let feedback = document.querySelector('#containerFeedback');
@@ -430,6 +427,7 @@ AFRAME.registerComponent('animate', {
                     feedback.setAttribute('visible', true);
                     for(let i = 1; i < targetObject.clones.length; i++)
                         targetObject.clones[i].setAttribute('visible', true);
+                    createFeedback();
                 }
                 //passaggio dalla modalità di editor alla modalità di animazione
                 if(!editingMode && feedback !== null && feedback.getAttribute('visible')) {
