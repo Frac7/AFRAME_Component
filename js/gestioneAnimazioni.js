@@ -1,3 +1,4 @@
+//TODO: rivedere i commenti
 //vengono definite qui le proprietà dell'animazione
 //quali traiettoria (key frames, alcuni punti nello spazio) per ora i key frames si generano con un timer;
 //un insieme di valori per scegliere quale proprietà manipolare (qui bisogna dare la possibilità all'utente di
@@ -105,6 +106,39 @@ var easingFunctions = ['linear', 'easeInQuad', 'easeOutQuad',	'easeInOutQuad',
     'easeInElastic', 'easeOutElastic', 'easeInOutElastic'];
 var currentEasingFunction = 0;
 
+function deleteKeyFrame () {
+    //TODO: possibilità di cambiare i ìl riferimento al target object...
+    if(currentFrame !== 0) { //non elimina il targetObject
+        //aggiorna to/from
+        if(currentFrame !== (targetObject.keyFrames.length - 1)) //non aggiorna il to/from se viene eliminato l'ultimo key frame
+            for(let i = 0; i < targetObject.keyFrames[currentFrame].length; i++) {
+                targetObject.keyFrames[currentFrame - 1][i].values.to = targetObject.keyFrames[currentFrame + 1][i].values.from;
+                targetObject.keyFrames[currentFrame + 1][i].values.from = targetObject.keyFrames[currentFrame - 1][i].values.to;
+            }
+        targetObject.clones[currentFrame].parentNode.removeChild(targetObject.clones[currentFrame]);
+        targetObject.clones.splice(currentFrame, 1);
+        targetObject.keyFrames.splice(currentFrame, 1);
+        console.log('Key frame rimosso');
+        currentFrame++;
+        if(currentFrame >= targetObject.keyFrames.length)
+            currentFrame = 0;
+        createFeedback();
+    } /*else {
+        if(targetObject.clones.length !== 1) { //c'è almeno un altro clone oltre il target object
+            targetObject.clones[currentFrame].parentNode.removeChild(targetObject.clones[currentFrame]);
+            targetObject.clones.splice(currentFrame, 1);
+            targetObject.keyFrames.splice(currentFrame, 1);
+            console.log('Key frame rimosso');
+            currentFrame++;
+            if (currentFrame >= targetObject.keyFrames.length)
+                currentFrame = 0;
+            targetObject = targetObject.clones[currentFrame];
+            console.log(targetObject);
+            createFeedback();
+        }
+    }*/
+}
+
 //creazione della traiettoria per l'oggetto dell'animazione
 function createPoint (self) {
     console.log('Creazione traiettoria');
@@ -187,6 +221,7 @@ function setKeyFrameAttributes(clone, i) { //clone e key frame scelto
 
 //NB: il primo key frame è l'oggetto puntato. qui si generano valori anche per l'oggetto puntato, quindi si ignora
 //il suo stato iniziale. con una gui si prelevano i valori definiti dall'utente al posto dei random values
+//TODO: variante con salvataggio di un clone per volta
 function createEditor () {
     targetObject.clones = [];
     //edit mode key frame attivo: questa porzione di codice deve essere eseguita una sola volta
@@ -196,8 +231,8 @@ function createEditor () {
         for(let i = 0; i < targetObject.keyFrames.length; i++) {
             if(i !== 0) {
                 //scorri i key frames
-                //targetObject.flushToDOM(true);
-                clone = targetObject.cloneNode(true);
+                targetObject.flushToDOM(true);
+                clone = targetObject.cloneNode(false);
                 document.querySelector('a-scene').appendChild(clone);
             } else
                 clone = targetObject; //il primo key frames è il target object, gli si assegnano le proprietà del primo key frame
@@ -219,7 +254,7 @@ function animateAll () { //usata fuori dall'editor
 }
 
 function createFeedback () {
-    console.log('Creazione feedback');
+    console.log('Creazione feedback: ' + (currentFrame + 1));
     for(let i = 0; i < targetObject.clones.length; i++) {
         if(i === currentFrame) {
             console.log('Frame corrente: ' + (currentFrame + 1));
@@ -267,9 +302,12 @@ function previewEasing (self) {
         let index = 0;
         //fai l'animazione tre volte
         let timer = setInterval(function () {
-            if(index > 2)
+            if(index > 2) {
+                targetObject.clones[currentFrame].removeAttribute('animation__position');
+                for (let i = 0; i < properties.length; i++)
+                    targetObject.clones[currentFrame].removeAttribute('animation__' + properties[i]);
                 clearInterval(timer);
-            else {
+            } else {
                 index++;
                 console.log(index);
                 animate(targetObject.clones[currentFrame]);
@@ -277,6 +315,7 @@ function previewEasing (self) {
             }
         //}, self.data.dur);
         }, 5000);
+        //ripristina il from dell'oggetto
         createFeedback();
     }
 }
@@ -334,9 +373,12 @@ AFRAME.registerComponent('animate', {
                         self.data.easing = easingFunctions[currentEasingFunction];
                         console.log(self.data.easing);
                         break;
+                    case 86: //v: elimina key frame
+                        deleteKeyFrame();
+                        break;
                     case 88: //x: frame +
                         currentFrame++;
-                        if(currentFrame === targetObject.keyFrames.length)
+                        if(currentFrame >= targetObject.keyFrames.length)
                             currentFrame = 0;
                         createFeedback();
                         break;
@@ -345,6 +387,9 @@ AFRAME.registerComponent('animate', {
                         if(currentFrame < 0)
                             currentFrame = targetObject.keyFrames.length - 1;
                         createFeedback();
+                        break;
+                    case 90: //z: switch control
+                        createTransform(controls[(currentControl + 1) % controls.length], document);
                         break;
                 }
             }
@@ -355,6 +400,7 @@ AFRAME.registerComponent('animate', {
             if (!setted) {
                 //inizializzazione array key frames dell'oggetto targettato
                 targetObject.keyFrames = [];
+                targetObject.clones = [];
                 //crea la traiettoria
                 targetObject.addEventListener('createTrajectory', function () {
                     createPoint(self);

@@ -46,6 +46,7 @@ function createControl(transform, document, values) {
     x.setAttribute('material', values.x.material);
     x.setAttribute('scale', values.x.scale);
     x.setAttribute('rotation', values.x.rotation);
+    x.removeAttribute('geometry');
     x.setAttribute('geometry', values.x.geometry);
     x.setAttribute('holdable', values.x.holdable);
     //creazione linea x
@@ -55,6 +56,7 @@ function createControl(transform, document, values) {
         xLine.setAttribute('id', values.xLine.id);
         transform.appendChild(xLine);
     }
+    xLine.removeAttribute('line');
     xLine.setAttribute('line', values.xLine.lineAttribute);
     //creazione freccia y
     y = document.querySelector('#y');
@@ -67,6 +69,7 @@ function createControl(transform, document, values) {
     y.setAttribute('material', values.y.material);
     y.setAttribute('scale', values.y.scale);
     y.setAttribute('rotation', values.y.rotation);
+    y.removeAttribute('geometry');
     y.setAttribute('geometry', values.y.geometry);
     y.setAttribute('holdable', values.y.holdable);
     //creazione linea y
@@ -76,6 +79,7 @@ function createControl(transform, document, values) {
         yLine.setAttribute('id', values.yLine.id);
         transform.appendChild(yLine);
     }
+    yLine.removeAttribute('line');
     yLine.setAttribute('line', values.yLine.lineAttribute);
     //creazione freccia z
     z = document.querySelector('#z');
@@ -88,6 +92,7 @@ function createControl(transform, document, values) {
     z.setAttribute('material', values.z.material);
     z.setAttribute('scale', values.z.scale);
     z.setAttribute('rotation', values.z.rotation);
+    z.removeAttribute('geometry');
     z.setAttribute('geometry', values.z.geometry);
     z.setAttribute('holdable', values.z.holdable);
     //creazione linea z
@@ -97,6 +102,7 @@ function createControl(transform, document, values) {
         zLine.setAttribute('id', values.zLine.id);
         transform.appendChild(zLine);
     }
+    zLine.removeAttribute('line');
     zLine.setAttribute('line', values.zLine.lineAttribute);
     //creazione controllo per tutti gli assi
     all = document.querySelector('#all');
@@ -108,6 +114,7 @@ function createControl(transform, document, values) {
     all.setAttribute('position', values.all.position);
     all.setAttribute('material', values.all.material);
     all.setAttribute('scale', values.all.scale);
+    all.removeAttribute('geometry');
     all.setAttribute('geometry', values.all.geometry);
     all.setAttribute('holdable', values.all.holdable);
     //piani transform
@@ -171,11 +178,15 @@ function createControl(transform, document, values) {
         for(let i = 0; i < array.length; i++) {
             array[i].setAttribute('visible', false);
         }
+        xLine.setAttribute('scale', '1 1 1');
+        yLine.setAttribute('scale', '1 1 1');
+        zLine.setAttribute('scale', '1 1 1');
     }
 }
 
 //creazione transform (popolamento valori da usare per creare il controllo)
 function createTransform(transformType, document) {
+    //TODO: si può ottimizzare(anche per quanto riguarda la leggibilità)
     let values = null;
     let transform = document.querySelector('#transform');
     if(transform === null || transform === undefined) {
@@ -305,7 +316,7 @@ function createTransform(transformType, document) {
         currentControl = 2;
         values = {
             x: {
-                tag: '',
+                tag: 'a-entity',
                 id: 'x',
                 position: '0 0 0',
                 material: 'color: #ff0000',
@@ -361,12 +372,6 @@ function createTransform(transformType, document) {
         }
     }
     createControl(transform, document, values);
-}
-
-function switchTransformGesture (hand) {
-    //TODO: gesture per switch
-    //TODO: possibilità di nascondere il transform dalla scena (document.querySelector('#transform').setAttribute('visible', false);
-    return false;
 }
 
 function createPath (document) {
@@ -476,12 +481,6 @@ AFRAME.registerComponent('intersect-and-manipulate', {
             //let distance = Math.sqrt(Math.pow(transformPosition.x - cameraPosition.x, 2) + Math.pow(transformPosition.y - cameraPosition.y, 2) + Math.pow(transformPosition.z - cameraPosition.z, 2));
             let distance = new THREE.Vector3(cameraPosition.x, cameraPosition.y, cameraPosition.z).distanceTo(new THREE.Vector3(transformPosition.x, transformPosition.y, transformPosition.z));
             transform.setAttribute('scale', (distance) + ' ' + (distance) + ' ' + (distance));
-
-            if(switchTransformGesture(gestureHand.components['leap-hand'].getHand())) {
-                //cambia il transform... in base a cosa si sceglie come cambiare?
-                //si potrebbe anche usare uno swipe e considerare i controlli come un array circolare
-                createTransform(controls[(currentControl + 1) % controls.length], document);
-            }
         }
     },
 
