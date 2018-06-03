@@ -1,4 +1,3 @@
-var self = null; //this (componente)
 //true se si è verificato l'evento "intersezione"
 var intersection = false;
 var transformCreated = false; //flag creazione transform (evita che venga creato più di una volta)
@@ -9,8 +8,6 @@ var oldPosition = null;
 var oldOpacity = null;
 var controls = ['translate', 'scale', 'rotate'];
 var currentControl = 0;
-
-var gestureHand = null;
 
 //mano selezionata tramite componente
 function selectedHand(hand, document) {
@@ -33,6 +30,7 @@ function validHand(hand) {
     return (hand && hand.pointables.length !== 0);
 }
 
+//TODO: ingrandire controllo rotate
 //creazione controllo in base ad array di valori
 function createControl(transform, document, values) {
     let x, y, z, all;
@@ -188,7 +186,6 @@ function createControl(transform, document, values) {
 
 //creazione transform (popolamento valori da usare per creare il controllo)
 function createTransform(transformType, document) {
-    //TODO: si può ottimizzare(anche per quanto riguarda la leggibilità)
     let values = null;
     let transform = document.querySelector('#transform');
     if(transform === null || transform === undefined) {
@@ -409,7 +406,17 @@ AFRAME.registerComponent('intersect-and-manipulate', {
     },
 
     init: function () {
-        self = this;
+        switch (this.data.control) {
+            case 'translate':
+                currentControl = 0;
+                break;
+            case 'scale':
+                currentControl = 1;
+                break;
+            case 'rotate':
+                currentControl = 2;
+                break;
+        }
         this.el.setAttribute('raycaster', {
             showLine: false,
             //evitare collisioni con la camera o con il raggio stesso
@@ -437,8 +444,6 @@ AFRAME.registerComponent('intersect-and-manipulate', {
         if (validHand(hand)) {
             //posizione del palmo e riconoscimento gesto
             if (gestureRecognizer(hand)) {
-                //temporaneo
-                gestureHand = aframeHand;
                 //hand raycaster
                 let origin = aframeHand.components['leap-hand'].intersector.raycaster.ray.origin;
                 let relativeOriginPosition = origin.clone();
@@ -528,8 +533,7 @@ AFRAME.registerComponent('intersect-and-manipulate', {
                         targetObject.aframeEl = event.srcElement;
                         oldOpacity = targetObject.aframeEl.getAttribute('material').opacity;
                         //creazione transform
-                        control = self.data.control;
-                        createTransform(control, document);
+                        createTransform(controls[currentControl], document);
                         transformCreated = true;
                         event.srcElement.setAttribute('material', 'opacity: 0.5');
                     }
