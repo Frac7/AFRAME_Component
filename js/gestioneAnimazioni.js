@@ -78,6 +78,7 @@ function createKeyFrames (self) {
 //il key frame, viene emesso un evento (e qui viene definito il listener)
 //flag per la creazione iniziale della trajettoria
 var trajectoryCreated = false;
+var case2 = false; //caso due: modifica key frame (significa che l'evento di fine traiettoria è già stato definito)
 //per definire i key frames si definisce prima la posizione (quindi la traiettoria)
 //una volta definita la posizione del key frame si preme il bottone per il key frame
 //con editing true l'oggetto viene clonato nella sua traiettoria con tutte le sue proprietà
@@ -187,13 +188,18 @@ function stringify(object) {
 }
 
 //questa funzione salva i valori dell'oggetto puntato alla pressione del bottone per il salvataggio del keyframe
+//ci sono due casi: il primo è quello in cui il key frame viene creato per la prima volta,
+//il secondo caso è quello in cui il key frame viene modificato
 function saveKeyFrame(self) {
-    //(quindi conviene avere un evento per la conferma della traiettoria, come nel test)
-    //svuota l'array dei valori
-    while(values.length)
-        values.pop();
+    //primo caso:
+    let values = [];
+    let properties = ['material.opacity', 'material.color', 'scale', 'rotation'];
     //inserisce i nuovi valori
     values.push(targetObject.aframeEl.getAttribute('material').opacity, targetObject.aframeEl.getAttribute('material').color, stringify(targetObject.aframeEl.getAttribute('scale')), stringify(targetObject.aframeEl.getAttribute('rotation')));
+    if(case2) { //salva anche la nuova posizione
+        values.push(targetObject.aframeEl.getAttribute('position'));
+        properties.push('position');
+    }
     //salva il nuovo key frame
     let attributes = [];
     for (let i = 0; i < properties.length; i++) {
@@ -221,7 +227,6 @@ function saveKeyFrame(self) {
 function setKeyFrameAttributes(clone, i) { //clone e key frame scelto
     for (let j = 0; j < targetObject.keyFrames[i].length; j++) { //scorre le varie proprietà del frame
         //TODO: nella modalità editing non viene aggiornato il key frame zero, capire come gestire la questione to/from nell'editor
-        clone.flushToDOM(true);
         let array = targetObject.keyFrames[i][j].name.slice(11).split('.');
         if (array.length > 1)
             clone.setAttribute(array[0], array[1] + ': ' + targetObject.keyFrames[i][j].values.to);
@@ -231,11 +236,8 @@ function setKeyFrameAttributes(clone, i) { //clone e key frame scelto
 }
 
 function removeAnimationAttributes(clone, i) { //clone e key frame scelto
-    for (let j = 0; j < targetObject.keyFrames[i].length; j++) {
-        clone.flushToDOM(true);
+    for (let j = 0; j < targetObject.keyFrames[i].length; j++)
         clone.removeAttribute(targetObject.keyFrames[i][j].name);
-        console.log('rimosso ' + targetObject.keyFrames[i][j].name);
-    }
 }
 
 function createClone () {
@@ -261,6 +263,7 @@ function createFeedback () {
     for(let i = 0; i < targetObject.clones.length; i++) {
         //assegnameto proprietà editor: from values
         if(i === currentFrame) {
+            targetObject.aframeEl = targetObject.clones[i]; //aggiornamento target object per spostamento controllo transform
             //unico frame dell'editor con le proprietà attive, frame attivo
             console.log('Frame corrente: ' + (currentFrame + 1));
             let position = targetObject.clones[i].getAttribute('position');
@@ -283,6 +286,7 @@ function createFeedback () {
                 document.querySelector('a-scene').appendChild(container);
             }
             setKeyFrameAttributes(targetObject.clones[i], i);
+            createTransform(controls[currentControl]);
             document.querySelector('#containerFeedback').setAttribute('rotation', document.querySelector('[camera]').getAttribute('rotation')); //si può spostare per un controllo dinamico
             document.querySelector('#containerFeedback').setAttribute('position', position.x + ' ' + (position.y + 2.5) + ' ' + position.z);
             document.querySelector('#textFeedback').setAttribute('text-geometry', 'value: ' + (currentFrame + 1));
@@ -373,9 +377,9 @@ AFRAME.registerComponent('animate', {
                             console.log(self.data.easing);
                         }
                         break;
-                    case 82: //r: start TODO: da provare, ma dovrebbe andare visto che l'animazione continua solo se la precedente è finita
+                    case 82: //r: start (anche emettendo l'evento, per animare ci vuole l'attributo)
                         if(!self.data.editMode)
-                            targetObject.aframeEl.emit('start');
+                            animateAll();
                         break;
                     case 84: //t: resume
                         if(!self.data.editMode)
@@ -406,7 +410,7 @@ AFRAME.registerComponent('animate', {
                             target = targetObject.clones[currentFrame];
                         }
                         break;
-                    case 90: //z: switch control TODO: da spostare
+                    case 90: //z: switch control
                         createTransform(controls[(currentControl + 1) % controls.length], document);
                         break;
                 }
@@ -426,6 +430,7 @@ AFRAME.registerComponent('animate', {
                 });
                 //"test" del componente
                 targetObject.aframeEl.addEventListener('trajectoryCreated', function () {
+                    case2 = true;
                     //elimina l'oggetto originale (che è stato clonato per primo)
                     if(targetObject.clones.length) {
                         targetObject.aframeEl.parentNode.removeChild(targetObject.aframeEl);
@@ -455,6 +460,7 @@ AFRAME.registerComponent('animate', {
                 }
                 //passaggio dalla modalità di editor alla modalità di animazione
                 if(!this.data.editMode && feedback !== null && feedback.getAttribute('visible')) {
+                    targetObject.aframeEl = targetObject.aframeEl.clones[0]; //ripristina il primo clone per l'animazione
                     document.querySelector('#transform').setAttribute('visible', false);
                     currentFrame = 0;
                     feedback.setAttribute('visible', false);
@@ -462,8 +468,17 @@ AFRAME.registerComponent('animate', {
                         targetObject.clones[i].setAttribute('visible', false);
                     animateAll();
                 }
-                //lo scopo dell'editor è quello di creare l'animazione dalla scena, quindi non si verificherà mai la
-                //condizione animazione prima di editor
+                //aggiornamento feedback, solo la x e la z sono uguali TODO: provare
+                if(feedback !== null && this.data.editMode) {
+                    let keyFramePosition = targetObject.aframeEl.getAttribute('position');
+                    let position = {
+                        x: keyFramePosition.x,
+                        y: keyFramePosition.y + 2.5,
+                        z: keyFramePosition.z
+                    };
+                    if(position !== feedback.getAttribute('position'))
+                        createFeedback();
+                }
             }
         }
     }

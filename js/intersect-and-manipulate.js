@@ -10,7 +10,7 @@ var controls = ['translate', 'scale', 'rotate'];
 var currentControl = 0;
 
 //mano selezionata tramite componente
-function selectedHand(hand, document) {
+function selectedHand(hand) {
     let hands = document.querySelectorAll('[leap-hand]');
     if (hands) {
         for (let i = 0; i < hands.length; i++)
@@ -30,9 +30,8 @@ function validHand(hand) {
     return (hand && hand.pointables.length !== 0);
 }
 
-//TODO: ingrandire controllo rotate
 //creazione controllo in base ad array di valori
-function createControl(transform, document, values) {
+function createControl(transform, values) {
     let x, y, z, all;
     let xLine, yLine, zLine;
     //creazione freccia x
@@ -40,15 +39,15 @@ function createControl(transform, document, values) {
     if(x === null || x === undefined) {
         x = document.createElement(values.x.tag);
         x.setAttribute('id', values.x.id);
+        x.setAttribute('holdable', values.x.holdable);
+        x.setAttribute('material', values.x.material);
         transform.appendChild(x);
     }
     x.setAttribute('position', values.x.position);
-    x.setAttribute('material', values.x.material);
     x.setAttribute('scale', values.x.scale);
     x.setAttribute('rotation', values.x.rotation);
     x.removeAttribute('geometry');
     x.setAttribute('geometry', values.x.geometry);
-    x.setAttribute('holdable', values.x.holdable);
     //creazione linea x
     xLine = document.querySelector('#xLine');
     if(xLine === null || xLine === undefined) {
@@ -63,15 +62,15 @@ function createControl(transform, document, values) {
     if(y === null || y === undefined) {
         y = document.createElement(values.y.tag);
         y.setAttribute('id', values.y.id);
+        y.setAttribute('holdable', values.y.holdable);
+        y.setAttribute('material', values.y.material);
         transform.appendChild(y);
     }
     y.setAttribute('position', values.y.position);
-    y.setAttribute('material', values.y.material);
     y.setAttribute('scale', values.y.scale);
     y.setAttribute('rotation', values.y.rotation);
     y.removeAttribute('geometry');
     y.setAttribute('geometry', values.y.geometry);
-    y.setAttribute('holdable', values.y.holdable);
     //creazione linea y
     yLine = document.querySelector('#yLine');
     if(yLine === null || yLine === undefined) {
@@ -86,15 +85,15 @@ function createControl(transform, document, values) {
     if(z === null || z === undefined) {
         z = document.createElement(values.z.tag);
         z.setAttribute('id', values.z.id);
+        z.setAttribute('holdable', values.z.holdable);
+        z.setAttribute('material', values.z.material);
         transform.appendChild(z);
     }
     z.setAttribute('position', values.z.position);
-    z.setAttribute('material', values.z.material);
     z.setAttribute('scale', values.z.scale);
     z.setAttribute('rotation', values.z.rotation);
     z.removeAttribute('geometry');
     z.setAttribute('geometry', values.z.geometry);
-    z.setAttribute('holdable', values.z.holdable);
     //creazione linea z
     zLine = document.querySelector('#zLine');
     if(zLine === null || zLine === undefined) {
@@ -109,29 +108,18 @@ function createControl(transform, document, values) {
     if(all === null || all === undefined) {
         all = document.createElement(values.all.tag);
         all.setAttribute('id', values.all.id);
+        all.setAttribute('holdable', values.all.holdable);
+        all.setAttribute('material', values.all.material);
         transform.appendChild(all);
     }
     all.setAttribute('position', values.all.position);
-    all.setAttribute('material', values.all.material);
     all.setAttribute('scale', values.all.scale);
     all.removeAttribute('geometry');
     all.setAttribute('geometry', values.all.geometry);
-    all.setAttribute('holdable', values.all.holdable);
     //piani transform
-    if(currentControl === 0) {
-        //ingrandire il controllo translate
-        x.setAttribute('scale', '0.15 0.15 0.15');
-        x.setAttribute('position', '0.3 0 0.3');
-        y.setAttribute('scale', '0.15 0.15 0.15');
-        y.setAttribute('position', '0 0.3 0');
-        z.setAttribute('scale', '0.15 0.15 0.15');
-        z.setAttribute('position', '-0.3 0 0.3');
-        xLine.setAttribute('scale', '1.5 1.5 1.5');
-        yLine.setAttribute('scale', '1.5 1.5 1.5');
-        zLine.setAttribute('scale', '1.5 1.5 1.5');
-        all.setAttribute('scale', '0.05 0.05 0.05');
+    /*if(currentControl === 0) {
         //piani
-        /*all.removeAttribute('geometry');
+        all.removeAttribute('geometry');
         all.removeAttribute('material');
         all.setAttribute('scale', '0.075 0.075 0.075');
         let planeXY = document.createElement('a-plane');
@@ -172,20 +160,16 @@ function createControl(transform, document, values) {
         });
         planeZX.setAttribute('width', 1);
         planeZX.setAttribute('height', 1);
-        planeZX.setAttribute('position', '0 0 0.7');*/
+        planeZX.setAttribute('position', '0 0 0.7');
     } else {
         let array = document.querySelectorAll('[translatePlane]');
-        for(let i = 0; i < array.length; i++) {
+        for(let i = 0; i < array.length; i++)
             array[i].setAttribute('visible', false);
-        }
-        xLine.setAttribute('scale', '1 1 1');
-        yLine.setAttribute('scale', '1 1 1');
-        zLine.setAttribute('scale', '1 1 1');
-    }
+    }*/
 }
 
 //creazione transform (popolamento valori da usare per creare il controllo)
-function createTransform(transformType, document) {
+function createTransform(transformType) {
     let values = null;
     let transform = document.querySelector('#transform');
     if(transform === null || transform === undefined) {
@@ -201,9 +185,9 @@ function createTransform(transformType, document) {
             x: {
                 tag: 'a-entity',
                 id: 'x',
-                position: '0.2 0 0.2',
+                position: '0.3 0 0.3',
                 material: 'color: #ff0000',
-                scale: '0.1 0.1 0.1',
+                scale: '0.15 0.15 0.15',
                 rotation: '0 -45 -90',
                 geometry: 'primitive: cone; radiusBottom: 0.25',
                 holdable: ''
@@ -211,14 +195,14 @@ function createTransform(transformType, document) {
             xLine: {
                 tag: 'a-entity',
                 id: 'xLine',
-                lineAttribute: 'start: 0.2, 0, 0.2; end: 0 0 0; color: #ff0000'
+                lineAttribute: 'start: 0.3, 0, 0.3; end: 0 0 0; color: #ff0000'
             },
             y: {
                 tag: 'a-entity',
                 id: 'y',
-                position: '0 0.2 0',
+                position: '0 0.3 0',
                 material: 'color: #00ff00',
-                scale: '0.1 0.1 0.1',
+                scale: '0.15 0.15 0.15',
                 rotation: '0 0 0',
                 geometry: 'primitive: cone; radiusBottom: 0.25',
                 holdable: ''
@@ -226,14 +210,14 @@ function createTransform(transformType, document) {
             yLine: {
                 tag: 'a-entity',
                 id: 'yLine',
-                lineAttribute: 'start: 0, 0.2, 0; end: 0 0 0; color: #00ff00'
+                lineAttribute: 'start: 0, 0.3, 0; end: 0 0 0; color: #00ff00'
             },
             z: {
                 tag: 'a-entity',
                 id: 'z',
-                position: '-0.2 0 0.2',
+                position: '-0.3 0 0.3',
                 material: 'color: #0000ff',
-                scale: '0.1 0.1 0.1',
+                scale: '0.15 0.15 0.15',
                 rotation: '0 45 90',
                 geometry: 'primitive: cone; radiusBottom: 0.25',
                 holdable: ''
@@ -241,14 +225,14 @@ function createTransform(transformType, document) {
             zLine: {
                 tag: 'a-entity',
                 id: 'zLine',
-                lineAttribute: 'start: -0.2, 0, 0.2; end: 0 0 0; color: #0000ff'
+                lineAttribute: 'start: -0.3, 0, 0.3; end: 0 0 0; color: #0000ff'
             },
             all: {
                 tag: 'a-entity',
                 id: 'all',
                 position: '0 0 0',
                 material: 'color: #ffffff',
-                scale: '0.03 0.03 0.03',
+                scale: '0.05 0.05 0.05',
                 geometry: 'primitive: sphere',
                 holdable: ''
             }
@@ -319,7 +303,7 @@ function createTransform(transformType, document) {
                 id: 'x',
                 position: '0 0 0',
                 material: 'color: #ff0000',
-                scale: '0.05 0.05 0.05',
+                scale: '0.075 0.075 0.075',
                 rotation: '0 90 0',
                 geometry: 'primitive: torus; radius: 5; radiusTubular: 0.1; segmentsRadial: 100; segmentsTubular: 100',
                 holdable: ''
@@ -334,7 +318,7 @@ function createTransform(transformType, document) {
                 id: 'y',
                 position: '0 0 0',
                 material: 'color: #00ff00',
-                scale: '0.05 0.05 0.05',
+                scale: '0.075 0.075 0.075',
                 rotation: '90 0 0',
                 geometry: 'primitive: torus; radius: 5; radiusTubular: 0.1; segmentsRadial: 100; segmentsTubular: 100',
                 holdable: ''
@@ -349,7 +333,7 @@ function createTransform(transformType, document) {
                 id: 'z',
                 position: '0 0 0',
                 material: 'color: #0000ff',
-                scale: '0.05 0.05 0.05',
+                scale: '0.075 0.075 0.075',
                 rotation: '0 0 0',
                 geometry: 'primitive: torus; radius: 5; radiusTubular: 0.1; segmentsRadial: 100; segmentsTubular: 100',
                 holdable: ''
@@ -364,16 +348,16 @@ function createTransform(transformType, document) {
                 id: 'all',
                 position: '0 0 0',
                 material: 'color: #ffffff',
-                scale: '0.05 0.05 0.05',
+                scale: '0.075 0.075 0.075',
                 geometry: 'primitive: torus; radius: 6; radiusTubular: 0.1; segmentsRadial: 100; segmentsTubular: 100',
                 holdable: ''
             }
         }
     }
-    createControl(transform, document, values);
+    createControl(transform, values);
 }
 
-function createPath (document) {
+function createPath () {
     //definizione del percorso. il percorso viene creato con un componente esterno per a-frame
     //#1 curva
     let curve = document.querySelector('#curve');
@@ -436,7 +420,7 @@ AFRAME.registerComponent('intersect-and-manipulate', {
 
     tick: function () {
         let cameraPosition = document.querySelector('[camera]').getAttribute('position');
-        let aframeHand = selectedHand(this.data.hand, document);
+        let aframeHand = selectedHand(this.data.hand);
         let hand = null;
         if (aframeHand)
             hand = aframeHand.components['leap-hand'].getHand();
@@ -495,7 +479,7 @@ AFRAME.registerComponent('intersect-and-manipulate', {
         //oggetto intersecato
         let intersectedObject = event.detail.els[0];
         //mano visibile
-        let isVisible = selectedHand(event.srcElement.components['intersect-and-manipulate'].data.hand, document).components['leap-hand'].isVisible;
+        let isVisible = selectedHand(event.srcElement.components['intersect-and-manipulate'].data.hand).components['leap-hand'].isVisible;
         if (isVisible) {
             //posizioni elemento intersecato e camera per successiva definizione del percorso
             let endPath = intersectedObject.getAttribute('position');
@@ -505,7 +489,7 @@ AFRAME.registerComponent('intersect-and-manipulate', {
             if (intersectedObject.getAttribute(this.data.tag) !== null) {
                 //inizia il percorso del nuovo oggetto
                 intersection = true;
-                createPath(document);
+                createPath();
                 document.querySelector('#point0').setAttribute('position', endPath);
                 document.querySelector('#point2').setAttribute('position', startPath);
                 intersectedObject.setAttribute('alongpath', {
@@ -533,7 +517,7 @@ AFRAME.registerComponent('intersect-and-manipulate', {
                         targetObject.aframeEl = event.srcElement;
                         oldOpacity = targetObject.aframeEl.getAttribute('material').opacity;
                         //creazione transform
-                        createTransform(controls[currentControl], document);
+                        createTransform(controls[currentControl]);
                         transformCreated = true;
                         event.srcElement.setAttribute('material', 'opacity: 0.5');
                     }

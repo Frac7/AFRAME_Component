@@ -6,7 +6,6 @@ var targetOriginalValue = null; //valore iniziale del target per somma (posizion
 var axis = null; //asse scelto per la modifica
 var oldTransformPosition = null; //posizione precedente transform per spostamento
 var handTick = null; //posizione della mano al tick della scena (da cui viene sottratta la posizione iniziale del pollice)
-var d = null; //document
 
 //riprinstina il colore degli assi in hold stop
 function oldColor () {
@@ -34,7 +33,7 @@ function selectHand() {
             i = 2;
             break;
     }
-    let hands = d.querySelectorAll('[leap-hand]');
+    let hands = document.querySelectorAll('[leap-hand]');
     for (let j = 0; j < hands.length; j++) {
         if (hands[j].components['leap-hand'].getHand() !== undefined && hands[j].components['leap-hand'].getHand().type === hand.type) {
             if (axis !== 'all' && controls[currentControl] !== 'rotate')
@@ -48,7 +47,6 @@ function selectHand() {
 AFRAME.registerComponent('holdable', {
 
     init: function () {
-        d = document;
         this.el.addEventListener('leap-holdstart', this.onHoldStart.bind(this));
         this.el.addEventListener('leap-holdstop', this.onHoldStop.bind(this));
     },
@@ -61,7 +59,6 @@ AFRAME.registerComponent('holdable', {
                 if (handTick !== null && handTick !== undefined) {
                     //modifica del parametro in base all'asse scelto, var i
                     //(differenza tra posizione pollice in holdstart e ad ogni tick)
-                    //TODO: emettere un evento allo spostamento dell'oggetto e aggiornare il to (from della successiva) e il feedback delle animazioni
                     switch (axis) {
                         case 'x':
                             if (controls[currentControl] === 'translate') {
