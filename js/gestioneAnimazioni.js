@@ -325,6 +325,13 @@ function previewEasing (self) {
         createFeedback();
     }
 }
+function parseRepeat (value) {
+    let n = parseInt(value);
+    if(isNaN(n))
+        return true;
+    else
+        return  n;
+}
 
 AFRAME.registerComponent('animate', {
     schema: {
@@ -346,9 +353,15 @@ AFRAME.registerComponent('animate', {
             'easeInCirc', 'easeOutCirc', 'easeInOutCirc',
             'easeInBack', 'easeOutBack', 'easeInOutBack',
             'easeInElastic', 'easeOutElastic', 'easeInOutElastic'], default: 'linear'},
-        repeat: {type: 'int', default: 1},
+        repeat: {type: 'string', default: '1'},
         duration: {type: 'float', default: 5000},
         delay: {type: 'float', default: 0}
+    },
+
+    init: function () {
+        //in base alla stringa inserita, restituisce il valore da usare in animation (k frame)
+        //true per infinito, un numero per qualsiasi numero inserito come stringa
+        this.data.repeat = parseRepeat(this.data.repeat);
     },
 
     tick: function () {
