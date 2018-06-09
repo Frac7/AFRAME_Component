@@ -338,7 +338,7 @@ AFRAME.registerComponent('animate', {
         editMode: {type: 'boolean', default: true}, //quando questa proprietà è true, l'utente vede l'oggetto clonato
         //in base ai key frames all'interno della scena
         //per property e interpolation, nella gui, deve essere mostrato un elenco con le opzioni dispnibili
-        trajectory: {type: 'string', default: ''},
+        //trajectory: {type: 'string', default: ''},
         property: {type: 'string', oneOf: ['', 'material.color', 'material.opacity', 'rotation', 'scale'], default: ''},
         value: {type: 'string', default: ''},
         //property e value verranno selezionati dalla gui, i valori selezionati devono essere assegnati a questi due valori
@@ -359,7 +359,7 @@ AFRAME.registerComponent('animate', {
     },
 
     init: function () {
-        //in base alla stringa inserita, restituisce il valore da usare in animation (k frame)
+        //in base alla stringa inserita, restituisce il valore da usare in animate (k frame)
         //true per infinito, un numero per qualsiasi numero inserito come stringa
         this.data.repeat = parseRepeat(this.data.repeat);
     },

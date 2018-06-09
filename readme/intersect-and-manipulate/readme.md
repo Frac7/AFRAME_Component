@@ -13,7 +13,7 @@ that intersects the pointed object.
 ![Example1](/gif1.gif)
 
 The selected object is moved in front of camera using [aframe-alongpath](https://github.com/protyze/aframe-alongpath-component)
- and the transform control is attached to it.
+ and transform control is attached to it.
  
 ![Example2](/gif.gif)
  
@@ -21,7 +21,7 @@ The selected object is moved in front of camera using [aframe-alongpath](https:/
 | Property | Default    | Description                                                                     |
 |----------|------------|---------------------------------------------------------------------------------|
 | hand     | right      | Hand that triggers pose recognition, one of `left`, `right`                     |
-| control  | translate  | Control type attached to selected object, one of `translate`, `scale`, `rotate` |
+| control  | translate  | Control type attached to the selected object, one of `translate`, `scale`, `rotate` |
 | tag      | selectable | Tag used to mark selectable objects                                             |
 
 ## Usage
