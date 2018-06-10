@@ -45,6 +45,7 @@ In animation mode user can play, stop and resume animation.
 <!-- inserire il codice per l'editor !-->
 ### More...
 [More examples on Glitch](https://mycomponent-tutorial.glitch.me/)
+
 [aframe-text-geometry](https://github.com/ngokevin/kframe/tree/master/components/text-geometry)
 
 <!-- descrizione !-->
