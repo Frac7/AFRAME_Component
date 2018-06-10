@@ -12,15 +12,15 @@ user can manipulate properties of the target object (with GUI/transform controls
 In animation mode user can play, stop and resume animation.
  
 ## Properties
-| Property     | Default    | Description                                                                     |
-|--------------|------------|---------------------------------------------------------------------------------|
-| editMode     | true       | Enable or disable animation editor                                              |
+| Property     | Default    | Description                                                                                            |
+|--------------|------------|--------------------------------------------------------------------------------------------------------|
+| editMode     | true       | Enable or disable animation editor                                                                     |
 | property     | ' '        | Propery to animate for each key frame, one of `material.color`, `material.opacity`, `scale`, `rotation`|
-| value        | ' '        | Value to assign to property (to value)                                          |
-| interpolation| 'linear'   | Function that defines the animation between key frames (realistic animation)    |
-| repeat       | '1'        | How many times animation is repeated (use `infinite` to repeat infinitely)       |
-| duration     | 5000       | How long each frame of animation lasts                                      |
-| delay        | 0          | How much to wait before each frame of animation starts                      |
+| value        | ' '        | Value to assign to property (to value)                                                                 |
+| interpolation| 'linear'   | Function that defines the animation between key frames (realistic animation)                           |
+| repeat       | '1'        | How many times animation is repeated (use `infinite` to repeat infinitely)                             |
+| duration     | 5000       | How long each frame of animation lasts                                                                 |
+| delay        | 0          | How much to wait before each frame of animation starts                                                 |
 
 ## Usage
 ```html
@@ -44,7 +44,8 @@ In animation mode user can play, stop and resume animation.
 ```
 <!-- inserire il codice per l'editor !-->
 ### More...
-[More examples on Glitch](https://my-animation-component.glitch.me/)
+[More examples on Glitch](https://mycomponent-tutorial.glitch.me/)
+[aframe-text-geometry](https://github.com/ngokevin/kframe/tree/master/components/text-geometry)
 
 <!-- descrizione !-->
 ### Easing functions
