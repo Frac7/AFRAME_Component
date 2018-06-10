@@ -1,3 +1,7 @@
+//TODO: to/from 1° key frame (l'utente parte dal from, le proprietà dell'oggetto puntato, poi definisce il to nel key frame)
+//TODO: trajectory (parametro)
+//TODO: posizione reset animazione
+//TODO: da provare 491, da provare save key frame
 //vengono definite qui le proprietà dell'animazione
 //quali traiettoria (key frames, alcuni punti nello spazio), per ora i key frames si generano con un timer;
 //un insieme di valori per scegliere quale proprietà manipolare
@@ -191,15 +195,23 @@ function stringify(object) {
 //ci sono due casi: il primo è quello in cui il key frame viene creato per la prima volta,
 //il secondo caso è quello in cui il key frame viene modificato
 function saveKeyFrame(self) {
+    console.log('Key frame salvato');
     //primo caso:
     let values = [];
     let properties = ['material.opacity', 'material.color', 'scale', 'rotation'];
     //inserisce i nuovi valori
-    values.push(targetObject.aframeEl.getAttribute('material').opacity, targetObject.aframeEl.getAttribute('material').color, stringify(targetObject.aframeEl.getAttribute('scale')), stringify(targetObject.aframeEl.getAttribute('rotation')));
+    //per il primo clone salva oldOpacity nel caso 1, altrimenti l'opacità corrente
+    let opacity = null;
     if(case2) { //salva anche la nuova posizione
         values.push(targetObject.aframeEl.getAttribute('position'));
         properties.push('position');
-    }
+        opacity = targetObject.aframeEl.getAttribute('material').opacity;
+    } else
+        if(oldOpacity !== null) //solo nei casi collada models l'opacità è null
+            opacity = oldOpacity;
+        else
+            opacity = 1;
+    values.push(opacity, targetObject.aframeEl.getAttribute('material').color, stringify(targetObject.aframeEl.getAttribute('scale')), stringify(targetObject.aframeEl.getAttribute('rotation')));
     //salva il nuovo key frame
     let attributes = [];
     for (let i = 0; i < properties.length; i++) {
@@ -226,7 +238,6 @@ function saveKeyFrame(self) {
 
 function setKeyFrameAttributes(clone, i) { //clone e key frame scelto
     for (let j = 0; j < targetObject.keyFrames[i].length; j++) { //scorre le varie proprietà del frame
-        //TODO: nella modalità editing non viene aggiornato il key frame zero, capire come gestire la questione to/from nell'editor
         let array = targetObject.keyFrames[i][j].name.slice(11).split('.');
         if (array.length > 1)
             clone.setAttribute(array[0], array[1] + ': ' + targetObject.keyFrames[i][j].values.to);
@@ -303,7 +314,7 @@ function animate (targetObjectParameter) {
         targetObjectParameter.setAttribute(targetObject.keyFrames[currentFrame][i].name, targetObject.keyFrames[currentFrame][i].values);
 }
 
-function previewEasing (self) {
+function easingPreview (self) {
     //questa funzione mostra un'anteprima della funzione di easing scelta
     //agisce sul frame corrente nella modalità editing
     if(self.data.editMode) {
@@ -327,7 +338,7 @@ function previewEasing (self) {
 }
 function parseRepeat (value) {
     let n = parseInt(value);
-    if(isNaN(n))
+    if(isNaN(n) || n === 0)
         return true;
     else
         return  n;
@@ -376,7 +387,7 @@ AFRAME.registerComponent('animate', {
                         targetObject.aframeEl.emit('createPoint');
                         break;
                     case 67: //c: anteprima funzione di easing
-                        previewEasing(self);
+                        easingPreview(self);
                         break;
                     case 69: //e: modalità di editing on/off
                         self.data.editMode = !self.data.editMode;
@@ -389,6 +400,9 @@ AFRAME.registerComponent('animate', {
                             self.data.easing = easingFunctions[currentEasingFunction];
                             console.log(self.data.easing);
                         }
+                        break;
+                    case 81: //q: salva key frame
+                        targetObject.aframeEl.emit('keyFrameCreated');
                         break;
                     case 82: //r: start (anche emettendo l'evento, per animare ci vuole l'attributo)
                         if(!self.data.editMode)
@@ -481,7 +495,7 @@ AFRAME.registerComponent('animate', {
                         targetObject.clones[i].setAttribute('visible', false);
                     animateAll();
                 }
-                //aggiornamento feedback, solo la x e la z sono uguali TODO: provare
+                //aggiornamento feedback, solo la x e la z sono uguali
                 if(feedback !== null && this.data.editMode) {
                     let keyFramePosition = targetObject.aframeEl.getAttribute('position');
                     let position = {
