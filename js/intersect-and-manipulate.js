@@ -506,7 +506,7 @@ AFRAME.registerComponent('intersect-and-manipulate', {
                             triggerRadius: 0
                         });
                         event.srcElement.removeAttribute('alongpath');
-                        if(targetObject.aframeEl !== null && targetObject.aframeEl !== undefined) {
+                        if(targetObject.aframeEl !== null && targetObject.aframeEl !== undefined && oldOpacity !== null) {
                             targetObject.aframeEl.setAttribute('material', 'opacity: ' + oldOpacity);
                             //se l'elemento non è stato traslato
                             if(oldPosition !== null)
@@ -515,7 +515,10 @@ AFRAME.registerComponent('intersect-and-manipulate', {
                         //aggiornamento vecchia posizione
                         oldPosition = endPath;
                         targetObject.aframeEl = event.srcElement;
-                        oldOpacity = targetObject.aframeEl.getAttribute('material').opacity;
+                        if(targetObject.aframeEl.getAttribute('material') !== null)
+                            oldOpacity = targetObject.aframeEl.getAttribute('material').opacity;
+                        else
+                            oldOpacity = null;
                         //creazione transform
                         createTransform(controls[currentControl]);
                         transformCreated = true;
