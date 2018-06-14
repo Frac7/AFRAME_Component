@@ -1,11 +1,11 @@
-var firstHandPosition = null; //posizione della mano nel momento in cui viene chiamato l'evento leap-holdstart
-var start = false; //indica se l'evento sia stato emesso o meno
-var target = null; //oggetto da trasformare
-var hand = null; //mano che innesca l'evento
-var targetOriginalValue = null; //valore iniziale del target per somma (posizione, scala, rotazione)
-var axis = null; //asse scelto per la modifica
-var oldTransformPosition = null; //posizione precedente transform per spostamento
-var handTick = null; //posizione della mano al tick della scena (da cui viene sottratta la posizione iniziale del pollice)
+let firstHandPosition = null; //posizione della mano nel momento in cui viene chiamato l'evento leap-holdstart
+let start = false; //indica se l'evento sia stato emesso o meno
+let target = null; //oggetto da trasformare
+let hand = null; //mano che innesca l'evento
+let targetOriginalValue = null; //valore iniziale del target per somma (posizione, scala, rotazione)
+let axis = null; //asse scelto per la modifica
+let oldTransformPosition = null; //posizione precedente transform per spostamento
+let handTick = null; //posizione della mano al tick della scena (da cui viene sottratta la posizione iniziale del pollice)
 
 //riprinstina il colore degli assi in hold stop
 function oldColor () {
@@ -57,38 +57,85 @@ AFRAME.registerComponent('holdable', {
                 //selezione posizione mano in base all'asse
                 selectHand();
                 if (handTick !== null && handTick !== undefined) {
-                    //modifica del parametro in base all'asse scelto, var i
+                    //modifica del parametro in base all'asse scelto
                     //(differenza tra posizione pollice in holdstart e ad ogni tick)
                     switch (axis) {
                         case 'x':
                             if (controls[currentControl] === 'translate') {
-                                target.setAttribute('position', (targetOriginalValue.x + (handTick - firstHandPosition[0])) + ' ' + targetOriginalValue.y + ' ' + targetOriginalValue.z);
-                                //spostamento assi assieme all'oggetto target
-                                document.querySelector('#transform').setAttribute('position', (oldTransformPosition.x + ((handTick - firstHandPosition[0])) + ' ' + oldTransformPosition.y + ' ' + oldTransformPosition.z));
+                                target.setAttribute('position', {
+                                    x: targetOriginalValue.x + (handTick - firstHandPosition[0]),
+                                    y: targetOriginalValue.y,
+                                    z: targetOriginalValue.z
+                                });//spostamento assi assieme all'oggetto target
+                                document.querySelector('#transform').setAttribute('position', {
+                                    x: oldTransformPosition.x + (handTick - firstHandPosition[0]),
+                                    y: oldTransformPosition.y,
+                                    z: oldTransformPosition.z
+                                });
                             } else if (controls[currentControl] === 'scale') {
-                                target.setAttribute('scale', (targetOriginalValue.x + (handTick - firstHandPosition[0])) + ' ' + targetOriginalValue.y + ' ' + targetOriginalValue.z);
+                                target.setAttribute('scale', {
+                                    x: targetOriginalValue.x + handTick - firstHandPosition[0],
+                                    y: targetOriginalValue.y,
+                                    z: targetOriginalValue.z
+                                });
                             } else if (controls[currentControl] === 'rotate') {
-                                target.setAttribute('rotation', (targetOriginalValue.x + ((handTick[1] - firstHandPosition[1]) * 360)) + ' ' + targetOriginalValue.y + ' ' + targetOriginalValue.z);
+                                target.setAttribute('rotation', {
+                                    x: targetOriginalValue.x + ((handTick[1] - firstHandPosition[1]) * 360),
+                                    y: targetOriginalValue.y,
+                                    z: targetOriginalValue.z
+                                });
                             }
                             break;
                         case 'y':
                             if (controls[currentControl] === 'translate') {
-                                target.setAttribute('position', targetOriginalValue.x + ' ' + (targetOriginalValue.y + (handTick - firstHandPosition[1])) + ' ' + targetOriginalValue.z);
-                                document.querySelector('#transform').setAttribute('position', oldTransformPosition.x + ' ' + (oldTransformPosition.y + (handTick - firstHandPosition[1])) + ' ' + oldTransformPosition.z);
+                                target.setAttribute('position', {
+                                    x: targetOriginalValue.x,
+                                    y: targetOriginalValue.y + (handTick - firstHandPosition[1]),
+                                    z: targetOriginalValue.z
+                                });
+                                document.querySelector('#transform').setAttribute('position', {
+                                    x: oldTransformPosition.x,
+                                    y: (oldTransformPosition.y + (handTick - firstHandPosition[1])),
+                                    z: oldTransformPosition.z
+                                });
                             } else if (controls[currentControl] === 'scale') {
-                                target.setAttribute('scale', targetOriginalValue.x + ' ' + (targetOriginalValue.y + (handTick - firstHandPosition[1])) + ' ' + targetOriginalValue.z);
+                                target.setAttribute('scale', {
+                                    x: targetOriginalValue.x,
+                                    y: targetOriginalValue.y + (handTick - firstHandPosition[1]),
+                                    z: targetOriginalValue.z
+                                });
                             } else if (controls[currentControl] === 'rotate') {
-                                target.setAttribute('rotation', targetOriginalValue.x + ' ' + (targetOriginalValue.y + ((handTick[0] - firstHandPosition[0]) * 360)) + ' ' + targetOriginalValue.z);
+                                target.setAttribute('rotation', {
+                                    x: targetOriginalValue.x,
+                                    y: targetOriginalValue.y + ((handTick[0] - firstHandPosition[0]) * 360),
+                                    z: targetOriginalValue.z
+                                });
                             }
                             break;
                         case 'z':
                             if (controls[currentControl] === 'translate') {
-                                target.setAttribute('position', targetOriginalValue.x + ' ' + targetOriginalValue.y + ' ' + (targetOriginalValue.z + (handTick - firstHandPosition[2])));
-                                document.querySelector('#transform').setAttribute('position', oldTransformPosition.x + ' ' + oldTransformPosition.y + ' ' + (oldTransformPosition.z + (handTick - firstHandPosition[2])));
+                                target.setAttribute('position', {
+                                    x: targetOriginalValue.x,
+                                    y: targetOriginalValue.y,
+                                    z: targetOriginalValue.z + (handTick - firstHandPosition[2])
+                                });
+                                document.querySelector('#transform').setAttribute('position', {
+                                    x: oldTransformPosition.x,
+                                    y: oldTransformPosition.y,
+                                    z: oldTransformPosition.z + (handTick - firstHandPosition[2])
+                                });
                             } else if (controls[currentControl] === 'scale') {
-                                target.setAttribute('scale', targetOriginalValue.x + ' ' + targetOriginalValue.y + ' ' + (targetOriginalValue.z + (handTick - firstHandPosition[2])));
+                                target.setAttribute('scale', {
+                                    x: targetOriginalValue.x,
+                                    y: targetOriginalValue.y,
+                                    z: targetOriginalValue.z + (handTick - firstHandPosition[2])
+                                });
                             } else if (controls[currentControl] === 'rotate') {
-                                target.setAttribute('rotation', targetOriginalValue.x + ' ' + targetOriginalValue.y + ' ' + (targetOriginalValue.z + ((handTick[0] - firstHandPosition[0] + handTick[1] - firstHandPosition[1]) * 180)));
+                                target.setAttribute('rotation', {
+                                    x: targetOriginalValue.x,
+                                    y: targetOriginalValue.y,
+                                    z: targetOriginalValue.z + ((handTick[0] - firstHandPosition[0] + handTick[1] - firstHandPosition[1]) * 180)
+                                });
                             }
                             break;
                         case 'all':
@@ -96,12 +143,28 @@ AFRAME.registerComponent('holdable', {
                             let allPosition = document.querySelector('#all').getAttribute('position');
                             let distance = new THREE.Vector3(allPosition.x, allPosition.y, allPosition.z).distanceTo(new THREE.Vector3(handTick[0], handTick[1], handTick[2]));
                             if (controls[currentControl] === 'translate') {
-                                target.setAttribute('position', (targetOriginalValue.x + distance) + ' ' + (targetOriginalValue.y + distance) + ' ' + (targetOriginalValue.z + distance));
-                                document.querySelector('#transform').setAttribute('position', (oldTransformPosition.x + distance) + ' ' + (oldTransformPosition.y + distance) + ' ' + (oldTransformPosition.z + distance));
+                                target.setAttribute('position', {
+                                    x: targetOriginalValue.x + distance,
+                                    y: targetOriginalValue.y + distance,
+                                    z: targetOriginalValue.z + distance
+                                });
+                                document.querySelector('#transform').setAttribute('position', {
+                                    x: oldTransformPosition.x + distance,
+                                    y: oldTransformPosition.y + distance,
+                                    z: oldTransformPosition.z + distance
+                                });
                             } else if (controls[currentControl] === 'scale') {
-                                target.setAttribute('scale', (targetOriginalValue.x + distance) + ' ' + (targetOriginalValue.y + distance) + ' ' + (targetOriginalValue.z + distance));
+                                target.setAttribute('scale', {
+                                    x: targetOriginalValue.x + distance,
+                                    y: targetOriginalValue.y + distance,
+                                    z: targetOriginalValue.z + distance
+                                });
                             } else if (controls[currentControl] === 'rotate') {
-                                target.setAttribute('rotation', (targetOriginalValue.x + (distance * 360)) + ' ' + (targetOriginalValue.y + (distance * 360)) + ' ' + (targetOriginalValue.z + (distance * 360)));
+                                target.setAttribute('rotation', {
+                                    x: targetOriginalValue.x + (distance * 360),
+                                    y: targetOriginalValue.y + (distance * 360),
+                                    z: targetOriginalValue.z + (distance * 360)
+                                });
                             }
                             break;
                     }

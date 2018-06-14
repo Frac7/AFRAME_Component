@@ -1,13 +1,13 @@
 //true se si è verificato l'evento "intersezione"
-var intersection = false;
-var transformCreated = false; //flag creazione transform (evita che venga creato più di una volta)
-var targetObject = {
+let intersection = false;
+let transformCreated = false; //flag creazione transform (evita che venga creato più di una volta)
+let targetObject = {
     aframeEl: null
 }; //oggetto puntato
-var oldPosition = null;
-var oldOpacity = null;
-var controls = ['translate', 'scale', 'rotate'];
-var currentControl = 0;
+let oldPosition = null;
+let oldOpacity = null;
+let controls = ['translate', 'scale', 'rotate'];
+let currentControl = 0;
 
 //mano selezionata tramite componente
 function selectedHand(hand) {

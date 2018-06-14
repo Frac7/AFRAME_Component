@@ -1,7 +1,3 @@
-//TODO: to/from 1° key frame (l'utente parte dal from, le proprietà dell'oggetto puntato, poi definisce il to nel key frame)
-//TODO: trajectory (parametro)
-//TODO: posizione reset animazione
-//TODO: da provare 491, da provare save key frame
 //vengono definite qui le proprietà dell'animazione
 //quali traiettoria (key frames, alcuni punti nello spazio), per ora i key frames si generano con un timer;
 //un insieme di valori per scegliere quale proprietà manipolare
@@ -81,20 +77,20 @@ function createKeyFrames (self) {
 //si può utilizzare anche un event listener sull'oggetto puntato, quando l'utente clicca sul bottone per modificare
 //il key frame, viene emesso un evento (e qui viene definito il listener)
 //flag per la creazione iniziale della trajettoria
-var trajectoryCreated = false;
-var case2 = false; //caso due: modifica key frame (significa che l'evento di fine traiettoria è già stato definito)
+let trajectoryCreated = false;
+let case2 = false; //caso due: modifica key frame (significa che l'evento di fine traiettoria è già stato definito)
 //per definire i key frames si definisce prima la posizione (quindi la traiettoria)
 //una volta definita la posizione del key frame si preme il bottone per il key frame
 //con editing true l'oggetto viene clonato nella sua traiettoria con tutte le sue proprietà
 //la prima volta che si preme il bottone per il key frame segna l'inizio dell'animazione
 //editing key frame non abilitato
-var editingMode = false;
-var properties = ['material.opacity', 'material.color', 'scale', 'rotation']; //proprietà da modificare
-var values = []; //valori da associare alle proprietà
-var setted = false; //inizializzazione vettore key frames
-var currentFrame = 0; //frame in riproduzione nell'animazione; si può usare anche per la modifica del key frame
+let editingMode = false;
+let properties = ['material.opacity', 'material.color', 'scale', 'rotation']; //proprietà da modificare
+let values = []; //valori da associare alle proprietà
+let setted = false; //inizializzazione vettore key frames
+let currentFrame = 0; //frame in riproduzione nell'animazione; si può usare anche per la modifica del key frame
 //easing functions disponibili
-var easingFunctions = ['linear', 'easeInQuad', 'easeOutQuad',	'easeInOutQuad',
+let easingFunctions = ['linear', 'easeInQuad', 'easeOutQuad',	'easeInOutQuad',
     'easeInCubic', 'easeOutCubic', 'easeInOutCubic',
     'easeInQuart', 'easeOutQuart', 'easeInOutQuart',
     'easeInQuint', 'easeOutQuint', 'easeInOutQuint',
@@ -103,7 +99,7 @@ var easingFunctions = ['linear', 'easeInQuad', 'easeOutQuad',	'easeInOutQuad',
     'easeInCirc', 'easeOutCirc', 'easeInOutCirc',
     'easeInBack', 'easeOutBack', 'easeInOutBack',
     'easeInElastic', 'easeOutElastic', 'easeInOutElastic'];
-var currentEasingFunction = 0; //easing function corrente (scelta dalla gui, utilizzata per l'anteprima)
+let currentEasingFunction = 0; //easing function corrente (scelta dalla gui, utilizzata per l'anteprima)
 
 function addEventListeners () {
     //clonare gli event listener
@@ -438,7 +434,7 @@ AFRAME.registerComponent('animate', {
                         }
                         break;
                     case 90: //z: switch control
-                        createTransform(controls[(currentControl + 1) % controls.length], document);
+                        createTransform(controls[(currentControl + 1) % controls.length]);
                         break;
                 }
             }
@@ -487,7 +483,7 @@ AFRAME.registerComponent('animate', {
                 }
                 //passaggio dalla modalità di editor alla modalità di animazione
                 if(!this.data.editMode && feedback !== null && feedback.getAttribute('visible')) {
-                    targetObject.aframeEl = targetObject.aframeEl.clones[0]; //ripristina il primo clone per l'animazione
+                    targetObject.aframeEl = targetObject.clones[0]; //ripristina il primo clone per l'animazione
                     document.querySelector('#transform').setAttribute('visible', false);
                     currentFrame = 0;
                     feedback.setAttribute('visible', false);
@@ -495,7 +491,7 @@ AFRAME.registerComponent('animate', {
                         targetObject.clones[i].setAttribute('visible', false);
                     animateAll();
                 }
-                //aggiornamento feedback, solo la x e la z sono uguali
+                /*//aggiornamento feedback, solo la x e la z sono uguali
                 if(feedback !== null && this.data.editMode) {
                     let keyFramePosition = targetObject.aframeEl.getAttribute('position');
                     let position = {
@@ -505,7 +501,7 @@ AFRAME.registerComponent('animate', {
                     };
                     if(position !== feedback.getAttribute('position'))
                         createFeedback();
-                }
+                }*/
             }
         }
     }
