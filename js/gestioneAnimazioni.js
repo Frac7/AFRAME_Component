@@ -198,10 +198,18 @@ function saveKeyFrame(self) {
     //inserisce i nuovi valori
     //per il primo clone salva oldOpacity nel caso 1, altrimenti l'opacità corrente
     let opacity = null;
+    let color = null;
     if(case2) { //salva anche la nuova posizione
         values.push(targetObject.aframeEl.getAttribute('position'));
         properties.push('position');
-        opacity = targetObject.aframeEl.getAttribute('material').opacity;
+        let material = targetObject.aframeEl.getAttribute('material');
+        if(material !== null) {
+            opacity = material.opacity;
+            color = material.color;
+        } else {
+            opacity = 1;
+            color = '#ffffff';
+        }
     } else
         if(oldOpacity !== null) //solo nei casi collada models l'opacità è null
             opacity = oldOpacity;
@@ -216,7 +224,8 @@ function saveKeyFrame(self) {
             property: properties[i],
             dur: currentFrame !== 0? self.data.duration: 100,
             easing: self.data.interpolation,
-            from: currentFrame !== 0? targetObject.keyFrames[currentFrame - 1][i + 1].values.to: (array.length > 1? targetObject.aframeEl.getAttribute(array[0])[array[1]]: targetObject.aframeEl.getAttribute(properties[i])),
+            //gestione opacity collada
+            from: currentFrame !== 0? targetObject.keyFrames[currentFrame - 1][i + 1].values.to: (array.length > 1? (properties[i] === 'material.opacity'? 1: (properties[i] === 'material.color'? '#ffffff': targetObject.aframeEl.getAttribute(array[0])[array[1]])): targetObject.aframeEl.getAttribute(properties[i])),
             to: values[i],
             delay: self.data.delay,
             loop: self.data.repeat,

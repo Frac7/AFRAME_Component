@@ -1173,7 +1173,7 @@ AFRAME.registerComponent('intersect-and-manipulate', {
                 this.el.removeAttribute('meshline');
                 this.el.setAttribute('raycaster', {
                     showLine: false,
-                    origin: 0.05,
+                    near: 0.05,
                     far: 0.05
                 });
             }
@@ -2758,50 +2758,50 @@ AFRAME.registerComponent('meshline', {
       }
     }
   },
-  
+
   init: function () {
     this.resolution = new THREE.Vector2 ( window.innerWidth, window.innerHeight ) ;
-    
+
     var sceneEl = this.el.sceneEl;
     sceneEl.addEventListener( 'render-target-loaded', this.do_update.bind(this) );
     sceneEl.addEventListener( 'render-target-loaded', this.addlisteners.bind(this) );
-  
-    
+
+
   /*
     if (sceneEl.hasLoaded) {
-  
+
       console.log('has loaded');
       this.do_update(); //never happens ?
-  
+
     } else {
-  
+
       sceneEl.addEventListener('render-target-loaded', this.do_update.bind(this));
-  
+
       }
   */
   },
-  
+
   addlisteners: function () {
-  
+
     //var canvas = this.el.sceneEl.canvas;
-  
+
     // canvas does not fire resize events, need window
     window.addEventListener( 'resize', this.do_update.bind (this) );
-    
+
     //console.log( canvas );
     //this.do_update() ;
-  
+
   },
-  
+
   do_update: function () {
-  
+
     var canvas = this.el.sceneEl.canvas;
     this.resolution.set( canvas.width,  canvas.height );
     //console.log( this.resolution );
     this.update();
 
   },
-  
+
   update: function () {
     //cannot use canvas here because it is not created yet at init time
     //console.log("canvas res:");
@@ -2814,22 +2814,22 @@ AFRAME.registerComponent('meshline', {
       //near: 0.1,
       //far: 1000
     });
-  
+
     var geometry = new THREE.Geometry();
-    
+
     this.data.path.forEach(function (vec3) {
       geometry.vertices.push(
         new THREE.Vector3(vec3.x, vec3.y, vec3.z)
       );
     });
-    
+
     var widthFn = new Function ('p', 'return ' + this.data.lineWidthStyler);
     //? try {var w = widthFn(0);} catch(e) {warn(e);}
     var line = new THREE.MeshLine();
     line.setGeometry( geometry, widthFn );
     this.el.setObject3D('mesh', new THREE.Mesh(line.geometry, material));
   },
-  
+
   remove: function () {
     this.el.removeObject3D('mesh');
   }
@@ -3268,12 +3268,12 @@ are permitted provided that the following conditions are met:
   * Redistributions of source code must retain the above copyright notice, this
     list of conditions and the following disclaimer.
   * Redistributions in binary form must reproduce the above copyright notice,
-    this list of conditions and the following disclaimer in the documentation 
+    this list of conditions and the following disclaimer in the documentation
     and/or other materials provided with the distribution.
 
 THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
 ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
-WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE 
+WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
 DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR
 ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
 (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
@@ -3333,12 +3333,12 @@ are permitted provided that the following conditions are met:
   * Redistributions of source code must retain the above copyright notice, this
     list of conditions and the following disclaimer.
   * Redistributions in binary form must reproduce the above copyright notice,
-    this list of conditions and the following disclaimer in the documentation 
+    this list of conditions and the following disclaimer in the documentation
     and/or other materials provided with the distribution.
 
 THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
 ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
-WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE 
+WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
 DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR
 ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
 (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
@@ -3777,7 +3777,7 @@ vec2.transformMat3 = function(out, a, m) {
  * @returns {vec2} out
  */
 vec2.transformMat4 = function(out, a, m) {
-    var x = a[0], 
+    var x = a[0],
         y = a[1];
     out[0] = m[0] * x + m[4] * y + m[12];
     out[1] = m[1] * x + m[5] * y + m[13];
@@ -3808,7 +3808,7 @@ vec2.forEach = (function() {
         if(!offset) {
             offset = 0;
         }
-        
+
         if(count) {
             l = Math.min((count * stride) + offset, a.length);
         } else {
@@ -3820,7 +3820,7 @@ vec2.forEach = (function() {
             fn(vec, vec, arg);
             a[i] = vec[0]; a[i+1] = vec[1];
         }
-        
+
         return a;
     };
 })();
@@ -3847,12 +3847,12 @@ are permitted provided that the following conditions are met:
   * Redistributions of source code must retain the above copyright notice, this
     list of conditions and the following disclaimer.
   * Redistributions in binary form must reproduce the above copyright notice,
-    this list of conditions and the following disclaimer in the documentation 
+    this list of conditions and the following disclaimer in the documentation
     and/or other materials provided with the distribution.
 
 THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
 ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
-WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE 
+WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
 DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR
 ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
 (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
@@ -4364,17 +4364,17 @@ vec3.rotateY = function(out, a, b, c){
   	p[0] = a[0] - b[0];
   	p[1] = a[1] - b[1];
   	p[2] = a[2] - b[2];
-  
+
   	//perform rotation
   	r[0] = p[2]*Math.sin(c) + p[0]*Math.cos(c);
   	r[1] = p[1];
   	r[2] = p[2]*Math.cos(c) - p[0]*Math.sin(c);
-  
+
   	//translate to correct position
   	out[0] = r[0] + b[0];
   	out[1] = r[1] + b[1];
   	out[2] = r[2] + b[2];
-  
+
   	return out;
 };
 
@@ -4392,17 +4392,17 @@ vec3.rotateZ = function(out, a, b, c){
   	p[0] = a[0] - b[0];
   	p[1] = a[1] - b[1];
   	p[2] = a[2] - b[2];
-  
+
   	//perform rotation
   	r[0] = p[0]*Math.cos(c) - p[1]*Math.sin(c);
   	r[1] = p[0]*Math.sin(c) + p[1]*Math.cos(c);
   	r[2] = p[2];
-  
+
   	//translate to correct position
   	out[0] = r[0] + b[0];
   	out[1] = r[1] + b[1];
   	out[2] = r[2] + b[2];
-  
+
   	return out;
 };
 
@@ -4430,7 +4430,7 @@ vec3.forEach = (function() {
         if(!offset) {
             offset = 0;
         }
-        
+
         if(count) {
             l = Math.min((count * stride) + offset, a.length);
         } else {
@@ -4442,7 +4442,7 @@ vec3.forEach = (function() {
             fn(vec, vec, arg);
             a[i] = vec[0]; a[i+1] = vec[1]; a[i+2] = vec[2];
         }
-        
+
         return a;
     };
 })();
@@ -4469,12 +4469,12 @@ are permitted provided that the following conditions are met:
   * Redistributions of source code must retain the above copyright notice, this
     list of conditions and the following disclaimer.
   * Redistributions in binary form must reproduce the above copyright notice,
-    this list of conditions and the following disclaimer in the documentation 
+    this list of conditions and the following disclaimer in the documentation
     and/or other materials provided with the distribution.
 
 THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
 ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
-WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE 
+WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
 DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR
 ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
 (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
@@ -4955,7 +4955,7 @@ vec4.forEach = (function() {
         if(!offset) {
             offset = 0;
         }
-        
+
         if(count) {
             l = Math.min((count * stride) + offset, a.length);
         } else {
@@ -4967,7 +4967,7 @@ vec4.forEach = (function() {
             fn(vec, vec, arg);
             a[i] = vec[0]; a[i+1] = vec[1]; a[i+2] = vec[2]; a[i+3] = vec[3];
         }
-        
+
         return a;
     };
 })();
@@ -4994,12 +4994,12 @@ are permitted provided that the following conditions are met:
   * Redistributions of source code must retain the above copyright notice, this
     list of conditions and the following disclaimer.
   * Redistributions in binary form must reproduce the above copyright notice,
-    this list of conditions and the following disclaimer in the documentation 
+    this list of conditions and the following disclaimer in the documentation
     and/or other materials provided with the distribution.
 
 THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
 ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
-WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE 
+WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
 DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR
 ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
 (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
@@ -5092,7 +5092,7 @@ mat2.transpose = function(out, a) {
         out[2] = a[1];
         out[3] = a[3];
     }
-    
+
     return out;
 };
 
@@ -5113,7 +5113,7 @@ mat2.invert = function(out, a) {
         return null;
     }
     det = 1.0 / det;
-    
+
     out[0] =  a3 * det;
     out[1] = -a1 * det;
     out[2] = -a2 * det;
@@ -5233,19 +5233,19 @@ mat2.frob = function (a) {
 
 /**
  * Returns L, D and U matrices (Lower triangular, Diagonal and Upper triangular) by factorizing the input matrix
- * @param {mat2} L the lower triangular matrix 
- * @param {mat2} D the diagonal matrix 
- * @param {mat2} U the upper triangular matrix 
+ * @param {mat2} L the lower triangular matrix
+ * @param {mat2} D the diagonal matrix
+ * @param {mat2} U the upper triangular matrix
  * @param {mat2} a the input matrix to factorize
  */
 
-mat2.LDU = function (L, D, U, a) { 
-    L[2] = a[2]/a[0]; 
-    U[0] = a[0]; 
-    U[1] = a[1]; 
-    U[3] = a[3] - L[2] * U[1]; 
-    return [L, D, U];       
-}; 
+mat2.LDU = function (L, D, U, a) {
+    L[2] = a[2]/a[0];
+    U[0] = a[0];
+    U[1] = a[1];
+    U[3] = a[3] - L[2] * U[1];
+    return [L, D, U];
+};
 
 if(typeof(exports) !== 'undefined') {
     exports.mat2 = mat2;
@@ -5259,12 +5259,12 @@ are permitted provided that the following conditions are met:
   * Redistributions of source code must retain the above copyright notice, this
     list of conditions and the following disclaimer.
   * Redistributions in binary form must reproduce the above copyright notice,
-    this list of conditions and the following disclaimer in the documentation 
+    this list of conditions and the following disclaimer in the documentation
     and/or other materials provided with the distribution.
 
 THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
 ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
-WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE 
+WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
 DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR
 ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
 (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
@@ -5276,8 +5276,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 /**
  * @class 2x3 Matrix
  * @name mat2d
- * 
- * @description 
+ *
+ * @description
  * A mat2d contains six elements defined as:
  * <pre>
  * [a, c, tx,
@@ -5491,7 +5491,7 @@ mat2d.translate = function(out, a, v) {
  * @returns {String} string representation of the matrix
  */
 mat2d.str = function (a) {
-    return 'mat2d(' + a[0] + ', ' + a[1] + ', ' + a[2] + ', ' + 
+    return 'mat2d(' + a[0] + ', ' + a[1] + ', ' + a[2] + ', ' +
                     a[3] + ', ' + a[4] + ', ' + a[5] + ')';
 };
 
@@ -5501,9 +5501,9 @@ mat2d.str = function (a) {
  * @param {mat2d} a the matrix to calculate Frobenius norm of
  * @returns {Number} Frobenius norm
  */
-mat2d.frob = function (a) { 
+mat2d.frob = function (a) {
     return(Math.sqrt(Math.pow(a[0], 2) + Math.pow(a[1], 2) + Math.pow(a[2], 2) + Math.pow(a[3], 2) + Math.pow(a[4], 2) + Math.pow(a[5], 2) + 1))
-}; 
+};
 
 if(typeof(exports) !== 'undefined') {
     exports.mat2d = mat2d;
@@ -5517,12 +5517,12 @@ are permitted provided that the following conditions are met:
   * Redistributions of source code must retain the above copyright notice, this
     list of conditions and the following disclaimer.
   * Redistributions in binary form must reproduce the above copyright notice,
-    this list of conditions and the following disclaimer in the documentation 
+    this list of conditions and the following disclaimer in the documentation
     and/or other materials provided with the distribution.
 
 THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
 ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
-WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE 
+WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
 DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR
 ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
 (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
@@ -5664,7 +5664,7 @@ mat3.transpose = function(out, a) {
         out[7] = a[5];
         out[8] = a[8];
     }
-    
+
     return out;
 };
 
@@ -5687,8 +5687,8 @@ mat3.invert = function(out, a) {
         // Calculate the determinant
         det = a00 * b01 + a01 * b11 + a02 * b21;
 
-    if (!det) { 
-        return null; 
+    if (!det) {
+        return null;
     }
     det = 1.0 / det;
 
@@ -5953,8 +5953,8 @@ mat3.normalFromMat4 = function (out, a) {
         // Calculate the determinant
         det = b00 * b11 - b01 * b10 + b02 * b09 + b03 * b08 - b04 * b07 + b05 * b06;
 
-    if (!det) { 
-        return null; 
+    if (!det) {
+        return null;
     }
     det = 1.0 / det;
 
@@ -5980,8 +5980,8 @@ mat3.normalFromMat4 = function (out, a) {
  * @returns {String} string representation of the matrix
  */
 mat3.str = function (a) {
-    return 'mat3(' + a[0] + ', ' + a[1] + ', ' + a[2] + ', ' + 
-                    a[3] + ', ' + a[4] + ', ' + a[5] + ', ' + 
+    return 'mat3(' + a[0] + ', ' + a[1] + ', ' + a[2] + ', ' +
+                    a[3] + ', ' + a[4] + ', ' + a[5] + ', ' +
                     a[6] + ', ' + a[7] + ', ' + a[8] + ')';
 };
 
@@ -6008,12 +6008,12 @@ are permitted provided that the following conditions are met:
   * Redistributions of source code must retain the above copyright notice, this
     list of conditions and the following disclaimer.
   * Redistributions in binary form must reproduce the above copyright notice,
-    this list of conditions and the following disclaimer in the documentation 
+    this list of conditions and the following disclaimer in the documentation
     and/or other materials provided with the distribution.
 
 THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
 ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
-WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE 
+WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
 DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR
 ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
 (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
@@ -6179,7 +6179,7 @@ mat4.transpose = function(out, a) {
         out[14] = a[11];
         out[15] = a[15];
     }
-    
+
     return out;
 };
 
@@ -6212,8 +6212,8 @@ mat4.invert = function(out, a) {
         // Calculate the determinant
         det = b00 * b11 - b01 * b10 + b02 * b09 + b03 * b08 - b04 * b07 + b05 * b06;
 
-    if (!det) { 
-        return null; 
+    if (!det) {
+        return null;
     }
     det = 1.0 / det;
 
@@ -6313,7 +6313,7 @@ mat4.multiply = function (out, a, b) {
         a30 = a[12], a31 = a[13], a32 = a[14], a33 = a[15];
 
     // Cache only the current line of the second matrix
-    var b0  = b[0], b1 = b[1], b2 = b[2], b3 = b[3];  
+    var b0  = b[0], b1 = b[1], b2 = b[2], b3 = b[3];
     out[0] = b0*a00 + b1*a10 + b2*a20 + b3*a30;
     out[1] = b0*a01 + b1*a11 + b2*a21 + b3*a31;
     out[2] = b0*a02 + b1*a12 + b2*a22 + b3*a32;
@@ -6433,7 +6433,7 @@ mat4.rotate = function (out, a, rad, axis) {
         b20, b21, b22;
 
     if (Math.abs(len) < GLMAT_EPSILON) { return null; }
-    
+
     len = 1 / len;
     x *= len;
     y *= len;
@@ -6652,7 +6652,7 @@ mat4.fromRotationTranslation = function (out, q, v) {
     out[13] = v[1];
     out[14] = v[2];
     out[15] = 1;
-    
+
     return out;
 };
 
@@ -6893,7 +6893,7 @@ mat4.lookAt = function (out, eye, center, up) {
 mat4.str = function (a) {
     return 'mat4(' + a[0] + ', ' + a[1] + ', ' + a[2] + ', ' + a[3] + ', ' +
                     a[4] + ', ' + a[5] + ', ' + a[6] + ', ' + a[7] + ', ' +
-                    a[8] + ', ' + a[9] + ', ' + a[10] + ', ' + a[11] + ', ' + 
+                    a[8] + ', ' + a[9] + ', ' + a[10] + ', ' + a[11] + ', ' +
                     a[12] + ', ' + a[13] + ', ' + a[14] + ', ' + a[15] + ')';
 };
 
@@ -6920,12 +6920,12 @@ are permitted provided that the following conditions are met:
   * Redistributions of source code must retain the above copyright notice, this
     list of conditions and the following disclaimer.
   * Redistributions in binary form must reproduce the above copyright notice,
-    this list of conditions and the following disclaimer in the documentation 
+    this list of conditions and the following disclaimer in the documentation
     and/or other materials provided with the distribution.
 
 THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
 ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
-WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE 
+WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
 DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR
 ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
 (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
@@ -7160,7 +7160,7 @@ quat.scale = vec4.scale;
  * @returns {quat} out
  */
 quat.rotateX = function (out, a, rad) {
-    rad *= 0.5; 
+    rad *= 0.5;
 
     var ax = a[0], ay = a[1], az = a[2], aw = a[3],
         bx = Math.sin(rad), bw = Math.cos(rad);
@@ -7181,7 +7181,7 @@ quat.rotateX = function (out, a, rad) {
  * @returns {quat} out
  */
 quat.rotateY = function (out, a, rad) {
-    rad *= 0.5; 
+    rad *= 0.5;
 
     var ax = a[0], ay = a[1], az = a[2], aw = a[3],
         by = Math.sin(rad), bw = Math.cos(rad);
@@ -7202,7 +7202,7 @@ quat.rotateY = function (out, a, rad) {
  * @returns {quat} out
  */
 quat.rotateZ = function (out, a, rad) {
-    rad *= 0.5; 
+    rad *= 0.5;
 
     var ax = a[0], ay = a[1], az = a[2], aw = a[3],
         bz = Math.sin(rad), bw = Math.cos(rad);
@@ -7290,8 +7290,8 @@ quat.slerp = function (out, a, b, t) {
         sinom  = Math.sin(omega);
         scale0 = Math.sin((1.0 - t) * omega) / sinom;
         scale1 = Math.sin(t * omega) / sinom;
-    } else {        
-        // "from" and "to" quaternions are very close 
+    } else {
+        // "from" and "to" quaternions are very close
         //  ... so we can do a linear interpolation
         scale0 = 1.0 - t;
         scale1 = t;
@@ -7301,7 +7301,7 @@ quat.slerp = function (out, a, b, t) {
     out[1] = scale0 * ay + scale1 * by;
     out[2] = scale0 * az + scale1 * bz;
     out[3] = scale0 * aw + scale1 * bw;
-    
+
     return out;
 };
 
@@ -7316,7 +7316,7 @@ quat.invert = function(out, a) {
     var a0 = a[0], a1 = a[1], a2 = a[2], a3 = a[3],
         dot = a0*a0 + a1*a1 + a2*a2 + a3*a3,
         invDot = dot ? 1.0/dot : 0;
-    
+
     // TODO: Would be faster to return [0,0,0,0] immediately if dot == 0
 
     out[0] = -a0*invDot;
@@ -7416,7 +7416,7 @@ quat.fromMat3 = function(out, m) {
           i = 2;
         var j = (i+1)%3;
         var k = (i+2)%3;
-        
+
         fRoot = Math.sqrt(m[i*3+i]-m[j*3+j]-m[k*3+k] + 1.0);
         out[i] = 0.5 * fRoot;
         fRoot = 0.5 / fRoot;
@@ -7424,7 +7424,7 @@ quat.fromMat3 = function(out, m) {
         out[j] = (m[j*3+i] + m[i*3+j]) * fRoot;
         out[k] = (m[k*3+i] + m[i*3+k]) * fRoot;
     }
-    
+
     return out;
 };
 
@@ -8043,7 +8043,7 @@ var Controller = module.exports = function(opts) {
   if (opts.useAllPlugins) this.useRegisteredPlugins();
   this.setupFrameEvents(opts);
   this.setupConnectionEvents();
-  
+
   this.startAnimationLoop(); // immediately when started
 }
 
@@ -8217,13 +8217,13 @@ Controller.prototype.setupFrameEvents = function(opts){
   -deviceStreaming/deviceStopped - called when a device is paused or resumed.
   -streamingStarted/streamingStopped - called when there is/is no longer at least 1 streaming device.
 									  Always comes after deviceStreaming.
-  
+
   The first of all of the above event pairs is triggered as appropriate upon connection.  All of
   these events receives an argument with the most recent info about the device that triggered it.
   These events will always be fired in the order they are listed here, with reverse ordering for the
-  matching shutdown call. (ie, deviceStreaming always comes after deviceAttached, and deviceStopped 
+  matching shutdown call. (ie, deviceStreaming always comes after deviceAttached, and deviceStopped
   will come before deviceRemoved).
-  
+
   -deviceConnected/deviceDisconnected - These are considered deprecated and will be removed in
   the next revision.  In contrast to the other events and in keeping with it's original behavior,
   it will only be fired when a device begins streaming AFTER a connection has been established.
@@ -8300,7 +8300,7 @@ Controller.prototype.setupConnectionEvents = function() {
       controller.emit('afterFrameCreated', frame, frameData)
     });
 
-    controller.emit('protocol', protocol); 
+    controller.emit('protocol', protocol);
   });
 
   this.connection.on('ready', function() {
@@ -8523,31 +8523,31 @@ Controller.plugins = function() {
 
 
 var setPluginCallbacks = function(pluginName, type, callback){
-  
+
   if ( ['beforeFrameCreated', 'afterFrameCreated'].indexOf(type) != -1 ){
-    
+
       // todo - not able to "unuse" a plugin currently
       this.on(type, callback);
-      
+
     }else {
-      
+
       if (!this.pipeline) this.pipeline = new Pipeline(this);
-    
+
       if (!this._pluginPipelineSteps[pluginName]) this._pluginPipelineSteps[pluginName] = [];
 
       this._pluginPipelineSteps[pluginName].push(
-        
+
         this.pipeline.addWrappedStep(type, callback)
-        
+
       );
-      
+
     }
-  
+
 };
 
 var setPluginMethods = function(pluginName, type, hash){
   var klass;
-  
+
   if (!this._pluginExtendedMethods[pluginName]) this._pluginExtendedMethods[pluginName] = [];
 
   switch (type) {
@@ -8572,7 +8572,7 @@ var setPluginMethods = function(pluginName, type, hash){
   _.extend(klass.prototype, hash);
   _.extend(klass.Invalid, hash);
   this._pluginExtendedMethods[pluginName].push([klass, hash])
-  
+
 }
 
 
@@ -8616,13 +8616,13 @@ Controller.prototype.use = function(pluginName, options) {
     functionOrHash = pluginInstance[key];
 
     if (typeof functionOrHash === 'function') {
-      
+
       setPluginCallbacks.call(this, pluginName, key, functionOrHash);
-      
+
     } else {
-      
+
       setPluginMethods.call(this, pluginName, key, functionOrHash);
-      
+
     }
 
   }
@@ -8862,11 +8862,11 @@ var Pointable = require('./pointable'),
 */
 var Finger = module.exports = function(data) {
   Pointable.call(this, data); // use pointable as super-constructor
-  
+
   /**
   * The position of the distal interphalangeal joint of the finger.
   * This joint is closest to the tip.
-  * 
+  *
   * The distal interphalangeal joint is located between the most extreme segment
   * of the finger (the distal phalanx) and the middle segment (the medial
   * phalanx).
@@ -8874,7 +8874,7 @@ var Finger = module.exports = function(data) {
   * @member dipPosition
   * @type {number[]}
   * @memberof Leap.Finger.prototype
-  */  
+  */
   this.dipPosition = data.dipPosition;
 
   /**
@@ -8889,7 +8889,7 @@ var Finger = module.exports = function(data) {
   * @member pipPosition
   * @type {number[]}
   * @memberof Leap.Finger.prototype
-  */  
+  */
   this.pipPosition = data.pipPosition;
 
   /**
@@ -8906,7 +8906,7 @@ var Finger = module.exports = function(data) {
   * @member mcpPosition
   * @type {number[]}
   * @memberof Leap.Finger.prototype
-  */  
+  */
   this.mcpPosition = data.mcpPosition;
 
   /**
@@ -8921,7 +8921,7 @@ var Finger = module.exports = function(data) {
   * Whether or not this finger is in an extended posture.
   *
   * A finger is considered extended if it is extended straight from the hand as if
-  * pointing. A finger is not extended when it is bent down and curled towards the 
+  * pointing. A finger is not extended when it is bent down and curled towards the
   * palm.
   * @member extended
   * @type {Boolean}
@@ -8931,7 +8931,7 @@ var Finger = module.exports = function(data) {
 
   /**
   * An integer code for the name of this finger.
-  * 
+  *
   * * 0 -- thumb
   * * 1 -- index finger
   * * 2 -- middle finger
@@ -8945,7 +8945,7 @@ var Finger = module.exports = function(data) {
   this.type = data.type;
 
   this.finger = true;
-  
+
   /**
   * The joint positions of this finger as an array in the order base to tip.
   *
@@ -9187,10 +9187,10 @@ Frame.prototype.postprocessData = function(data){
 };
 
 /**
- * Adds data from a pointable element into the pointablesMap; 
+ * Adds data from a pointable element into the pointablesMap;
  * also adds the pointable to the frame.handsMap hand to which it belongs,
  * and to the hand's tools or hand's fingers map.
- * 
+ *
  * @param pointable {Object} a Pointable
  */
 Frame.prototype.addPointable = function (pointable) {
@@ -10151,7 +10151,7 @@ var Hand = module.exports = function(data) {
    * @type {Leap.Pointable[]}
    */
   this.fingers = [];
-  
+
   if (data.armBasis){
     this.arm = new Bone(this, {
       type: 4,
@@ -10163,7 +10163,7 @@ var Hand = module.exports = function(data) {
   }else{
     this.arm = null;
   }
-  
+
   /**
    * The list of tools detected in this frame that are held by this
    * hand, given in arbitrary order.

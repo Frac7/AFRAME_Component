@@ -460,7 +460,7 @@ AFRAME.registerComponent('intersect-and-manipulate', {
                 this.el.removeAttribute('meshline');
                 this.el.setAttribute('raycaster', {
                     showLine: false,
-                    origin: 0.05,
+                    near: 0.05,
                     far: 0.05
                 });
             }
