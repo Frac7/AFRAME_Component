@@ -147,7 +147,7 @@ function addEventListeners (self) {
     })
     //vengono copiati solo questi event listener perché gli altri non verranno più emessi
 }
-function deleteKeyFrame () {
+function deleteKeyFrame (self) {
     if(targetObject.clones.length !== 1) { //c'è almeno un altro clone oltre il target object
         targetObject.clones[currentFrame].parentNode.removeChild(targetObject.clones[currentFrame]);
         targetObject.clones.splice(currentFrame, 1);
@@ -303,8 +303,7 @@ function createFeedback () {
             targetObject.aframeEl = targetObject.clones[i]; //aggiornamento target object per spostamento controllo transform
             //unico frame dell'editor con le proprietà attive, frame attivo
             console.log('Frame corrente: ' + (currentFrame + 1));
-            //let position = targetObject.clones[i].getAttribute('position');
-            let position = targetObject.clones[i].object3D.position;
+            let position = targetObject.clones[i].getAttribute('position');
             let containerFeedback = document.querySelector('#containerFeedback');
             if(containerFeedback === null) {
                 let triangle = document.createElement('a-entity');
@@ -348,9 +347,6 @@ function easingPreview (self) {
         //fai l'animazione tre volte
         let timer = setInterval(function () {
             if(index > 2) {
-
-                targetObject.clones[currentFrame].flushToDOM(true);
-
                 removeAnimationAttributes(targetObject.clones[currentFrame], currentFrame);
                 clearInterval(timer);
             } else {
@@ -445,7 +441,7 @@ AFRAME.registerComponent('animate', {
                             targetObject.aframeEl.emit('stop');
                         break;
                     case 86: //v: elimina key frame
-                        deleteKeyFrame();
+                        deleteKeyFrame(self);
                         break;
                     case 88: //x: frame +
                         if(self.data.editMode) {
