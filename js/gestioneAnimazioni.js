@@ -3,6 +3,7 @@
 //un insieme di valori per scegliere quale proprietà manipolare
 //e infine in base alle proprietà i valori da usare
 //per gestire start/stop/resum si emette l'evento con nome corrispondente all'azione
+//l'unico problema di queste funzioni temporanee è che se usate con modelli senza material, questo componente viene attaccato
 //funzione temporanea
 function randomValues () {
     while(values.length)
@@ -112,11 +113,11 @@ let currentEasingFunction = 0; //easing function corrente (scelta dalla gui, uti
 
 //values: oggetto javascript con i campi position, color, opacity, rotation, scale
 function modifyFrom(values) {
-    let properties = ['position', 'material.opacity', 'material.color', 'scale', 'rotation'];
+    let properties = ['position', 'opacity', 'color', 'scale', 'rotation'];
     let material = targetObject.aframeEl.getAttribute('material');
     //controllo componente material per collada/obj/ecc
     if(material === null)
-        properties.splice(properties.indexOf('material.opacity', 2));
+        properties.splice(properties.indexOf('opacity', 2));
     for(let i = 0; i < properties.length; i++)
         targetObject.keyFrames[0][i].values.from = values[properties[i]];
 }
@@ -137,9 +138,6 @@ function addEventListeners (self) {
             }, self.data.duration + self.data.delay);
         }
     });
-    targetObject.aframeEl.addEventListener('keyFrameCreated', function () { //la gui deve emettere questo evento alla pressione del bottone
-        saveKeyFrame(self);
-    });
     //elimina gli attributi dell'animazione in caso di stop per editing mode
     targetObject.aframeEl.addEventListener('stop', function () {
         if(editingMode)
@@ -148,19 +146,15 @@ function addEventListeners (self) {
     //vengono copiati solo questi event listener perché gli altri non verranno più emessi
 }
 function deleteKeyFrame (self) {
-    if(targetObject.clones.length !== 1) { //c'è almeno un altro clone oltre il target object
-        targetObject.clones[currentFrame].parentNode.removeChild(targetObject.clones[currentFrame]);
-        targetObject.clones.splice(currentFrame, 1);
-        targetObject.keyFrames.splice(currentFrame, 1);
+    if(targetObject.clones.length !== 1) { //c'� almeno un altro clone oltre il target object
         console.log('Key frame rimosso');
         //rimozione elemento del key frame selezionato e rimozione key frame
-        if (currentFrame !== 0) {
+        if (currentFrame !== 0 && currentFrame !== targetObject.keyFrames.length - 1) { //non aggiorna il to/from se viene eliminato l'ultimo key frame o il primo
             //aggiorna to/from
-            if (currentFrame !== (targetObject.keyFrames.length - 1)) //non aggiorna il to/from se viene eliminato l'ultimo key frame
-                for (let i = 0; i < targetObject.keyFrames[currentFrame].length; i++) {
-                    targetObject.keyFrames[currentFrame - 1][i].values.to = targetObject.keyFrames[currentFrame + 1][i].values.from;
-                    targetObject.keyFrames[currentFrame + 1][i].values.from = targetObject.keyFrames[currentFrame - 1][i].values.to;
-                }
+            for (let i = 0; i < targetObject.keyFrames[currentFrame].length; i++) {
+                targetObject.keyFrames[currentFrame - 1][i].values.to = targetObject.keyFrames[currentFrame + 1][i].values.from;
+                targetObject.keyFrames[currentFrame + 1][i].values.from = targetObject.keyFrames[currentFrame - 1][i].values.to;
+            }
         } else {
             //se si cerca di eliminare il primo key frame
             //viene riassegnato il targetObject
@@ -168,6 +162,9 @@ function deleteKeyFrame (self) {
             //clona gli event listener
             addEventListeners(self);
         }
+        targetObject.clones[currentFrame].parentNode.removeChild(targetObject.clones[currentFrame]);
+        targetObject.clones.splice(currentFrame, 1);
+        targetObject.keyFrames.splice(currentFrame, 1);
         //cambio key frame (aggiornamento variabile)
         currentFrame++;
         if (currentFrame >= targetObject.keyFrames.length)
@@ -198,7 +195,7 @@ function createPoint (self) {
         }
     }];
     targetObject.keyFrames.push(keyFrame);
-    createClone();
+    createClone(self);
     if (targetObject.keyFrames.length > 2) {
         for(let i = 0; i < targetObject.keyFrames[0].length; i++)
             targetObject.aframeEl.setAttribute(targetObject.keyFrames[0][i].name, targetObject.keyFrames[0][i].values);
@@ -240,7 +237,7 @@ function saveKeyFrame(self) {
             property: properties[i],
             dur: self.data.duration,
             easing: self.data.interpolation,
-            from: currentFrame !== 0? targetObject.keyFrames[currentFrame - 1][i + 1].values.to: (array.length > 1? initialValues[array[1]]: initialValues[properties[i]]),
+            from: currentFrame !== 0? targetObject.keyFrames[currentFrame - 1][i].values.to: (array.length > 1? initialValues[array[1]]: initialValues[properties[i]]),
             to: values[i],
             delay: self.data.delay,
             loop: self.data.repeat,
@@ -277,11 +274,14 @@ function removeAnimationAttributes(clone, i) { //clone e key frame scelto
         clone.removeAttribute(targetObject.keyFrames[i][j].name);
 }
 
-function createClone () {
+function createClone (self) {
     targetObject.aframeEl.flushToDOM(true);
     let clone = targetObject.aframeEl.cloneNode(true);
     document.querySelector('a-scene').appendChild(clone);
     targetObject.clones.push(clone);
+    clone.addEventListener('keyFrameCreated', function () { //la gui deve emettere questo evento alla pressione del bottone
+        saveKeyFrame(self);
+    });
 }
 
 function animateAll () { //usata fuori dall'editor
@@ -327,7 +327,8 @@ function createFeedback () {
             createTransform(controls[currentControl]);
             document.querySelector('#textFeedback').setAttribute('text-geometry', 'value: ' + (currentFrame + 1));
         } else
-            targetObject.clones[i].setAttribute('material', 'color: #555555; opacity: 0.5');
+            if(targetObject.clones[i].getAttribute('material') !== null)
+                targetObject.clones[i].setAttribute('material', 'color: #555555; opacity: 0.5');
         //frame non attivo
     }
 }
@@ -426,7 +427,7 @@ AFRAME.registerComponent('animate', {
                         }
                         break;
                     case 81: //q: salva key frame
-                        targetObject.aframeEl.emit('keyFrameCreated');
+                        targetObject.clones[currentFrame].emit('keyFrameCreated');
                         break;
                     case 82: //r: start (anche emettendo l'evento, per animare ci vuole l'attributo)
                         if(!self.data.editMode)
