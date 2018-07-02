@@ -41,7 +41,7 @@ function createKeyFrames (self) {
                     property: properties[i],
                     dur: self.data.duration,
                     easing: self.data.interpolation, // più uno perché non si conta la posizione
-                    from: index !== 1? targetObject.keyFrames[index - 2][i + 1].values.to: (array.length > 1? targetObject.aframeEl.getAttribute(array[0])[array[1]]: targetObject.aframeEl.getAttribute(properties[i])),
+                    from: index !== 1? targetObject.keyFrames[index - 2][i + 1].values.to: (array.length > 1? initialValues[array[1]]: initialValues[properties[i]]),
                     to: values[i],
                     delay: self.data.delay,
                     loop: self.data.repeat,
@@ -71,14 +71,23 @@ function createKeyFrames (self) {
         }, 20000);
 
 }
-
+//dalla gui, per save key frame, bisogna gestire il bottone in modo che se nessuna modifica è stata effettuata, il bottone
+//non possa essere premuto e quindi non sia possibile salvare le modifiche
+//sempre dalla gui deve essere data all'utente la possibilità di modificare il from del primo key frame
+//si salvano le proprietà iniziali dalle quali l'oggetto da animare deve partire
+let initialValues = {
+    position: null,
+    color: null,
+    opacity: null,
+    rotation: null,
+    scale: null
+};
 //con la gui sarà possibile modificare il frame selezionato, verrà richiamata la funzione che deve stare al posto di random
 //values e che prende le proprietà dell'oggetto e le assegna al key frame
 //si può utilizzare anche un event listener sull'oggetto puntato, quando l'utente clicca sul bottone per modificare
 //il key frame, viene emesso un evento (e qui viene definito il listener)
 //flag per la creazione iniziale della trajettoria
 let trajectoryCreated = false;
-let case2 = false; //caso due: modifica key frame (significa che l'evento di fine traiettoria è già stato definito)
 //per definire i key frames si definisce prima la posizione (quindi la traiettoria)
 //una volta definita la posizione del key frame si preme il bottone per il key frame
 //con editing true l'oggetto viene clonato nella sua traiettoria con tutte le sue proprietà
@@ -101,7 +110,18 @@ let easingFunctions = ['linear', 'easeInQuad', 'easeOutQuad',	'easeInOutQuad',
     'easeInElastic', 'easeOutElastic', 'easeInOutElastic'];
 let currentEasingFunction = 0; //easing function corrente (scelta dalla gui, utilizzata per l'anteprima)
 
-function addEventListeners () {
+//values: oggetto javascript con i campi position, color, opacity, rotation, scale
+function modifyFrom(values) {
+    let properties = ['position', 'material.opacity', 'material.color', 'scale', 'rotation'];
+    let material = targetObject.aframeEl.getAttribute('material');
+    //controllo componente material per collada/obj/ecc
+    if(material === null)
+        properties.splice(properties.indexOf('material.opacity', 2));
+    for(let i = 0; i < properties.length; i++)
+        targetObject.keyFrames[0][i].values.from = values[properties[i]];
+}
+
+function addEventListeners (self) {
     //clonare gli event listener
     targetObject.aframeEl.addEventListener('animationcomplete', function () {
         console.log('Animazione completata');
@@ -114,12 +134,17 @@ function addEventListeners () {
             setTimeout(function () {
                 removeAnimationAttributes(targetObject.clones[0], 0);
                 setKeyFrameAttributes(targetObject.aframeEl, 0);
-            }, 6000);
+            }, self.data.duration + self.data.delay);
         }
     });
     targetObject.aframeEl.addEventListener('keyFrameCreated', function () { //la gui deve emettere questo evento alla pressione del bottone
-        saveKeyFrame();
+        saveKeyFrame(self);
     });
+    //elimina gli attributi dell'animazione in caso di stop per editing mode
+    targetObject.aframeEl.addEventListener('stop', function () {
+        if(editingMode)
+            removeAnimationAttributes(targetObject.clones[0], 0);
+    })
     //vengono copiati solo questi event listener perché gli altri non verranno più emessi
 }
 function deleteKeyFrame () {
@@ -141,7 +166,7 @@ function deleteKeyFrame () {
             //viene riassegnato il targetObject
             targetObject.aframeEl = targetObject.clones[0]; //nuovo key frame zero
             //clona gli event listener
-            addEventListeners();
+            addEventListeners(self);
         }
         //cambio key frame (aggiornamento variabile)
         currentFrame++;
@@ -163,7 +188,7 @@ function createPoint (self) {
             property: 'position',
             dur: self.data.duration,
             easing: self.data.interpolation,
-            from: targetObject.keyFrames.length !== 0? targetObject.keyFrames[targetObject.keyFrames.length - 1][0].values.to: stringify(targetObject.aframeEl.getAttribute('position')),
+            from: targetObject.keyFrames.length !== 0? targetObject.keyFrames[targetObject.keyFrames.length - 1][0].values.to: stringify(initialValues.position),
             to: stringify(targetObject.aframeEl.getAttribute('position')),
             delay: self.data.delay,
             loop: self.data.repeat,
@@ -188,44 +213,34 @@ function stringify(object) {
 }
 
 //questa funzione salva i valori dell'oggetto puntato alla pressione del bottone per il salvataggio del keyframe
-//ci sono due casi: il primo è quello in cui il key frame viene creato per la prima volta,
-//il secondo caso è quello in cui il key frame viene modificato
 function saveKeyFrame(self) {
     console.log('Key frame salvato');
     //primo caso:
     let values = [];
-    let properties = ['material.opacity', 'material.color', 'scale', 'rotation'];
+    let properties = [];
+    properties.push('position', 'material.opacity', 'material.color', 'scale', 'rotation');
+    //salva anche la nuova posizione perché la traiettoria è già stata definita
+    values.push(stringify(targetObject.aframeEl.getAttribute('position')));
+    //elimina key frame corrente per sostituirlo con i nuovi valori
+    targetObject.keyFrames.splice(currentFrame, 1);
     //inserisce i nuovi valori
-    //per il primo clone salva oldOpacity nel caso 1, altrimenti l'opacità corrente
-    let opacity = null;
-    let color = null;
-    if(case2) { //salva anche la nuova posizione
-        values.push(targetObject.aframeEl.getAttribute('position'));
-        properties.push('position');
-        let material = targetObject.aframeEl.getAttribute('material');
-        if(material !== null) {
-            opacity = material.opacity;
-            color = material.color;
-        } else {
-            opacity = 1;
-            color = '#ffffff';
-        }
-    } else
-        if(oldOpacity !== null) //solo nei casi collada models l'opacità è null
-            opacity = oldOpacity;
-        else
-            opacity = 1;
-    values.push(opacity, targetObject.aframeEl.getAttribute('material').color, stringify(targetObject.aframeEl.getAttribute('scale')), stringify(targetObject.aframeEl.getAttribute('rotation')));
+    let material = targetObject.aframeEl.getAttribute('material');
+    //controllo componente material per collada/obj/ecc
+    if(material !== null)
+        values.push(material.opacity, material.color);
+    else
+        properties.splice(properties.indexOf('material.opacity', 2));
+    values.push(stringify(targetObject.aframeEl.getAttribute('scale')), stringify(targetObject.aframeEl.getAttribute('rotation')));
     //salva il nuovo key frame
     let attributes = [];
+    let keyFrame = [];
     for (let i = 0; i < properties.length; i++) {
         let array = properties[i].split('.');
         attributes[i] = {
             property: properties[i],
-            dur: currentFrame !== 0? self.data.duration: 100,
+            dur: self.data.duration,
             easing: self.data.interpolation,
-            //gestione opacity collada
-            from: currentFrame !== 0? targetObject.keyFrames[currentFrame - 1][i + 1].values.to: (array.length > 1? (properties[i] === 'material.opacity'? 1: (properties[i] === 'material.color'? '#ffffff': targetObject.aframeEl.getAttribute(array[0])[array[1]])): targetObject.aframeEl.getAttribute(properties[i])),
+            from: currentFrame !== 0? targetObject.keyFrames[currentFrame - 1][i + 1].values.to: (array.length > 1? initialValues[array[1]]: initialValues[properties[i]]),
             to: values[i],
             delay: self.data.delay,
             loop: self.data.repeat,
@@ -234,11 +249,17 @@ function saveKeyFrame(self) {
             resumeEvents: 'resume'
         };
         //salvataggio key frame (una locazione per ogni proprietà, formano un key frame)
-        targetObject.keyFrames[currentFrame].push({
+        // si salvano tutte le proprietà compresa la posizione
+        keyFrame.push({
             name: 'animation__' + properties[i],
             values: attributes[i]
         });
     }
+    //sostituisce il key frame (inserisce un elemento in posizione current frame)
+    targetObject.keyFrames.splice(currentFrame, 0, keyFrame);
+    if(currentFrame !== targetObject.keyFrames.length - 1)
+        for(let i = 0; i < targetObject.keyFrames[currentFrame + 1].length; i++)
+            targetObject.keyFrames[currentFrame + 1][i].values.from = targetObject.keyFrames[currentFrame][i].values.to;
 }
 
 function setKeyFrameAttributes(clone, i) { //clone e key frame scelto
@@ -258,7 +279,7 @@ function removeAnimationAttributes(clone, i) { //clone e key frame scelto
 
 function createClone () {
     targetObject.aframeEl.flushToDOM(true);
-    let clone = targetObject.aframeEl.cloneNode(false);
+    let clone = targetObject.aframeEl.cloneNode(true);
     document.querySelector('a-scene').appendChild(clone);
     targetObject.clones.push(clone);
 }
@@ -282,8 +303,10 @@ function createFeedback () {
             targetObject.aframeEl = targetObject.clones[i]; //aggiornamento target object per spostamento controllo transform
             //unico frame dell'editor con le proprietà attive, frame attivo
             console.log('Frame corrente: ' + (currentFrame + 1));
-            let position = targetObject.clones[i].getAttribute('position');
-            if(document.querySelector('#containerFeedback') === null) {
+            //let position = targetObject.clones[i].getAttribute('position');
+            let position = targetObject.clones[i].object3D.position;
+            let containerFeedback = document.querySelector('#containerFeedback');
+            if(containerFeedback === null) {
                 let triangle = document.createElement('a-entity');
                 triangle.setAttribute('id', 'triangleFeedback');
                 let text = document.createElement('a-entity');
@@ -303,8 +326,6 @@ function createFeedback () {
             }
             setKeyFrameAttributes(targetObject.clones[i], i);
             createTransform(controls[currentControl]);
-            document.querySelector('#containerFeedback').setAttribute('rotation', document.querySelector('[camera]').getAttribute('rotation')); //si può spostare per un controllo dinamico
-            document.querySelector('#containerFeedback').setAttribute('position', position.x + ' ' + (position.y + 2.5) + ' ' + position.z);
             document.querySelector('#textFeedback').setAttribute('text-geometry', 'value: ' + (currentFrame + 1));
         } else
             targetObject.clones[i].setAttribute('material', 'color: #555555; opacity: 0.5');
@@ -327,6 +348,9 @@ function easingPreview (self) {
         //fai l'animazione tre volte
         let timer = setInterval(function () {
             if(index > 2) {
+
+                targetObject.clones[currentFrame].flushToDOM(true);
+
                 removeAnimationAttributes(targetObject.clones[currentFrame], currentFrame);
                 clearInterval(timer);
             } else {
@@ -335,9 +359,8 @@ function easingPreview (self) {
                 animate(targetObject.clones[currentFrame]);
                 targetObject.clones[currentFrame].emit('start');
             }
-        //}, self.data.dur);
-        }, 5000);
-        //ripristina il from dell'oggetto
+        }, (self.data.duration + self.data.delay) * 3);
+        //ripristina il to dell'oggetto
         createFeedback();
     }
 }
@@ -450,6 +473,15 @@ AFRAME.registerComponent('animate', {
         };
         //il componente funziona solo dopo che un certo oggetto è stato puntato
         if (targetObject.aframeEl !== null) {
+            if(initialValues.position === null) {
+                initialValues.position = targetObject.aframeEl.getAttribute('position');
+                initialValues.rotation = targetObject.aframeEl.getAttribute('rotation');
+                initialValues.scale = targetObject.aframeEl.getAttribute('scale');
+                if(targetObject.aframeEl.getAttribute('material') !== null) {
+                    initialValues.opacity = targetObject.aframeEl.getAttribute('material').opacity;
+                    initialValues.color = targetObject.aframeEl.getAttribute('material').color;
+                }
+            }
             //questa porzione di codice viene eseguita una sola volta
             if (!setted) {
                 //inizializzazione array key frames dell'oggetto targettato
@@ -462,19 +494,18 @@ AFRAME.registerComponent('animate', {
                 });
                 //"test" del componente
                 targetObject.aframeEl.addEventListener('trajectoryCreated', function () {
-                    case2 = true;
                     //elimina l'oggetto originale (che è stato clonato per primo)
                     if(targetObject.clones.length) {
                         targetObject.aframeEl.parentNode.removeChild(targetObject.aframeEl);
                         targetObject.aframeEl = targetObject.clones[0];
                         target = targetObject;
-                        addEventListeners();
+                        addEventListeners(self);
                     }
                     createKeyFrames(self);
                 });
                 //registrazione event listener sull'oggetto taggato, nell'event listener della fine di un'animazione
                 //si fa partire la successiva
-                addEventListeners();
+                addEventListeners(self);
             } else {
                 //si può provare cambiando la modalità dall'inspector
                 let feedback = document.querySelector('#containerFeedback');
@@ -500,7 +531,7 @@ AFRAME.registerComponent('animate', {
                         targetObject.clones[i].setAttribute('visible', false);
                     animateAll();
                 }
-                /*//aggiornamento feedback, solo la x e la z sono uguali
+                //aggiornamento feedback
                 if(feedback !== null && this.data.editMode) {
                     let keyFramePosition = targetObject.aframeEl.getAttribute('position');
                     let position = {
@@ -509,8 +540,9 @@ AFRAME.registerComponent('animate', {
                         z: keyFramePosition.z
                     };
                     if(position !== feedback.getAttribute('position'))
-                        createFeedback();
-                }*/
+                        feedback.setAttribute('position', position);
+                    feedback.setAttribute('rotation', selectCamera().getAttribute('rotation'));
+                }
             }
         }
     }

@@ -17,12 +17,14 @@
 <body>
 <a-scene inspector leap="vr: false">
     <a-sky color="#000000"></a-sky>
-    <a-entity camera="near: 0.01" look-controls wasd-controls position="0 1.5 0">
+    <!--<a-entity camera="near: 0.01" look-controls wasd-controls position="0 1.5 0">-->
+    <a-camera>
         <a-entity leap-hand="hand: left; holdDistance: 0.5" position="0 -0.25 -0.5"></a-entity>
         <a-entity leap-hand="hand: right; holdDistance: 0.5" position="0 -0.25 -0.5"></a-entity>
         <a-entity intersect-and-manipulate></a-entity>
         <a-entity animate></a-entity>
-    </a-entity>
+    </a-camera>
+    <!--</a-entity>-->
 
     <a-box position="-1 0.5 -3" rotation="0 45 0" color="#4CC3D9"></a-box>
     <a-sphere selectable position="0 1.25 -5" radius="1.25" color="#EF2D5E"></a-sphere>

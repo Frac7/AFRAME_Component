@@ -56,7 +56,7 @@ AFRAME.registerComponent('holdable', {
             if (axis !== null) {
                 //selezione posizione mano in base all'asse
                 selectHand();
-                if (handTick !== null && handTick !== undefined) {
+                if (handTick !== null) {
                     //modifica del parametro in base all'asse scelto
                     //(differenza tra posizione pollice in holdstart e ad ogni tick)
                     switch (axis) {
@@ -80,7 +80,8 @@ AFRAME.registerComponent('holdable', {
                                 });
                             } else if (controls[currentControl] === 'rotate') {
                                 target.setAttribute('rotation', {
-                                    x: targetOriginalValue.x + ((handTick[1] - firstHandPosition[1]) * 360),
+                                    x: targetOriginalValue.x + ((handTick[1] - firstHandPosition[1]) * 360) % 360,
+                                    //x: THREE.Math.radToDeg(targetOriginalValue.x + handTick[1] - firstHandPosition[1]) % 360,
                                     y: targetOriginalValue.y,
                                     z: targetOriginalValue.z
                                 });
@@ -107,7 +108,8 @@ AFRAME.registerComponent('holdable', {
                             } else if (controls[currentControl] === 'rotate') {
                                 target.setAttribute('rotation', {
                                     x: targetOriginalValue.x,
-                                    y: targetOriginalValue.y + ((handTick[0] - firstHandPosition[0]) * 360),
+                                    y: targetOriginalValue.y + ((handTick[0] - firstHandPosition[0]) * 360) % 360,
+                                    //y: THREE.Math.radToDeg(targetOriginalValue.y + handTick[0] - firstHandPosition[0]) % 360,
                                     z: targetOriginalValue.z
                                 });
                             }
@@ -134,7 +136,8 @@ AFRAME.registerComponent('holdable', {
                                 target.setAttribute('rotation', {
                                     x: targetOriginalValue.x,
                                     y: targetOriginalValue.y,
-                                    z: targetOriginalValue.z + ((handTick[0] - firstHandPosition[0] + handTick[1] - firstHandPosition[1]) * 180)
+                                    z: targetOriginalValue.z + ((handTick[0] - firstHandPosition[0] + handTick[1] - firstHandPosition[1]) * 180) % 360
+                                    //z: THREE.Math.radToDeg(targetOriginalValue.z + handTick[0] - firstHandPosition[0] + handTick[1] - firstHandPosition[1]) % 360
                                 });
                             }
                             break;
@@ -161,9 +164,12 @@ AFRAME.registerComponent('holdable', {
                                 });
                             } else if (controls[currentControl] === 'rotate') {
                                 target.setAttribute('rotation', {
-                                    x: targetOriginalValue.x + (distance * 360),
-                                    y: targetOriginalValue.y + (distance * 360),
-                                    z: targetOriginalValue.z + (distance * 360)
+                                    x: targetOriginalValue.x + (distance * 360) % 360,
+                                    y: targetOriginalValue.y + (distance * 360) % 360,
+                                    z: targetOriginalValue.z + (distance * 360) % 360
+                                    /*x: THREE.Math.radToDeg(targetOriginalValue.x + distance) % 360,
+                                    y: THREE.Math.radToDeg(targetOriginalValue.y + distance) % 360,
+                                    z: THREE.Math.radToDeg(targetOriginalValue.z + distance) % 360*/
                                 });
                             }
                             break;
@@ -182,7 +188,8 @@ AFRAME.registerComponent('holdable', {
         //la vecchia posizione viene sovrascritta da null nel caso di traslazione dell'oggetto
         target = targetObject.aframeEl;
         axis = e.srcElement.id;
-        if (e.detail.hand !== null && e.detail !== undefined && e.detail.hand) {
+        //if (e.detail.hand !== null && e.detail !== undefined && e.detail.hand) {
+        if (e.detail.hand !== null && e.detail.hand) {
             //assegnamento mano che innescato l'evento
             hand = e.detail.hand;
             firstHandPosition = e.detail.hand.pointables[0].tipPosition;

@@ -19,6 +19,14 @@ function selectedHand(hand) {
     }
 }
 
+//selezione camera attiva
+function selectCamera() {
+    let camera = document.querySelector('[camera]');
+    if(camera === null)
+        camera = document.querySelector('a-camera');
+    return camera;
+}
+
 //riconoscimento posa
 function gestureRecognizer(hand) {
     //palmo verso l'alto, tre dita estese e due no (pollice, indice, mignolo estese)
@@ -36,7 +44,7 @@ function createControl(transform, values) {
     let xLine, yLine, zLine;
     //creazione freccia x
     x = document.querySelector('#x');
-    if(x === null || x === undefined) {
+    if(x === null) {
         x = document.createElement(values.x.tag);
         x.setAttribute('id', values.x.id);
         x.setAttribute('holdable', values.x.holdable);
@@ -59,7 +67,7 @@ function createControl(transform, values) {
     xLine.setAttribute('line', values.xLine.lineAttribute);
     //creazione freccia y
     y = document.querySelector('#y');
-    if(y === null || y === undefined) {
+    if(y === null) {
         y = document.createElement(values.y.tag);
         y.setAttribute('id', values.y.id);
         y.setAttribute('holdable', values.y.holdable);
@@ -82,7 +90,7 @@ function createControl(transform, values) {
     yLine.setAttribute('line', values.yLine.lineAttribute);
     //creazione freccia z
     z = document.querySelector('#z');
-    if(z === null || z === undefined) {
+    if(z === null) {
         z = document.createElement(values.z.tag);
         z.setAttribute('id', values.z.id);
         z.setAttribute('holdable', values.z.holdable);
@@ -105,7 +113,7 @@ function createControl(transform, values) {
     zLine.setAttribute('line', values.zLine.lineAttribute);
     //creazione controllo per tutti gli assi
     all = document.querySelector('#all');
-    if(all === null || all === undefined) {
+    if(all === null) {
         all = document.createElement(values.all.tag);
         all.setAttribute('id', values.all.id);
         all.setAttribute('holdable', values.all.holdable);
@@ -170,15 +178,16 @@ function createControl(transform, values) {
 
 //creazione transform (popolamento valori da usare per creare il controllo)
 function createTransform(transformType) {
+    let camera = selectCamera();
     let values = null;
     let transform = document.querySelector('#transform');
-    if(transform === null || transform === undefined) {
+    if(transform === null ) {
         transform = document.createElement('a-entity');
         transform.setAttribute('id', 'transform');
         document.querySelector('a-scene').appendChild(transform);
     }
     transform.setAttribute('position', targetObject.aframeEl.getAttribute('position'));
-    transform.setAttribute('rotation', document.querySelector('[camera]').getAttribute('rotation'));
+    transform.setAttribute('rotation', camera.getAttribute('rotation'));
     if (transformType === 'translate') {
         currentControl = 0;
         values = {
@@ -361,7 +370,7 @@ function createPath () {
     //definizione del percorso. il percorso viene creato con un componente esterno per a-frame
     //#1 curva
     let curve = document.querySelector('#curve');
-    if(curve === null || curve === undefined) {
+    if(curve === null) {
         curve = document.createElement('a-curve');
         curve.setAttribute('id', 'curve');
         document.querySelector('a-scene').appendChild(curve);
@@ -402,11 +411,11 @@ AFRAME.registerComponent('intersect-and-manipulate', {
                 break;
         }
         this.el.setAttribute('raycaster', {
-            showLine: false,
+            //showLine: false,
             //evitare collisioni con la camera o con il raggio stesso
             near: 0.05,
             //lunghezza del raggio
-            far: 0.05
+            far: 0
         });
         //event listener: il raggio ha intersecato qualcosa
         //nel momento in cui un oggetto viene intersecato dal raggio, viene creato un percorso che parte dalla posizione
@@ -419,7 +428,9 @@ AFRAME.registerComponent('intersect-and-manipulate', {
     },
 
     tick: function () {
-        let cameraPosition = document.querySelector('[camera]').getAttribute('position');
+        if(this.el.getAttribute('line') !== null)
+            this.el.removeAttribute('line');
+        let camera = selectCamera();
         let aframeHand = selectedHand(this.data.hand);
         let hand = null;
         if (aframeHand)
@@ -431,11 +442,10 @@ AFRAME.registerComponent('intersect-and-manipulate', {
                 //hand raycaster
                 let origin = aframeHand.components['leap-hand'].intersector.raycaster.ray.origin;
                 let relativeOriginPosition = origin.clone();
-                //document.querySelector('[camera]').components['camera'].el.object3D.updateMatrixWorld();
-                document.querySelector('[camera]').components['camera'].el.object3D.worldToLocal(relativeOriginPosition);
+                //camera.components['camera'].el.object3D.updateMatrixWorld();
+                camera.components['camera'].el.object3D.worldToLocal(relativeOriginPosition);
                 //modifica del raycaster del componente con posizione della mano (coincide con la mesh)
                 this.el.setAttribute('raycaster', {
-                    showLine: false,
                     origin: relativeOriginPosition,
                     far: 5
                 });
@@ -457,25 +467,26 @@ AFRAME.registerComponent('intersect-and-manipulate', {
                     });
                 }
             } else {
-                this.el.removeAttribute('meshline');
-                this.el.setAttribute('raycaster', {
-                    showLine: false,
-                    near: 0.05,
-                    far: 0.05
-                });
+                if(this.el.getAttribute('meshline') !== null) {
+                    this.el.removeAttribute('meshline');
+                    this.el.setAttribute('raycaster', {
+                        far: 0
+                    });
+                }
             }
         }
         let transform = document.querySelector('#transform');
         if (transform !== null) {
+            let cameraPosition = camera.getAttribute('position');
             //scala il transform in base alla distanza
             let transformPosition = document.querySelector('#transform').getAttribute('position');
-            //let distance = Math.sqrt(Math.pow(transformPosition.x - cameraPosition.x, 2) + Math.pow(transformPosition.y - cameraPosition.y, 2) + Math.pow(transformPosition.z - cameraPosition.z, 2));
             let distance = new THREE.Vector3(cameraPosition.x, cameraPosition.y, cameraPosition.z).distanceTo(new THREE.Vector3(transformPosition.x, transformPosition.y, transformPosition.z));
             transform.setAttribute('scale', (distance) + ' ' + (distance) + ' ' + (distance));
         }
     },
 
     raycasterIntersection: function (event) {
+        let camera = selectCamera();
         //oggetto intersecato
         let intersectedObject = event.detail.els[0];
         //mano visibile
@@ -483,9 +494,9 @@ AFRAME.registerComponent('intersect-and-manipulate', {
         if (isVisible) {
             //posizioni elemento intersecato e camera per successiva definizione del percorso
             let endPath = intersectedObject.getAttribute('position');
-            //document.querySelector('[camera]').components['camera'].el.object3D.updateMatrixWorld();
+            //camera.components['camera'].el.object3D.updateMatrixWorld();
             let localPosition = new THREE.Vector3(0, -0.5, -3);
-            let startPath = document.querySelector('[camera]').components['camera'].el.object3D.localToWorld(localPosition);
+            let startPath = camera.components['camera'].el.object3D.localToWorld(localPosition);
             if (intersectedObject.getAttribute(this.data.tag) !== null) {
                 //inizia il percorso del nuovo oggetto
                 intersection = true;
