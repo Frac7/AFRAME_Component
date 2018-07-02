@@ -399,19 +399,7 @@ AFRAME.registerComponent('intersect-and-manipulate', {
     },
 
     init: function () {
-        switch (this.data.control) {
-            case 'translate':
-                currentControl = 0;
-                break;
-            case 'scale':
-                currentControl = 1;
-                break;
-            case 'rotate':
-                currentControl = 2;
-                break;
-        }
         this.el.setAttribute('raycaster', {
-            //showLine: false,
             //evitare collisioni con la camera o con il raggio stesso
             near: 0.05,
             //lunghezza del raggio
@@ -428,6 +416,21 @@ AFRAME.registerComponent('intersect-and-manipulate', {
     },
 
     tick: function () {
+        //cambia il tipo di transform
+        switch (this.data.control) {
+            case 'translate':
+                if(currentControl !== 0)
+                    createTransform(controls[(currentControl + 1) % controls.length]);
+                break;
+            case 'scale':
+                if(currentControl !== 1)
+                    createTransform(controls[(currentControl + 1) % controls.length]);
+                break;
+            case 'rotate':
+                if(currentControl !== 2)
+                    createTransform(controls[(currentControl + 1) % controls.length]);
+                break;
+        }
         if(this.el.getAttribute('line') !== null)
             this.el.removeAttribute('line');
         let camera = selectCamera();
