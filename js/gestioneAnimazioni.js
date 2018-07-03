@@ -42,7 +42,7 @@ function createKeyFrames (self) {
                     property: properties[i],
                     dur: self.data.duration,
                     easing: self.data.interpolation, // più uno perché non si conta la posizione
-                    from: index !== 1? targetObject.keyFrames[index - 2][i + 1].values.to: (array.length > 1? initialValues[array[1]]: initialValues[properties[i]]),
+                    from: index !== 1? targetObject.keyFrames[index - 2][i + 1].values.to: (array.length > 1? initialValues[array[1]]: stringify(initialValues[properties[i]])),
                     to: values[i],
                     delay: self.data.delay,
                     loop: self.data.repeat,
@@ -145,6 +145,7 @@ function addEventListeners (self) {
     })
     //vengono copiati solo questi event listener perché gli altri non verranno più emessi
 }
+
 function deleteKeyFrame (self) {
     if(targetObject.clones.length !== 1) { //c'� almeno un altro clone oltre il target object
         console.log('Key frame rimosso');
@@ -155,10 +156,10 @@ function deleteKeyFrame (self) {
                 targetObject.keyFrames[currentFrame - 1][i].values.to = targetObject.keyFrames[currentFrame + 1][i].values.from;
                 targetObject.keyFrames[currentFrame + 1][i].values.from = targetObject.keyFrames[currentFrame - 1][i].values.to;
             }
-        } else {
+        } else if(currentFrame === 0) {
             //se si cerca di eliminare il primo key frame
             //viene riassegnato il targetObject
-            targetObject.aframeEl = targetObject.clones[0]; //nuovo key frame zero
+            targetObject.aframeEl = targetObject.clones[1]; //nuovo key frame zero
             //clona gli event listener
             addEventListeners(self);
         }
@@ -167,8 +168,7 @@ function deleteKeyFrame (self) {
         targetObject.keyFrames.splice(currentFrame, 1);
         //cambio key frame (aggiornamento variabile)
         currentFrame++;
-        if (currentFrame >= targetObject.keyFrames.length)
-            currentFrame = 0;
+        currentFrame = currentFrame % targetObject.keyFrames.length;
         createFeedback();
     }
 }
@@ -462,9 +462,9 @@ AFRAME.registerComponent('animate', {
                             target = targetObject.clones[currentFrame];
                         }
                         break;
-                    case 90: //z: switch control
+                    /*case 90: //z: switch control - da inspector
                         createTransform(controls[(currentControl + 1) % controls.length]);
-                        break;
+                        break;*/
                 }
             }
         };
