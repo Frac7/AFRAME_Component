@@ -135,7 +135,8 @@ function addEventListeners (self) {
             setTimeout(function () {
                 removeAnimationAttributes(targetObject.clones[0], 0);
                 setKeyFrameAttributes(targetObject.aframeEl, 0);
-            }, self.data.duration + self.data.delay);
+                currentFrame = 0;
+            }, self.data.duration + self.data.delay + 1000);
         }
     });
     //elimina gli attributi dell'animazione in caso di stop per editing mode
@@ -356,7 +357,7 @@ function easingPreview (self) {
                 animate(targetObject.clones[currentFrame]);
                 targetObject.clones[currentFrame].emit('start');
             }
-        }, self.data.duration + self.data.delay);
+        }, self.data.duration + self.data.delay + 1000);
         //ripristina il to dell'oggetto
         createFeedback();
     }
