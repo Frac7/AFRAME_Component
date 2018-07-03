@@ -356,7 +356,7 @@ function easingPreview (self) {
                 animate(targetObject.clones[currentFrame]);
                 targetObject.clones[currentFrame].emit('start');
             }
-        }, (self.data.duration + self.data.delay) * 3);
+        }, self.data.duration + self.data.delay);
         //ripristina il to dell'oggetto
         createFeedback();
     }
