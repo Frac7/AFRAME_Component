@@ -237,7 +237,7 @@ function saveKeyFrame(self) {
             property: properties[i],
             dur: self.data.duration,
             easing: self.data.interpolation,
-            from: currentFrame !== 0? targetObject.keyFrames[currentFrame - 1][i].values.to: (array.length > 1? initialValues[array[1]]: initialValues[properties[i]]),
+            from: currentFrame !== 0? targetObject.keyFrames[currentFrame - 1][i].values.to: (array.length > 1? initialValues[array[1]]: stringify(initialValues[properties[i]])),
             to: values[i],
             delay: self.data.delay,
             loop: self.data.repeat,
@@ -375,8 +375,8 @@ AFRAME.registerComponent('animate', {
         //in base ai key frames all'interno della scena
         //per property e interpolation, nella gui, deve essere mostrato un elenco con le opzioni dispnibili
         //trajectory: {type: 'string', default: ''},
-        property: {type: 'string', oneOf: ['', 'material.color', 'material.opacity', 'rotation', 'scale'], default: ''},
-        value: {type: 'string', default: ''},
+        //property: {type: 'string', oneOf: ['', 'material.color', 'material.opacity', 'rotation', 'scale'], default: ''},
+        //value: {type: 'string', default: ''},
         //property e value verranno selezionati dalla gui, i valori selezionati devono essere assegnati a questi due valori
         //i quali sostituiranno la funziona che genera valori random
         interpolation: {type: 'string', oneOf:
