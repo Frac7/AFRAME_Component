@@ -40,12 +40,12 @@ function createKeyFrames (self) {
                 let array = properties[i].split('.');
                 attributes[i] = {
                     property: properties[i],
-                    dur: self.data.duration,
+                    dur: targetObject.keyFrames.length !== 0? self.data.duration/targetObject.keyFrames.length: self.data.duration,
                     easing: self.data.interpolation, // più uno perché non si conta la posizione
                     from: index !== 1? targetObject.keyFrames[index - 2][i + 1].values.to: (array.length > 1? initialValues[array[1]]: stringify(initialValues[properties[i]])),
                     to: values[i],
                     delay: self.data.delay,
-                    loop: self.data.repeat,
+                    loop: 1,
                     startEvents: 'start',
                     pauseEvents: 'stop',
                     resumeEvents: 'resume'
@@ -72,6 +72,10 @@ function createKeyFrames (self) {
         }, 20000);
 
 }
+//in base a come viene gestito il sistema per aggiungere punti alla traiettoria(quindi key frames), bisogna gestire il
+//ricalcolo dei tempi di animazione dei key frames precedenti
+let played = 0; // variabile per la riproduzione di animazioni con ripetizione
+let repeat = 0; //ripetizione
 //dalla gui, per save key frame, bisogna gestire il bottone in modo che se nessuna modifica è stata effettuata, il bottone
 //non possa essere premuto e quindi non sia possibile salvare le modifiche
 //sempre dalla gui deve essere data all'utente la possibilità di modificare il from del primo key frame
@@ -124,25 +128,34 @@ function modifyFrom(values) {
 
 function addEventListeners (self) {
     //clonare gli event listener
+    targetObject.aframeEl.addEventListener('start', function () {
+        if(currentFrame !== 0)
+            played = 0; //è necessario questo per ripristinare il numero di ripetizioni nel caso di pause e restart
+    });
     targetObject.aframeEl.addEventListener('animationcomplete', function () {
         console.log('Animazione completata');
         //continua ad animare
-        if(!editingMode)
+        if(!editingMode && played !== repeat) {
+            currentFrame %= targetObject.keyFrames.length;
             animateAll();
+        }
         //ripristina lo stato
-        if(currentFrame === targetObject.keyFrames.length) {
+        if(currentFrame === targetObject.keyFrames.length && played === repeat) {
+            console.log('Fine');
             //rimuove gli attributi animazioni dal target object
             setTimeout(function () {
                 removeAnimationAttributes(targetObject.clones[0], 0);
                 setKeyFrameAttributes(targetObject.aframeEl, 0);
                 currentFrame = 0;
-            }, self.data.duration + self.data.delay + 1000);
+            }, self.data.duration/targetObject.keyFrames.length + self.data.delay + 1000);
         }
     });
     //elimina gli attributi dell'animazione in caso di stop per editing mode
     targetObject.aframeEl.addEventListener('stop', function () {
         if(editingMode)
             removeAnimationAttributes(targetObject.clones[0], 0);
+        else
+            played = 0; //ripristina lo 0
     })
     //vengono copiati solo questi event listener perché gli altri non verranno più emessi
 }
@@ -184,12 +197,12 @@ function createPoint (self) {
         name: 'animation__position',
         values: {
             property: 'position',
-            dur: self.data.duration,
+            dur: targetObject.keyFrames.length !== 0? self.data.duration/targetObject.keyFrames.length: self.data.duration,
             easing: self.data.interpolation,
             from: targetObject.keyFrames.length !== 0? targetObject.keyFrames[targetObject.keyFrames.length - 1][0].values.to: stringify(initialValues.position),
             to: stringify(targetObject.aframeEl.getAttribute('position')),
             delay: self.data.delay,
-            loop: self.data.repeat,
+            loop: 1,
             startEvents: 'start',
             pauseEvents: 'stop',
             resumeEvents: 'resume'
@@ -236,12 +249,12 @@ function saveKeyFrame(self) {
         let array = properties[i].split('.');
         attributes[i] = {
             property: properties[i],
-            dur: self.data.duration,
+            dur: targetObject.keyFrames.length !== 0? self.data.duration/targetObject.keyFrames.length: self.data.duration,
             easing: self.data.interpolation,
             from: currentFrame !== 0? targetObject.keyFrames[currentFrame - 1][i].values.to: (array.length > 1? initialValues[array[1]]: stringify(initialValues[properties[i]])),
             to: values[i],
             delay: self.data.delay,
-            loop: self.data.repeat,
+            loop: 1,
             startEvents: 'start',
             pauseEvents: 'stop',
             resumeEvents: 'resume'
@@ -293,6 +306,8 @@ function animateAll () { //usata fuori dall'editor
         targetObject.aframeEl.emit('start');
         currentFrame++;
         console.log('Animazione ' + currentFrame);
+        if(currentFrame === targetObject.keyFrames.length)
+            played++;
     }
 }
 
@@ -399,6 +414,32 @@ AFRAME.registerComponent('animate', {
         //in base alla stringa inserita, restituisce il valore da usare in animate (k frame)
         //true per infinito, un numero per qualsiasi numero inserito come stringa
         this.data.repeat = parseRepeat(this.data.repeat);
+        repeat = this.data.repeat;
+    },
+
+    update: function (oldData) {
+        if(oldData.repeat !== this.data.repeat) { //aggiornamento ripetizione
+            this.data.repeat = parseRepeat(this.data.repeat);
+            repeat = this.data.repeat;
+        }
+        if(setted) {
+            if(oldData.interpolation !== this.data.interpolation) {
+                currentEasingFunction = this.data.interpolation;
+                for (let i = 0; i < targetObject.keyFrames.length; i++)
+                    for(let j = 0; j < targetObject.keyFrames[i].length; j++)
+                        targetObject.keyFrames[i][j].values.easing = this.data.interpolation; //aggiorna le interpolazioni di tutti i key frames
+                }
+            if(oldData.duration !== this.data.duration) {
+                for (let i = 0; i < targetObject.keyFrames.length; i++)
+                    for(let j = 0; j < targetObject.keyFrames[i].length; j++)
+                        targetObject.keyFrames[i][j].values.dur = this.data.duration/targetObject.keyFrames.length; //aggiorna la durata di ciascun key frame
+            }
+            if(oldData.delay !== this.data.delay) {
+                if(targetObject.keyFrames.length !== 0)
+                    for(let j = 0; j < targetObject.keyFrames[i].length; j++)
+                        targetObject.keyFrames[i][j].values.delay = this.data.delay; //aggiorna il ritardo al primo key frame
+            }
+        }
     },
 
     tick: function () {

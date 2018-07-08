@@ -314,7 +314,7 @@ function createTransform(transformType) {
                 material: 'color: #ff0000',
                 scale: '0.075 0.075 0.075',
                 rotation: '0 90 0',
-                geometry: 'primitive: torus; radius: 5; radiusTubular: 0.1; segmentsRadial: 100; segmentsTubular: 100',
+                geometry: 'primitive: torus; radius: 5; radiusTubular: 0.05; segmentsRadial: 100; segmentsTubular: 100',
                 holdable: ''
             },
             xLine: {
@@ -329,7 +329,7 @@ function createTransform(transformType) {
                 material: 'color: #00ff00',
                 scale: '0.075 0.075 0.075',
                 rotation: '90 0 0',
-                geometry: 'primitive: torus; radius: 5; radiusTubular: 0.1; segmentsRadial: 100; segmentsTubular: 100',
+                geometry: 'primitive: torus; radius: 5; radiusTubular: 0.05; segmentsRadial: 100; segmentsTubular: 100',
                 holdable: ''
             },
             yLine: {
@@ -344,7 +344,7 @@ function createTransform(transformType) {
                 material: 'color: #0000ff',
                 scale: '0.075 0.075 0.075',
                 rotation: '0 0 0',
-                geometry: 'primitive: torus; radius: 5; radiusTubular: 0.1; segmentsRadial: 100; segmentsTubular: 100',
+                geometry: 'primitive: torus; radius: 5; radiusTubular: 0.05; segmentsRadial: 100; segmentsTubular: 100',
                 holdable: ''
             },
             zLine: {
@@ -358,7 +358,7 @@ function createTransform(transformType) {
                 position: '0 0 0',
                 material: 'color: #ffffff',
                 scale: '0.075 0.075 0.075',
-                geometry: 'primitive: torus; radius: 6; radiusTubular: 0.1; segmentsRadial: 100; segmentsTubular: 100',
+                geometry: 'primitive: torus; radius: 6; radiusTubular: 0.05; segmentsRadial: 100; segmentsTubular: 100',
                 holdable: ''
             }
         }
@@ -415,22 +415,32 @@ AFRAME.registerComponent('intersect-and-manipulate', {
         });
     },
 
+    update: function (oldData) {
+        if(targetObject.aframeEl !== null && oldData.control !== this.data.control)
+            //cambia il tipo di transform
+            switch (this.data.control) {
+                case 'translate':
+                    if(currentControl !== 0)
+                        createTransform(controls[(currentControl + 1) % controls.length]);
+                    else
+                        currentControl = 0;
+                    break;
+                case 'scale':
+                    if(currentControl !== 1)
+                        createTransform(controls[(currentControl + 1) % controls.length]);
+                    else
+                        currentControl = 1;
+                    break;
+                case 'rotate':
+                    if(currentControl !== 2)
+                        createTransform(controls[(currentControl + 1) % controls.length]);
+                    else
+                        currentControl = 2;
+                    break;
+            }
+    },
+
     tick: function () {
-        //cambia il tipo di transform
-        switch (this.data.control) {
-            case 'translate':
-                if(currentControl !== 0)
-                    createTransform(controls[(currentControl + 1) % controls.length]);
-                break;
-            case 'scale':
-                if(currentControl !== 1)
-                    createTransform(controls[(currentControl + 1) % controls.length]);
-                break;
-            case 'rotate':
-                if(currentControl !== 2)
-                    createTransform(controls[(currentControl + 1) % controls.length]);
-                break;
-        }
         if(this.el.getAttribute('line') !== null)
             this.el.removeAttribute('line');
         let camera = selectCamera();
@@ -484,6 +494,7 @@ AFRAME.registerComponent('intersect-and-manipulate', {
             //scala il transform in base alla distanza
             let transformPosition = document.querySelector('#transform').getAttribute('position');
             let distance = new THREE.Vector3(cameraPosition.x, cameraPosition.y, cameraPosition.z).distanceTo(new THREE.Vector3(transformPosition.x, transformPosition.y, transformPosition.z));
+            distance *= 1.125;
             transform.setAttribute('scale', (distance) + ' ' + (distance) + ' ' + (distance));
         }
     },
@@ -536,7 +547,8 @@ AFRAME.registerComponent('intersect-and-manipulate', {
                         //creazione transform
                         createTransform(controls[currentControl]);
                         transformCreated = true;
-                        event.srcElement.setAttribute('material', 'opacity: 0.5');
+                        if(event.srcElement.getAttribute('material') !== null) //collada non hanno material, quindi opacità
+                            event.srcElement.setAttribute('material', 'opacity: 0.5');
                     }
                 });
             } else
