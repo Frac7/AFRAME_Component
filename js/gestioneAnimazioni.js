@@ -44,7 +44,7 @@ function createKeyFrames (self) {
                     easing: self.data.interpolation, // più uno perché non si conta la posizione
                     from: index !== 1? targetObject.keyFrames[index - 2][i + 1].values.to: (array.length > 1? initialValues[array[1]]: stringify(initialValues[properties[i]])),
                     to: values[i],
-                    delay: self.data.delay,
+                    delay: targetObject.keyFrames.length === 0? self.data.delay: 0,
                     loop: 1,
                     startEvents: 'start',
                     pauseEvents: 'stop',
@@ -128,10 +128,6 @@ function modifyFrom(values) {
 
 function addEventListeners (self) {
     //clonare gli event listener
-    targetObject.aframeEl.addEventListener('start', function () {
-        if(currentFrame !== 0)
-            played = 0; //è necessario questo per ripristinare il numero di ripetizioni nel caso di pause e restart
-    });
     targetObject.aframeEl.addEventListener('animationcomplete', function () {
         console.log('Animazione completata');
         //continua ad animare
@@ -147,6 +143,7 @@ function addEventListeners (self) {
                 removeAnimationAttributes(targetObject.clones[0], 0);
                 setKeyFrameAttributes(targetObject.aframeEl, 0);
                 currentFrame = 0;
+                played = 0;
             }, self.data.duration/targetObject.keyFrames.length + self.data.delay + 1000);
         }
     });
@@ -201,7 +198,7 @@ function createPoint (self) {
             easing: self.data.interpolation,
             from: targetObject.keyFrames.length !== 0? targetObject.keyFrames[targetObject.keyFrames.length - 1][0].values.to: stringify(initialValues.position),
             to: stringify(targetObject.aframeEl.getAttribute('position')),
-            delay: self.data.delay,
+            delay: targetObject.keyFrames.length === 0? self.data.delay: 0,
             loop: 1,
             startEvents: 'start',
             pauseEvents: 'stop',
@@ -253,7 +250,7 @@ function saveKeyFrame(self) {
             easing: self.data.interpolation,
             from: currentFrame !== 0? targetObject.keyFrames[currentFrame - 1][i].values.to: (array.length > 1? initialValues[array[1]]: stringify(initialValues[properties[i]])),
             to: values[i],
-            delay: self.data.delay,
+            delay: targetObject.keyFrames.length === 0? self.data.delay: 0,
             loop: 1,
             startEvents: 'start',
             pauseEvents: 'stop',
