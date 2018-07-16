@@ -1,15 +1,15 @@
 # animate component
-[A-Frame VR](https://aframe.io/) component to animate objects in scene.
+[A-Frame VR](https://aframe.io/) component to animate objects in the scene.
 
 This component wraps [aframe-animation-component](https://github.com/ngokevin/kframe/tree/master/components/animation) in
-order to simplify way to animate objects for users without any animation knowledge.
+order to simplify the way to animate objects for users without any animation knowledge.
 
 This component uses the intersect-and-manipulate component to select objects to animate (must be included in scene).
 
-In editing mode, user have to create trajectory for object animation. Once trajectory is created,
-user can manipulate properties of the target object (with GUI/transform controls) and save the key frame.
+In editing mode the user has to create trajectory for object animation. Once trajectory is created,
+the user can manipulate properties of the target object (with GUI/transform controls) and save the key frame.
 
-In animation mode user can play, stop and resume animation.
+In animation mode the user can play, stop and resume animation.
  
 ## Properties
 | Property     | Default    | Description                                                                                            |
@@ -44,7 +44,7 @@ In animation mode user can play, stop and resume animation.
 ```
 <!-- inserire il codice per l'editor !-->
 ### More...
-[More examples on Glitch](https://mycomponent-tutorial.glitch.me/)
+[Tutorial on Glitch](https://mycomponent-tutorial.glitch.me/)
 
 [aframe-text-geometry](https://github.com/ngokevin/kframe/tree/master/components/text-geometry)
 
