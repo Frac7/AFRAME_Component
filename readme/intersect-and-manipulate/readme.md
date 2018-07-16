@@ -1,9 +1,9 @@
 # intersect-and-manipulate component
-[A-Frame VR](https://aframe.io/) component to select and manipulate objects in scene.
+[A-Frame VR](https://aframe.io/) component to select and manipulate objects in the scene.
 
 This component uses [A-Frame raycaster](https://github.com/aframevr/aframe/blob/master/docs/components/raycaster.md)
 and [aframe-leap-hands](https://github.com/openleap/aframe-leap-hands/blob/master/README.md)
- to allow users to select, with a pose recognition, marked objects in scene and manipulate them using transform controls.
+ to allow users to select, with a pose recognition, marked objects in the scene and manipulate them using transform controls.
 
 The recognized pose is the gesture of Spider Man, a metaphor to intersect objects.
  
@@ -12,8 +12,8 @@ that intersects the pointed object.
 
 ![Example1](https://github.com/Frac7/Tirocinio/blob/master/readme/intersect-and-manipulate/gif1.gif)
 
-The selected object is moved in front of camera using [aframe-alongpath](https://github.com/protyze/aframe-alongpath-component)
- and transform control is attached to it.
+The selected object is moved in front of the camera using [aframe-alongpath](https://github.com/protyze/aframe-alongpath-component)
+ and the transform control is attached to it.
  
 ![Example2](https://github.com/Frac7/Tirocinio/blob/master/readme/intersect-and-manipulate/gif.gif)
  
